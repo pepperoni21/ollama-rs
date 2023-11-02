@@ -17,6 +17,7 @@ impl Ollama {
         }
     }
 
+    /// Returns the http URI of the Ollama instance
     pub fn uri(&self) -> String {
         format!("http://{}:{}", self.host, self.port)
     }

@@ -14,6 +14,8 @@ pub type GenerationResponseStream = Pin<Box<dyn tokio_stream::Stream<Item = Resu
 
 impl Ollama {
     #[cfg(feature = "stream")]
+    /// Completion generation with streaming.
+    /// Returns a stream of `GenerationResponse` objects
     pub async fn generate_stream(&self, request: GenerationRequest) -> crate::error::Result<GenerationResponseStream> {
         use tokio_stream::StreamExt;
         let mut request = request;
@@ -53,6 +55,7 @@ impl Ollama {
         Ok(Pin::from(stream))
     }
 
+    /// Completion generation with a single response.
     pub async fn generate(&self, request: GenerationRequest) -> Result<GenerationResponse, String> {
         let mut request = request;
         request.stream = false;
@@ -76,26 +79,39 @@ impl Ollama {
     }
 }
 
+/// An encoding of a conversation returned by Ollama after a completion request, this can be sent in a new request to keep a conversational memory.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenerationContext(Vec<i32>);
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GenerationResponse {
+    /// The name of the model used for the completion.
     pub model: String,
+    /// The creation time of the completion, in such format: `2023-08-04T08:52:19.385406455-07:00`.
     pub created_at: String,
+    /// The response of the completion. This can be the entire completion or only a token if the completion is streaming.
     pub response: String,
+    /// Whether the completion is done. If the completion is streaming, this will be false until the last response.
     pub done: bool,
     #[serde(flatten)]
+    /// The final data of the completion. This is only present if the completion is done.
     pub final_data: Option<GenerationFinalResponseData>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GenerationFinalResponseData {
+    /// An encoding of the conversation used in this response, this can be sent in the next request to keep a conversational memory
     pub context: GenerationContext,
+    /// Time spent generating the response
     pub total_duration: u64,
+    /// Time spent in nanoseconds loading the model
     pub load_duration: u64,
+    /// Number of tokens in the prompt
     pub prompt_eval_count: u16,
+    /// Time spent in nanoseconds evaluating the prompt
     pub prompt_eval_duration: u64,
+    /// Number of tokens the response
     pub eval_count: u16,
+    /// Time in nanoseconds spent generating the response
     pub eval_duration: u64,
 }
