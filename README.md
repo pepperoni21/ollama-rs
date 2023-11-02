@@ -64,6 +64,7 @@ println!("{:#?}", res);
 - [x] Better error handling
 - [x] List local models
 - [x] Show model info
+- [x] Add stream feature
 - [ ] Improve documentation
 - [ ] Create a model
 - [ ] Copy a model

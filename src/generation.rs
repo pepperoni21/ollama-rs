@@ -1,7 +1,6 @@
 use std::pin::Pin;
 
 use serde::{Serialize, Deserialize};
-use tokio_stream::{Stream, StreamExt};
 
 use crate::Ollama;
 
@@ -10,8 +9,13 @@ use self::request::GenerationRequest;
 pub mod options;
 pub mod request;
 
+#[cfg(feature = "stream")]
+pub type GenerationResponseStream = Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponse, ()>>>>;
+
 impl Ollama {
+    #[cfg(feature = "stream")]
     pub async fn generate_stream(&self, request: GenerationRequest) -> crate::error::Result<GenerationResponseStream> {
+        use tokio_stream::StreamExt;
         let mut request = request;
         request.stream = true;
 
@@ -95,5 +99,3 @@ pub struct GenerationFinalResponseData {
     pub eval_count: u16,
     pub eval_duration: u64,
 }
-
-pub type GenerationResponseStream = Pin<Box<dyn Stream<Item = Result<GenerationResponse, ()>>>>;
