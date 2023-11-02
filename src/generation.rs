@@ -11,7 +11,7 @@ pub mod options;
 pub mod request;
 
 impl Ollama {
-    pub async fn generate_stream(&self, request: GenerationRequest) -> Result<GenerationResponseStream, String> {
+    pub async fn generate_stream(&self, request: GenerationRequest) -> crate::error::Result<GenerationResponseStream> {
         let mut request = request;
         request.stream = true;
 
@@ -24,7 +24,7 @@ impl Ollama {
             .map_err(|e| e.to_string())?;
 
         if !res.status().is_success() {
-            return Err(res.text().await.unwrap_or_else(|e| e.to_string()));
+            return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
         }
 
         let stream = Box::new(res.bytes_stream().map(|res| {
