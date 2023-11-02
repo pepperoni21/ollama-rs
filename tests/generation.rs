@@ -3,7 +3,7 @@
 use tokio_stream::StreamExt;
 use tokio::io::AsyncWriteExt;
 
-use crate::{Ollama, generation::{request::GenerationRequest, GenerationResponseStream}};
+use ollama_rs::{Ollama, generation::{request::GenerationRequest, GenerationResponseStream}};
 
 #[allow(dead_code)]
 const PROMPT: &'static str = "Why is the sky blue?";
@@ -14,19 +14,21 @@ async fn test_generation_stream() {
 
     let mut res: GenerationResponseStream = ollama.generate_stream(GenerationRequest::new("llama2:latest".to_string(), PROMPT.into())).await.unwrap();
 
-    let mut stdout = tokio::io::stdout();
+    let mut done = false;
     while let Some(res) = res.next().await {
         let res = res.unwrap();
-        stdout.write(res.response.as_bytes()).await.unwrap();
-        stdout.flush().await.unwrap();
+        if res.done {
+            done = true;
+            break;
+        }
     }
+
+    assert!(done);
 }
 
 #[tokio::test]
 async fn test_generation() {
     let ollama = Ollama::default();
 
-    let res = ollama.generate(GenerationRequest::new("llama2:latest".to_string(), PROMPT.into())).await.unwrap();
-
-    println!("{}", res.response);
+    let _ = ollama.generate(GenerationRequest::new("llama2:latest".to_string(), PROMPT.into())).await.unwrap();
 }
