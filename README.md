@@ -17,7 +17,8 @@ ollama-rs = { git = "https://github.com/pepperoni21/ollama-rs" }
 ## TODO (by priority)
 - [x] Completion generation (single response)
 - [x] Completion generation (streaming)
-- [x] Add usage for completion generation
+- [ ] Add usage for completion generation
+- [ ] Better error handling
 - [ ] List local models
 - [ ] Show model info
 - [ ] Create a model
