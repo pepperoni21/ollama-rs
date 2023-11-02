@@ -66,7 +66,7 @@ println!("{:#?}", res);
 - [x] Show model info
 - [x] Add stream feature
 - [x] Improve documentation
-- [ ] Create a model
+- [x] Create a model
 - [ ] Copy a model
 - [ ] Delete a model
 - [ ] Push a model
