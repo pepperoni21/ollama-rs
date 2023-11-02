@@ -42,6 +42,20 @@ while let Some(res) = stream.next().await {
 }
 ```
 Same output as above but streamed.
+### List local models
+```rust
+let ollama = Ollama::default(); // or Ollama::new(HOST, PORT) for custom values
+
+let res = ollama.list_local_models().await.unwrap();
+println!("{:#?}", res);
+```
+### Show model information
+```rust
+let ollama = Ollama::default(); // or Ollama::new(HOST, PORT) for custom values
+
+let res = ollama.show_model_info("llama2:latest".to_string()).await.unwrap();
+println!("{:#?}", res);
+```
 
 ## TODO
 - [x] Completion generation (single response)
@@ -49,7 +63,7 @@ Same output as above but streamed.
 - [x] Add usage for completion generation
 - [x] Better error handling
 - [x] List local models
-- [ ] Show model info
+- [x] Show model info
 - [ ] Improve documentation
 - [ ] Create a model
 - [ ] Copy a model

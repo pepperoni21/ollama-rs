@@ -9,3 +9,11 @@ pub struct Model {
     pub modified_at: String,
     pub size: u64,
 }
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ModelInfo {
+    pub license: String,
+    pub modelfile: String,
+    pub parameters: String,
+    pub template: String,
+}
