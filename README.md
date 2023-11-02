@@ -48,8 +48,9 @@ Same output as above but streamed.
 - [x] Completion generation (streaming)
 - [x] Add usage for completion generation
 - [x] Better error handling
-- [ ] List local models
+- [x] List local models
 - [ ] Show model info
+- [ ] Improve documentation
 - [ ] Create a model
 - [ ] Copy a model
 - [ ] Delete a model

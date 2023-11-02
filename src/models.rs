@@ -1,8 +1,11 @@
-use std::time::Instant;
+mod list_local;
 
-#[derive(Debug, Clone)]
+pub use list_local::*;
+use serde::Deserialize;
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct Model {
     pub name: String,
-    pub modified_at: Instant,
+    pub modified_at: String,
     pub size: u64,
 }
