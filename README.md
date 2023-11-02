@@ -43,11 +43,11 @@ while let Some(res) = stream.next().await {
 ```
 Same output as above but streamed.
 
-## TODO (by priority)
+## TODO
 - [x] Completion generation (single response)
 - [x] Completion generation (streaming)
 - [x] Add usage for completion generation
-- [ ] Better error handling
+- [x] Better error handling
 - [ ] List local models
 - [ ] Show model info
 - [ ] Create a model
