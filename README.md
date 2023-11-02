@@ -68,7 +68,7 @@ println!("{:#?}", res);
 - [x] Improve documentation
 - [x] Create a model
 - [x] Copy a model
-- [ ] Delete a model
+- [X] Delete a model
 - [ ] Push a model
 - [ ] Pull a model
 - [ ] Generate embeddings
