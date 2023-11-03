@@ -1,6 +1,8 @@
 use serde::Serialize;
 
-use super::{options::GenerationOptions, GenerationContext};
+use crate::generation::options::GenerationOptions;
+
+use super::GenerationContext;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct GenerationRequest {

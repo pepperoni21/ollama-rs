@@ -1,9 +1,8 @@
 #![allow(unused_imports)]
 
+use ollama_rs::{Ollama, generation::completion::{GenerationResponseStream, request::GenerationRequest}};
 use tokio_stream::StreamExt;
 use tokio::io::AsyncWriteExt;
-
-use ollama_rs::{Ollama, generation::{request::GenerationRequest, GenerationResponseStream}};
 
 #[allow(dead_code)]
 const PROMPT: &'static str = "Why is the sky blue?";
