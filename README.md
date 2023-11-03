@@ -69,7 +69,7 @@ println!("{:#?}", res);
 - [x] Create a model
 - [x] Copy a model
 - [X] Delete a model
-- [ ] Generate embeddings
+- [x] Generate embeddings
 - [ ] Push a model
 - [ ] Pull a model
 - [ ] Add missing examples in README.md
