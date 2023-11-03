@@ -8,12 +8,19 @@ It was made following the [Ollama API](https://github.com/jmorganca/ollama/blob/
 [dependencies]
 ollama-rs = { git = "https://github.com/pepperoni21/ollama-rs" }
 ```
+### Initialize Ollama
+```rust
+// By default it will connect to localhost:11434
+let ollama = Ollama::default();
+
+// For custom values:
+let ollama = Ollama::new("localhost".to_string(), 11434);
+```
 
 ## Usage
+*These examples use poor error handling for simplicity, but you should handle errors properly in your code.*
 ### Completion generation
 ```rust
-let ollama = Ollama::default(); // or Ollama::new(HOST, PORT) for custom values
-
 let model = "llama2:latest".to_string();
 let prompt = "Why is the sky blue?".to_string();
 
@@ -24,14 +31,12 @@ if let Ok(res) = res {
 }
 ```
 **OUTPUTS:** *The sky appears blue because of a phenomenon called Rayleigh scattering...*
-### Completion generation (stream)
+### Completion generation (streaming)
 ```rust
-let ollama = Ollama::default(); // or Ollama::new(HOST, PORT) for custom values
-
 let model = "llama2:latest".to_string();
 let prompt = "Why is the sky blue?".to_string();
 
-let mut stream = ollama.generate_stream(GenerationRequest::new(model, prompt)).await.unwrap(); // bad error handling for example purposes
+let mut stream = ollama.generate_stream(GenerationRequest::new(model, prompt)).await.unwrap();
 
 let mut stdout = tokio::io::stdout();
 // Requires tokio_stream
@@ -44,18 +49,43 @@ while let Some(res) = stream.next().await {
 Same output as above but streamed.
 ### List local models
 ```rust
-let ollama = Ollama::default(); // or Ollama::new(HOST, PORT) for custom values
-
 let res = ollama.list_local_models().await.unwrap();
-println!("{:#?}", res);
 ```
+*Returns a vector of `Model` structs.*
 ### Show model information
 ```rust
-let ollama = Ollama::default(); // or Ollama::new(HOST, PORT) for custom values
-
 let res = ollama.show_model_info("llama2:latest".to_string()).await.unwrap();
-println!("{:#?}", res);
 ```
+*Returns a `ModelInfo` struct.*
+### Create a model
+```rust
+let res = ollama.create_model("model".into(), "/tmp/Modelfile.example".into()).await.unwrap();
+```
+*Returns a `CreateModelStatus` struct representing the final status of the model creation.*
+### Create a model (streaming)
+```rust
+let mut res = ollama.create_model_stream("model".into(), "/tmp/Modelfile.example".into()).await.unwrap();
+
+while let Some(res) = res.next().await {
+    let res = res.unwrap();
+    // Handle the status
+}
+```
+*Returns a `CreateModelStatusStream` that will stream every status update of the model creation.*
+### Copy a model
+```rust
+let _ = ollama.copy_model("mario".into(), "mario_copy".into()).await.unwrap();
+```
+### Delete a model
+```rust
+ollama.delete_model("mario_copy".into()).await.unwrap();
+```
+### Generate embeddings
+```rust
+let prompt = "Why is the sky blue?".to_string();
+let res = ollama.generate_embeddings("llama2:latest".to_string(), prompt, None).await.unwrap();
+```
+*Returns a `GenerateEmbeddingsResponse` struct containing the embeddings (a vector of floats).*
 
 ## TODO
 - [x] Completion generation (single response)
@@ -70,6 +100,6 @@ println!("{:#?}", res);
 - [x] Copy a model
 - [X] Delete a model
 - [x] Generate embeddings
+- [x] Add missing examples in README.md
 - [ ] Push a model
 - [ ] Pull a model
-- [ ] Add missing examples in README.md
