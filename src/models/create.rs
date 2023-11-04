@@ -1,12 +1,10 @@
-use std::pin::Pin;
-
 use serde::{Deserialize, Serialize};
 
 use crate::Ollama;
 
 #[cfg(feature = "stream")]
 pub type CreateModelStatusStream =
-    Pin<Box<dyn tokio_stream::Stream<Item = Result<CreateModelStatus, ()>>>>;
+    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<CreateModelStatus, ()>>>>;
 
 impl Ollama {
     #[cfg(feature = "stream")]
@@ -55,7 +53,7 @@ impl Ollama {
             }
         }));
 
-        Ok(Pin::from(stream))
+        Ok(std::pin::Pin::from(stream))
     }
 
     /// Create a model with a single response, only the final status will be returned.

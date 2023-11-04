@@ -2,6 +2,7 @@ pub mod error;
 pub mod generation;
 pub mod models;
 
+#[derive(Debug, Clone)]
 pub struct Ollama {
     pub(crate) host: String,
     pub(crate) port: u16,

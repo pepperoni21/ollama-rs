@@ -1,4 +1,4 @@
-use std::fmt::{Debug, Display};
+use std::{fmt::{Debug, Display}, error::Error};
 
 pub type Result<T> = std::result::Result<T, OllamaError>;
 
@@ -19,6 +19,8 @@ impl Debug for OllamaError {
             .finish()
     }
 }
+
+impl Error for OllamaError {}
 
 impl From<String> for OllamaError {
     fn from(message: String) -> Self {

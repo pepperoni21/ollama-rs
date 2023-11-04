@@ -1,5 +1,3 @@
-use std::pin::Pin;
-
 use serde::{Deserialize, Serialize};
 
 use crate::Ollama;
@@ -10,7 +8,7 @@ pub mod request;
 
 #[cfg(feature = "stream")]
 pub type GenerationResponseStream =
-    Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponse, ()>>>>;
+    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponse, ()>>>>;
 
 impl Ollama {
     #[cfg(feature = "stream")]
@@ -56,7 +54,7 @@ impl Ollama {
             }
         }));
 
-        Ok(Pin::from(stream))
+        Ok(std::pin::Pin::from(stream))
     }
 
     /// Completion generation with a single response.
