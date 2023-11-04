@@ -1,6 +1,6 @@
 use std::pin::Pin;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::Ollama;
 
@@ -9,13 +9,17 @@ use request::GenerationRequest;
 pub mod request;
 
 #[cfg(feature = "stream")]
-pub type GenerationResponseStream = Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponse, ()>>>>;
+pub type GenerationResponseStream =
+    Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponse, ()>>>>;
 
 impl Ollama {
     #[cfg(feature = "stream")]
     /// Completion generation with streaming.
     /// Returns a stream of `GenerationResponse` objects
-    pub async fn generate_stream(&self, request: GenerationRequest) -> crate::error::Result<GenerationResponseStream> {
+    pub async fn generate_stream(
+        &self,
+        request: GenerationRequest,
+    ) -> crate::error::Result<GenerationResponseStream> {
         use tokio_stream::StreamExt;
 
         let mut request = request;
@@ -23,7 +27,9 @@ impl Ollama {
 
         let uri = format!("{}/api/generate", self.uri());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
-        let res = self.reqwest_client.post(uri)
+        let res = self
+            .reqwest_client
+            .post(uri)
             .body(serialized)
             .send()
             .await
@@ -33,22 +39,20 @@ impl Ollama {
             return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
         }
 
-        let stream = Box::new(res.bytes_stream().map(|res| {
-            match res {
-                Ok(bytes) => {
-                    let res = serde_json::from_slice::<GenerationResponse>(&bytes);
-                    match res {
-                        Ok(res) => Ok(res),
-                        Err(e) => {
-                            eprintln!("Failed to deserialize response: {}", e);
-                            Err(())
-                        }
+        let stream = Box::new(res.bytes_stream().map(|res| match res {
+            Ok(bytes) => {
+                let res = serde_json::from_slice::<GenerationResponse>(&bytes);
+                match res {
+                    Ok(res) => Ok(res),
+                    Err(e) => {
+                        eprintln!("Failed to deserialize response: {}", e);
+                        Err(())
                     }
                 }
-                Err(e) => {
-                    eprintln!("Failed to read response: {}", e);
-                    Err(())
-                }
+            }
+            Err(e) => {
+                eprintln!("Failed to read response: {}", e);
+                Err(())
             }
         }));
 
@@ -62,7 +66,9 @@ impl Ollama {
 
         let uri = format!("{}/api/generate", self.uri());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
-        let res = self.reqwest_client.post(uri)
+        let res = self
+            .reqwest_client
+            .post(uri)
             .body(serialized)
             .send()
             .await

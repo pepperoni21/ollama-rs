@@ -7,8 +7,11 @@ use super::ModelInfo;
 impl Ollama {
     pub async fn show_model_info(&self, model_name: String) -> crate::error::Result<ModelInfo> {
         let uri = format!("{}/api/show", self.uri());
-        let serialized = serde_json::to_string(&ModelInfoRequest { name: model_name }).map_err(|e| e.to_string())?;
-        let res = self.reqwest_client.post(uri)
+        let serialized = serde_json::to_string(&ModelInfoRequest { name: model_name })
+            .map_err(|e| e.to_string())?;
+        let res = self
+            .reqwest_client
+            .post(uri)
             .body(serialized)
             .send()
             .await

@@ -4,7 +4,11 @@ use crate::Ollama;
 
 impl Ollama {
     /// Copy a model. Creates a model with another name from an existing model.
-    pub async fn copy_model(&self, source: String, destination: String) -> crate::error::Result<()> {
+    pub async fn copy_model(
+        &self,
+        source: String,
+        destination: String,
+    ) -> crate::error::Result<()> {
         let request = CopyModelRequest {
             source,
             destination,
@@ -12,12 +16,14 @@ impl Ollama {
 
         let uri = format!("{}/api/copy", self.uri());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
-        let res = self.reqwest_client.post(uri)
+        let res = self
+            .reqwest_client
+            .post(uri)
             .body(serialized)
             .send()
             .await
             .map_err(|e| e.to_string())?;
-        
+
         if res.status().is_success() {
             Ok(())
         } else {

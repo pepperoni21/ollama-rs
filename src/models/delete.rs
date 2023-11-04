@@ -5,13 +5,13 @@ use crate::Ollama;
 impl Ollama {
     /// Delete a model and its data.
     pub async fn delete_model(&self, model_name: String) -> crate::error::Result<()> {
-        let request = DeleteModelRequest {
-            model_name,
-        };
+        let request = DeleteModelRequest { model_name };
 
         let uri = format!("{}/api/delete", self.uri());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
-        let res = self.reqwest_client.delete(uri)
+        let res = self
+            .reqwest_client
+            .delete(uri)
             .body(serialized)
             .send()
             .await

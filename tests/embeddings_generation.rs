@@ -6,7 +6,10 @@ async fn test_embeddings_generation() {
 
     let prompt = "Why is the sky blue?".to_string();
 
-    let res = ollama.generate_embeddings("llama2:latest".to_string(), prompt, None).await.unwrap();
+    let res = ollama
+        .generate_embeddings("llama2:latest".to_string(), prompt, None)
+        .await
+        .unwrap();
 
     dbg!(res);
 }

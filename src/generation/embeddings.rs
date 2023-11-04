@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::Ollama;
 
@@ -8,16 +8,23 @@ impl Ollama {
     /// Generate embeddings from a model
     /// * `model_name` - Name of model to generate embeddings from
     /// * `prompt` - Prompt to generate embeddings for
-    pub async fn generate_embeddings(&self, model_name: String, prompt: String, options: Option<GenerationOptions>) -> crate::error::Result<GenerateEmbeddingsResponse> {
+    pub async fn generate_embeddings(
+        &self,
+        model_name: String,
+        prompt: String,
+        options: Option<GenerationOptions>,
+    ) -> crate::error::Result<GenerateEmbeddingsResponse> {
         let request = GenerateEmbeddingsRequest {
             model_name,
             prompt,
-            options
+            options,
         };
 
         let uri = format!("{}/api/embeddings", self.uri());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
-        let res = self.reqwest_client.post(uri)
+        let res = self
+            .reqwest_client
+            .post(uri)
             .body(serialized)
             .send()
             .await
@@ -28,7 +35,8 @@ impl Ollama {
         }
 
         let res = res.bytes().await.map_err(|e| e.to_string())?;
-        let res = serde_json::from_slice::<GenerateEmbeddingsResponse>(&res).map_err(|e| e.to_string())?;
+        let res = serde_json::from_slice::<GenerateEmbeddingsResponse>(&res)
+            .map_err(|e| e.to_string())?;
 
         Ok(res)
     }
@@ -39,12 +47,12 @@ struct GenerateEmbeddingsRequest {
     #[serde(rename = "model")]
     model_name: String,
     prompt: String,
-    options: Option<GenerationOptions>
+    options: Option<GenerationOptions>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct GenerateEmbeddingsResponse {
     #[serde(rename = "embedding")]
     #[allow(dead_code)]
-    embeddings: Vec<f64>
+    embeddings: Vec<f64>,
 }

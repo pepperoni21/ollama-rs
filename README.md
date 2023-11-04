@@ -32,6 +32,7 @@ if let Ok(res) = res {
 ```
 **OUTPUTS:** *The sky appears blue because of a phenomenon called Rayleigh scattering...*
 ### Completion generation (streaming)
+*Requires the `stream` feature.*
 ```rust
 let model = "llama2:latest".to_string();
 let prompt = "Why is the sky blue?".to_string();
@@ -63,6 +64,7 @@ let res = ollama.create_model("model".into(), "/tmp/Modelfile.example".into()).a
 ```
 *Returns a `CreateModelStatus` struct representing the final status of the model creation.*
 ### Create a model (streaming)
+*Requires the `stream` feature.*
 ```rust
 let mut res = ollama.create_model_stream("model".into(), "/tmp/Modelfile.example".into()).await.unwrap();
 

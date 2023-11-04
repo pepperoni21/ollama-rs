@@ -3,5 +3,8 @@
 async fn test_copy_model() {
     let ollama = ollama_rs::Ollama::default();
 
-    let _ = ollama.copy_model("mario".into(), "mario_copy".into()).await.unwrap();
+    let _ = ollama
+        .copy_model("mario".into(), "mario_copy".into())
+        .await
+        .unwrap();
 }

@@ -13,7 +13,7 @@ pub struct GenerationRequest {
     pub system: Option<String>,
     pub template: Option<String>,
     pub context: Option<GenerationContext>,
-    pub(crate) stream: bool
+    pub(crate) stream: bool,
 }
 
 impl GenerationRequest {

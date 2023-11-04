@@ -1,6 +1,6 @@
-pub mod models;
-pub mod generation;
 pub mod error;
+pub mod generation;
+pub mod models;
 
 pub struct Ollama {
     pub(crate) host: String,

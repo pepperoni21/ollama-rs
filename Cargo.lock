@@ -471,6 +471,7 @@ dependencies = [
 name = "ollama-rs"
 version = "0.1.0"
 dependencies = [
+ "ollama-rs",
  "reqwest",
  "serde",
  "serde_json",
