@@ -1,7 +1,10 @@
-use std::io::stdin;
-
-use ollama_rs::{Ollama, generation::completion::{GenerationContext, request::GenerationRequest, GenerationResponseStream}};
-use tokio::io::{stdout, AsyncWriteExt,};
+use ollama_rs::{
+    generation::completion::{
+        request::GenerationRequest, GenerationContext, GenerationResponseStream,
+    },
+    Ollama,
+};
+use tokio::io::{stdout, AsyncWriteExt};
 use tokio_stream::StreamExt;
 
 #[tokio::main]
@@ -9,7 +12,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ollama = Ollama::default();
 
     let mut stdout = stdout();
-    let stdin = stdin();
 
     let mut context: Option<GenerationContext> = None;
 
@@ -18,8 +20,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         stdout.flush().await?;
 
         let mut input = String::new();
-        stdin.read_line(&mut input)?;
-        
+        std::io::stdin().read_line(&mut input)?;
+
         let input = input.trim_end();
         if input.eq_ignore_ascii_case("exit") {
             break;

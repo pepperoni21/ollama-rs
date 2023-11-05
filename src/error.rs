@@ -1,4 +1,7 @@
-use std::{fmt::{Debug, Display}, error::Error};
+use std::{
+    error::Error,
+    fmt::{Debug, Display},
+};
 
 pub type Result<T> = std::result::Result<T, OllamaError>;
 
