@@ -14,7 +14,7 @@ ollama-rs = { git = "https://github.com/pepperoni21/ollama-rs" }
 let ollama = Ollama::default();
 
 // For custom values:
-let ollama = Ollama::new("localhost".to_string(), 11434);
+let ollama = Ollama::new("http://localhost".to_string(), 11434);
 ```
 
 ## Usage
