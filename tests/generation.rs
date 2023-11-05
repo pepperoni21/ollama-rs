@@ -8,7 +8,7 @@ use tokio::io::AsyncWriteExt;
 use tokio_stream::StreamExt;
 
 #[allow(dead_code)]
-const PROMPT: &'static str = "Why is the sky blue?";
+const PROMPT: &str = "Why is the sky blue?";
 
 #[tokio::test]
 async fn test_generation_stream() {

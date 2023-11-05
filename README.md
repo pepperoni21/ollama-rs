@@ -103,5 +103,5 @@ let res = ollama.generate_embeddings("llama2:latest".to_string(), prompt, None).
 - [X] Delete a model
 - [x] Generate embeddings
 - [x] Add missing examples in README.md
+- [x] Pull a model
 - [ ] Push a model
-- [ ] Pull a model
