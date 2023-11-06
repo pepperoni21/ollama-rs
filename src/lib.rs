@@ -20,14 +20,14 @@ impl Ollama {
 
     /// Returns the http URI of the Ollama instance
     pub fn uri(&self) -> String {
-        format!("http://{}:{}", self.host, self.port)
+        format!("{}:{}", self.host, self.port)
     }
 }
 
 impl Default for Ollama {
     fn default() -> Self {
         Self {
-            host: "127.0.0.1".to_string(),
+            host: "http://127.0.0.1".to_string(),
             port: 11434,
             reqwest_client: reqwest::Client::new(),
         }
