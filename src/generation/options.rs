@@ -1,7 +1,6 @@
 use serde::Serialize;
 
-#[derive(Debug, Clone, Serialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct GenerationOptions {
     pub(super) mirostat: Option<u8>,
     pub(super) mirostat_eta: Option<f32>,
@@ -20,8 +19,6 @@ pub struct GenerationOptions {
     pub(super) top_k: Option<u32>,
     pub(super) top_p: Option<f32>,
 }
-
-
 
 impl GenerationOptions {
     pub fn mirostat(mut self, mirostat: u8) -> Self {

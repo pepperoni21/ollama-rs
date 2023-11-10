@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::generation::options::GenerationOptions;
 
@@ -13,11 +13,16 @@ pub struct GenerationRequest {
     pub system: Option<String>,
     pub template: Option<String>,
     pub context: Option<GenerationContext>,
+    pub format: Option<FormatEnum>,
     pub(crate) stream: bool,
 }
-
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "lowercase")]
+pub enum FormatEnum {
+    Json,
+}
 impl GenerationRequest {
-    pub fn new(model_name: String, prompt: String) -> Self {
+    pub fn new(model_name: String, prompt: String, format: Option<FormatEnum>) -> Self {
         Self {
             model_name,
             prompt,
@@ -25,6 +30,8 @@ impl GenerationRequest {
             system: None,
             template: None,
             context: None,
+            //format value for now just json
+            format: format,
             // Stream value will be overwritten by Ollama::generate_stream() and Ollama::generate() methods
             stream: false,
         }

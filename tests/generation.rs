@@ -1,7 +1,7 @@
 #![allow(unused_imports)]
 
 use ollama_rs::{
-    generation::completion::{request::GenerationRequest, GenerationResponseStream},
+    generation::completion::{request::{GenerationRequest, FormatEnum}, GenerationResponseStream},
     Ollama,
 };
 use tokio::io::AsyncWriteExt;
@@ -18,6 +18,7 @@ async fn test_generation_stream() {
         .generate_stream(GenerationRequest::new(
             "llama2:latest".to_string(),
             PROMPT.into(),
+            None
         ))
         .await
         .unwrap();
@@ -42,6 +43,21 @@ async fn test_generation() {
         .generate(GenerationRequest::new(
             "llama2:latest".to_string(),
             PROMPT.into(),
+            None
+        ))
+        .await
+        .unwrap();
+}
+#[tokio::test]
+async fn test_generation_json() {
+    let ollama = Ollama::default();
+
+    let _ = ollama
+        .generate_json(GenerationRequest::new(
+            "llama2:latest".to_string(),
+            PROMPT.into(),
+            Some(FormatEnum::Json)
+            
         ))
         .await
         .unwrap();

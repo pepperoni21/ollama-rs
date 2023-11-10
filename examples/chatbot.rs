@@ -1,6 +1,6 @@
 use ollama_rs::{
     generation::completion::{
-        request::GenerationRequest, GenerationContext, GenerationResponseStream,
+        request::{GenerationRequest, FormatEnum}, GenerationContext, GenerationResponseStream,
     },
     Ollama,
 };
@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             break;
         }
 
-        let mut request = GenerationRequest::new("llama2:latest".into(), input.to_string());
+        let mut request = GenerationRequest::new("llama2:latest".into(), input.to_string(), None);
         if let Some(context) = context.clone() {
             request = request.context(context);
         }
