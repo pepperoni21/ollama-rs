@@ -106,4 +106,7 @@ struct PullModelRequest {
 pub struct PullModelStatus {
     #[serde(rename = "status")]
     pub message: String,
+    pub digest: Option<String>,
+    pub total: Option<u64>,
+    pub completed: Option<u64>,
 }
