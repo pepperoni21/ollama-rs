@@ -53,7 +53,7 @@ async fn test_generation_json() {
     let ollama = Ollama::default();
 
     let _ = ollama
-        .generate_json(GenerationRequest::new(
+        .generate(GenerationRequest::new(
             "llama2:latest".to_string(),
             PROMPT.into(),
             Some(FormatEnum::Json)
