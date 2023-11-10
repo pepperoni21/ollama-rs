@@ -91,6 +91,7 @@ impl Ollama {
 
 #[derive(Serialize)]
 struct CreateModelRequest {
+    #[serde(rename = "name")]
     model_name: String,
     path: String,
     stream: bool,
