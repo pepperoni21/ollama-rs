@@ -17,8 +17,7 @@ async fn test_generation_stream() {
     let mut res: GenerationResponseStream = ollama
         .generate_stream(GenerationRequest::new(
             "llama2:latest".to_string(),
-            PROMPT.into(),
-            None
+            PROMPT.into()
         ))
         .await
         .unwrap();
@@ -42,22 +41,7 @@ async fn test_generation() {
     let _ = ollama
         .generate(GenerationRequest::new(
             "llama2:latest".to_string(),
-            PROMPT.into(),
-            None
-        ))
-        .await
-        .unwrap();
-}
-#[tokio::test]
-async fn test_generation_json() {
-    let ollama = Ollama::default();
-
-    let _ = ollama
-        .generate(GenerationRequest::new(
-            "llama2:latest".to_string(),
-            PROMPT.into(),
-            Some(FormatEnum::Json)
-            
+            PROMPT.into()
         ))
         .await
         .unwrap();

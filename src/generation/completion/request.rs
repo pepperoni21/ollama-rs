@@ -22,7 +22,7 @@ pub enum FormatEnum {
     Json,
 }
 impl GenerationRequest {
-    pub fn new(model_name: String, prompt: String, format: Option<FormatEnum>) -> Self {
+    pub fn new(model_name: String, prompt: String) -> Self {
         Self {
             model_name,
             prompt,
@@ -30,8 +30,8 @@ impl GenerationRequest {
             system: None,
             template: None,
             context: None,
-            //format value for now just json
-            format: format,
+            // The format to return a response in. Currently the only accepted value is `json`
+            format: None,
             // Stream value will be overwritten by Ollama::generate_stream() and Ollama::generate() methods
             stream: false,
         }
