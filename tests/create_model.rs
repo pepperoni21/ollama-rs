@@ -13,10 +13,14 @@ async fn test_create_model_stream() {
 
     let mut done = false;
     while let Some(res) = res.next().await {
-        let res = res.unwrap();
-        dbg!(&res.message);
-        if res.message.eq("success") {
-            done = true;
+        match res {
+            Ok(res) => {
+                dbg!(&res.message);
+                if res.message.eq("success") {
+                    done = true;
+                }
+            }
+            Err(e) => panic!("{:?}", e),
         }
     }
 

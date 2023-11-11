@@ -42,7 +42,6 @@ let prompt = "Why is the sky blue?".to_string();
 let mut stream = ollama.generate_stream(GenerationRequest::new(model, prompt)).await.unwrap();
 
 let mut stdout = tokio::io::stdout();
-// Requires tokio_stream
 while let Some(res) = stream.next().await {
     let res = res.unwrap();
     stdout.write(res.response.as_bytes()).await.unwrap();
@@ -90,20 +89,3 @@ let prompt = "Why is the sky blue?".to_string();
 let res = ollama.generate_embeddings("llama2:latest".to_string(), prompt, None).await.unwrap();
 ```
 *Returns a `GenerateEmbeddingsResponse` struct containing the embeddings (a vector of floats).*
-
-## TODO
-- [x] Completion generation (single response)
-- [x] Completion generation (streaming)
-- [x] Add usage for completion generation
-- [x] Better error handling
-- [x] List local models
-- [x] Show model info
-- [x] Add stream feature
-- [x] Improve documentation
-- [x] Create a model
-- [x] Copy a model
-- [X] Delete a model
-- [x] Generate embeddings
-- [x] Add missing examples in README.md
-- [x] Pull a model
-- [ ] Push a model

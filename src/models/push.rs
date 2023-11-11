@@ -1,32 +1,31 @@
 use serde::{Deserialize, Serialize};
 
-use crate::Ollama;
+use crate::{error::OllamaError, Ollama};
 
 #[cfg(feature = "stream")]
-pub type PullModelStatusStream =
-    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = crate::error::Result<PullModelStatus>>>>;
+pub type PushModelStatusStream =
+    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = crate::error::Result<PushModelStatus>>>>;
 
 impl Ollama {
     #[cfg(feature = "stream")]
-    /// Pull a model with streaming, meaning that each new status will be streamed.
-    /// - `model_name` - The name of the model to pull.
-    /// - `allow_insecure` - Allow insecure connections to the library. Only use this if you are pulling from your own library during development.
-    pub async fn pull_model_stream(
+    /// Upload a model to a model library. Requires registering for ollama.ai and adding a public key first.
+    /// Push a model with streaming, meaning that each new status will be streamed.
+    /// - `model_name` - The name of the model to push in the form of `<namespace>/<model>:<tag>`.
+    /// - `allow_insecure` - Allow insecure connections to the library. Only use this if you are pushing to your library during development.
+    pub async fn push_model_stream(
         &self,
         model_name: String,
         allow_insecure: bool,
-    ) -> crate::error::Result<PullModelStatusStream> {
+    ) -> crate::error::Result<PushModelStatusStream> {
         use tokio_stream::StreamExt;
 
-        use crate::error::OllamaError;
-
-        let request = PullModelRequest {
+        let request = PushModelRequest {
             model_name,
             allow_insecure,
             stream: true,
         };
 
-        let uri = format!("{}/api/pull", self.uri());
+        let uri = format!("{}/api/push", self.uri());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
         let res = self
             .reqwest_client
@@ -42,7 +41,7 @@ impl Ollama {
 
         let stream = Box::new(res.bytes_stream().map(|res| match res {
             Ok(bytes) => {
-                let res = serde_json::from_slice::<PullModelStatus>(&bytes);
+                let res = serde_json::from_slice::<PushModelStatus>(&bytes);
                 match res {
                     Ok(res) => Ok(res),
                     Err(e) => {
@@ -63,21 +62,22 @@ impl Ollama {
         Ok(std::pin::Pin::from(stream))
     }
 
-    /// Pull a model with a single response, only the final status will be returned.
-    /// - `model_name` - The name of the model to pull.
-    /// - `allow_insecure` - Allow insecure connections to the library. Only use this if you are pulling from your own library during development.
-    pub async fn pull_model(
+    /// Upload a model to a model library. Requires registering for ollama.ai and adding a public key first.
+    /// Push a model with a single response, only the final status will be returned.
+    /// - `model_name` - The name of the model to push in the form of `<namespace>/<model>:<tag>`.
+    /// - `allow_insecure` - Allow insecure connections to the library. Only use this if you are pushing to your library during development.
+    pub async fn push_model(
         &self,
         model_name: String,
         allow_insecure: bool,
-    ) -> crate::error::Result<PullModelStatus> {
-        let request = PullModelRequest {
+    ) -> crate::error::Result<PushModelStatus> {
+        let request = PushModelRequest {
             model_name,
             allow_insecure,
             stream: false,
         };
 
-        let uri = format!("{}/api/pull", self.uri());
+        let uri = format!("{}/api/push", self.uri());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
         let res = self
             .reqwest_client
@@ -92,14 +92,14 @@ impl Ollama {
         }
 
         let res = res.bytes().await.map_err(|e| e.to_string())?;
-        let res = serde_json::from_slice::<PullModelStatus>(&res).map_err(|e| e.to_string())?;
+        let res = serde_json::from_slice::<PushModelStatus>(&res).map_err(|e| e.to_string())?;
 
         Ok(res)
     }
 }
 
 #[derive(Debug, Clone, Serialize)]
-struct PullModelRequest {
+struct PushModelRequest {
     #[serde(rename = "name")]
     model_name: String,
     #[serde(rename = "insecure")]
@@ -108,10 +108,9 @@ struct PullModelRequest {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct PullModelStatus {
+pub struct PushModelStatus {
     #[serde(rename = "status")]
     pub message: String,
     pub digest: Option<String>,
     pub total: Option<u64>,
-    pub completed: Option<u64>,
 }

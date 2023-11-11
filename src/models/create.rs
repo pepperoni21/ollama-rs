@@ -4,7 +4,7 @@ use crate::Ollama;
 
 #[cfg(feature = "stream")]
 pub type CreateModelStatusStream =
-    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<CreateModelStatus, ()>>>>;
+    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = crate::error::Result<CreateModelStatus>>>>;
 
 impl Ollama {
     #[cfg(feature = "stream")]
@@ -15,6 +15,8 @@ impl Ollama {
         path: String,
     ) -> crate::error::Result<CreateModelStatusStream> {
         use tokio_stream::StreamExt;
+
+        use crate::error::OllamaError;
 
         let request = CreateModelRequest {
             model_name,
@@ -42,15 +44,18 @@ impl Ollama {
                 match res {
                     Ok(res) => Ok(res),
                     Err(e) => {
-                        eprintln!("Failed to deserialize response: {}", e);
-                        Err(())
+                        let err = serde_json::from_slice::<crate::error::OllamaError>(&bytes);
+                        match err {
+                            Ok(err) => Err(err),
+                            Err(_) => Err(OllamaError::from(format!(
+                                "Failed to deserialize response: {}",
+                                e
+                            ))),
+                        }
                     }
                 }
             }
-            Err(e) => {
-                eprintln!("Failed to read response: {}", e);
-                Err(())
-            }
+            Err(e) => Err(OllamaError::from(format!("Failed to read response: {}", e))),
         }));
 
         Ok(std::pin::Pin::from(stream))
