@@ -1,7 +1,6 @@
 use ollama_rs::{
     generation::completion::{
-        request::{GenerationRequest},
-        GenerationContext, GenerationResponseStream,
+        request::GenerationRequest, GenerationContext, GenerationResponseStream,
     },
     Ollama,
 };
