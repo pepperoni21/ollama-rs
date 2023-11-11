@@ -5,10 +5,11 @@ use crate::Ollama;
 use super::ModelInfo;
 
 impl Ollama {
+    /// Show details about a model including modelfile, template, parameters, license, and system prompt.
     pub async fn show_model_info(&self, model_name: String) -> crate::error::Result<ModelInfo> {
         let uri = format!("{}/api/show", self.uri());
-        let serialized = serde_json::to_string(&ModelInfoRequest { name: model_name })
-            .map_err(|e| e.to_string())?;
+        let serialized =
+            serde_json::to_string(&ModelInfoRequest { model_name }).map_err(|e| e.to_string())?;
         let res = self
             .reqwest_client
             .post(uri)
@@ -28,7 +29,9 @@ impl Ollama {
     }
 }
 
+/// A show model info request to Ollama.
 #[derive(Serialize)]
 struct ModelInfoRequest {
-    name: String,
+    #[serde(rename = "name")]
+    model_name: String,
 }

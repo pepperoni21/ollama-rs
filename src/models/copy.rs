@@ -32,6 +32,7 @@ impl Ollama {
     }
 }
 
+/// A copy model request to Ollama.
 #[derive(Serialize)]
 struct CopyModelRequest {
     source: String,

@@ -469,7 +469,7 @@ dependencies = [
 
 [[package]]
 name = "ollama-rs"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "ollama-rs",
  "reqwest",

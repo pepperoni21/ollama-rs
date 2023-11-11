@@ -25,6 +25,7 @@ impl Ollama {
     }
 }
 
+/// A delete model request to Ollama.
 #[derive(Serialize)]
 struct DeleteModelRequest {
     #[serde(rename = "name")]

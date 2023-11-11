@@ -2,10 +2,10 @@ use serde::Deserialize;
 
 use crate::Ollama;
 
-use super::Model;
+use super::LocalModel;
 
 impl Ollama {
-    pub async fn list_local_models(&self) -> crate::error::Result<Vec<Model>> {
+    pub async fn list_local_models(&self) -> crate::error::Result<Vec<LocalModel>> {
         let uri = format!("{}/api/tags", self.uri());
         let res = self
             .reqwest_client
@@ -26,7 +26,8 @@ impl Ollama {
     }
 }
 
+/// A response from Ollama containing a list of local models.
 #[derive(Debug, Clone, Deserialize)]
 struct ListLocalModelsResponse {
-    models: Vec<Model>,
+    models: Vec<LocalModel>,
 }

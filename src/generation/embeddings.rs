@@ -42,6 +42,7 @@ impl Ollama {
     }
 }
 
+/// An embeddings generation request to Ollama.
 #[derive(Debug, Serialize)]
 struct GenerateEmbeddingsRequest {
     #[serde(rename = "model")]
@@ -50,6 +51,7 @@ struct GenerateEmbeddingsRequest {
     options: Option<GenerationOptions>,
 }
 
+/// An embeddings generation response from Ollama.
 #[derive(Debug, Deserialize, Clone)]
 pub struct GenerateEmbeddingsResponse {
     #[serde(rename = "embedding")]

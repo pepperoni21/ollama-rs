@@ -25,6 +25,7 @@ impl Ollama {
 }
 
 impl Default for Ollama {
+    /// Returns a default Ollama instance with the host set to `http://127.0.0.1:11434`.
     fn default() -> Self {
         Self {
             host: "http://127.0.0.1".to_string(),

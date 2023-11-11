@@ -7,6 +7,7 @@ use request::GenerationRequest;
 pub mod request;
 
 #[cfg(feature = "stream")]
+/// A stream of `GenerationResponse` objects
 pub type GenerationResponseStream =
     std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponse, ()>>>>;
 
@@ -58,6 +59,7 @@ impl Ollama {
     }
 
     /// Completion generation with a single response.
+    /// Returns a single `GenerationResponse` object
     pub async fn generate(&self, request: GenerationRequest) -> Result<GenerationResponse, String> {
         let mut request = request;
         request.stream = false;

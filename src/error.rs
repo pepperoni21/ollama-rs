@@ -5,8 +5,10 @@ use std::{
 
 use serde::Deserialize;
 
+/// A result type for ollama-rs.
 pub type Result<T> = std::result::Result<T, OllamaError>;
 
+/// An error type for ollama-rs.
 #[derive(Deserialize)]
 pub struct OllamaError {
     #[serde(rename = "error")]

@@ -4,6 +4,7 @@ use crate::generation::options::GenerationOptions;
 
 use super::GenerationContext;
 
+/// A generation request to Ollama.
 #[derive(Debug, Clone, Serialize)]
 pub struct GenerationRequest {
     #[serde(rename = "model")]
@@ -17,6 +18,7 @@ pub struct GenerationRequest {
     pub(crate) stream: bool,
 }
 
+/// The format to return a response in. Currently the only accepted value is `json`
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum FormatEnum {

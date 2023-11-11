@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::Ollama;
 
+/// A stream of `CreateModelStatus` objects
 #[cfg(feature = "stream")]
 pub type CreateModelStatusStream =
     std::pin::Pin<Box<dyn tokio_stream::Stream<Item = crate::error::Result<CreateModelStatus>>>>;
@@ -94,6 +95,7 @@ impl Ollama {
     }
 }
 
+/// A create model request to Ollama.
 #[derive(Serialize)]
 struct CreateModelRequest {
     #[serde(rename = "name")]
@@ -102,6 +104,7 @@ struct CreateModelRequest {
     stream: bool,
 }
 
+/// A create model status response from Ollama.
 #[derive(Deserialize, Debug)]
 pub struct CreateModelStatus {
     #[serde(rename = "status")]
