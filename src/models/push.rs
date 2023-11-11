@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{error::OllamaError, Ollama};
+use crate::Ollama;
 
 #[cfg(feature = "stream")]
 pub type PushModelStatusStream =
@@ -17,6 +17,7 @@ impl Ollama {
         model_name: String,
         allow_insecure: bool,
     ) -> crate::error::Result<PushModelStatusStream> {
+        use crate::error::OllamaError;
         use tokio_stream::StreamExt;
 
         let request = PushModelRequest {
