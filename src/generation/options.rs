@@ -58,7 +58,7 @@ impl GenerationOptions {
         self
     }
 
-    /// 	Sets the number of threads to use during computation. By default, Ollama will detect this for optimal performance. It is recommended to set this value to the number of physical CPU cores your system has (as opposed to the logical number of cores).
+    /// Sets the number of threads to use during computation. By default, Ollama will detect this for optimal performance. It is recommended to set this value to the number of physical CPU cores your system has (as opposed to the logical number of cores).
     pub fn num_thread(mut self, num_thread: u32) -> Self {
         self.num_thread = Some(num_thread);
         self
