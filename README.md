@@ -6,7 +6,7 @@ It was made following the [Ollama API](https://github.com/jmorganca/ollama/blob/
 ### Add ollama-rs to your Cargo.toml
 ```toml
 [dependencies]
-ollama-rs = "0.1.1"
+ollama-rs = "0.1.2"
 ```
 ### Initialize Ollama
 ```rust
