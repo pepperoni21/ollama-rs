@@ -1,6 +1,6 @@
 [package]
 name = "ollama-rs"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 license-file = "LICENSE.md"
 description = "A Rust library for interacting with the Ollama API"
