@@ -1,4 +1,4 @@
-use ollama_rs::Ollama;
+use ollama_rs::{Ollama, models::create::CreateModelRequest};
 use tokio_stream::StreamExt;
 
 #[tokio::test]
@@ -7,7 +7,7 @@ async fn test_create_model_stream() {
     let ollama = Ollama::default();
 
     let mut res = ollama
-        .create_model_stream("model".into(), "/tmp/Modelfile.example".into())
+        .create_model_stream(CreateModelRequest::path("model".into(), "/tmp/Modelfile.example".into()))
         .await
         .unwrap();
 
@@ -33,7 +33,7 @@ async fn test_create_model() {
     let ollama = Ollama::default();
 
     let res = ollama
-        .create_model("model".into(), "/tmp/Modelfile.example".into())
+        .create_model(CreateModelRequest::path("model".into(), "/tmp/Modelfile.example".into()))
         .await
         .unwrap();
 

@@ -61,13 +61,13 @@ let res = ollama.show_model_info("llama2:latest".to_string()).await.unwrap();
 *Returns a `ModelInfo` struct.*
 ### Create a model
 ```rust
-let res = ollama.create_model("model".into(), "/tmp/Modelfile.example".into()).await.unwrap();
+let res = ollama.create_model(CreateModelRequest::path("model".into(), "/tmp/Modelfile.example".into())).await.unwrap();
 ```
 *Returns a `CreateModelStatus` struct representing the final status of the model creation.*
 ### Create a model (streaming)
 *Requires the `stream` feature.*
 ```rust
-let mut res = ollama.create_model_stream("model".into(), "/tmp/Modelfile.example".into()).await.unwrap();
+let mut res = ollama.create_model_stream(CreateModelRequest::path("model".into(), "/tmp/Modelfile.example".into())).await.unwrap();
 
 while let Some(res) = res.next().await {
     let res = res.unwrap();
@@ -81,7 +81,7 @@ let _ = ollama.copy_model("mario".into(), "mario_copy".into()).await.unwrap();
 ```
 ### Delete a model
 ```rust
-ollama.delete_model("mario_copy".into()).await.unwrap();
+let _ = ollama.delete_model("mario_copy".into()).await.unwrap();
 ```
 ### Generate embeddings
 ```rust
