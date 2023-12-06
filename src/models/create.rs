@@ -12,18 +12,13 @@ impl Ollama {
     /// Create a model with streaming, meaning that each new status will be streamed.
     pub async fn create_model_stream(
         &self,
-        model_name: String,
-        path: String,
+        mut request: CreateModelRequest,
     ) -> crate::error::Result<CreateModelStatusStream> {
         use tokio_stream::StreamExt;
 
         use crate::error::OllamaError;
 
-        let request = CreateModelRequest {
-            model_name,
-            path,
-            stream: true,
-        };
+        request.stream = true;
 
         let uri = format!("{}/api/create", self.uri());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
@@ -65,15 +60,8 @@ impl Ollama {
     /// Create a model with a single response, only the final status will be returned.
     pub async fn create_model(
         &self,
-        model_name: String,
-        path: String,
+        request: CreateModelRequest,
     ) -> crate::error::Result<CreateModelStatus> {
-        let request = CreateModelRequest {
-            model_name,
-            path,
-            stream: false,
-        };
-
         let uri = format!("{}/api/create", self.uri());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
         let res = self
@@ -97,11 +85,34 @@ impl Ollama {
 
 /// A create model request to Ollama.
 #[derive(Serialize)]
-struct CreateModelRequest {
+pub struct CreateModelRequest {
     #[serde(rename = "name")]
     model_name: String,
-    path: String,
+    path: Option<String>,
+    modelfile: Option<String>,
     stream: bool,
+}
+
+impl CreateModelRequest {
+    /// Create a model described in the Modelfile at `path`.
+    pub fn path(model_name: String, path: String) -> Self {
+        Self {
+            model_name,
+            path: Some(path),
+            modelfile: None,
+            stream: false,
+        }
+    }
+
+    /// Create a model described by the Modelfile contents passed to `modelfile`.
+    pub fn modelfile(model_name: String, modelfile: String) -> Self {
+        Self {
+            model_name,
+            path: None,
+            modelfile: Some(modelfile),
+            stream: false,
+        }
+    }
 }
 
 /// A create model status response from Ollama.
