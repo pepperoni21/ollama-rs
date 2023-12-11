@@ -2,33 +2,29 @@ use serde::Serialize;
 
 use crate::generation::{format::FormatType, options::GenerationOptions};
 
-use super::GenerationContext;
+use super::ChatMessage;
 
-/// A generation request to Ollama.
+/// A chat message request to Ollama.
 #[derive(Debug, Clone, Serialize)]
-pub struct GenerationRequest {
+pub struct ChatMessageRequest {
     #[serde(rename = "model")]
     pub model_name: String,
-    pub prompt: String,
+    pub messages: Vec<ChatMessage>,
     pub options: Option<GenerationOptions>,
-    pub system: Option<String>,
     pub template: Option<String>,
-    pub context: Option<GenerationContext>,
     pub format: Option<FormatType>,
     pub(crate) stream: bool,
 }
 
-impl GenerationRequest {
-    pub fn new(model_name: String, prompt: String) -> Self {
+impl ChatMessageRequest {
+    pub fn new(model_name: String, messages: Vec<ChatMessage>) -> Self {
         Self {
             model_name,
-            prompt,
+            messages,
             options: None,
-            system: None,
             template: None,
-            context: None,
             format: None,
-            // Stream value will be overwritten by Ollama::generate_stream() and Ollama::generate() methods
+            // Stream value will be overwritten by Ollama::send_chat_messages_stream() and Ollama::send_chat_messages() methods
             stream: false,
         }
     }
@@ -39,21 +35,9 @@ impl GenerationRequest {
         self
     }
 
-    /// System prompt to (overrides what is defined in the Modelfile)
-    pub fn system(mut self, system: String) -> Self {
-        self.system = Some(system);
-        self
-    }
-
     /// The full prompt or prompt template (overrides what is defined in the Modelfile)
     pub fn template(mut self, template: String) -> Self {
         self.template = Some(template);
-        self
-    }
-
-    /// The context parameter returned from a previous request to /generate, this can be used to keep a short conversational memory
-    pub fn context(mut self, context: GenerationContext) -> Self {
-        self.context = Some(context);
         self
     }
 

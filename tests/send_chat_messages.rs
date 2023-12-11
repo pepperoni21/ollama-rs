@@ -1,23 +1,21 @@
-#![allow(unused_imports)]
-
 use ollama_rs::{
-    generation::completion::{request::GenerationRequest, GenerationResponseStream},
+    generation::chat::{request::ChatMessageRequest, ChatMessage},
     Ollama,
 };
-use tokio::io::AsyncWriteExt;
 use tokio_stream::StreamExt;
 
 #[allow(dead_code)]
 const PROMPT: &str = "Why is the sky blue?";
 
 #[tokio::test]
-async fn test_generation_stream() {
+async fn test_send_chat_messages_stream() {
     let ollama = Ollama::default();
 
-    let mut res: GenerationResponseStream = ollama
-        .generate_stream(GenerationRequest::new(
+    let messages = vec![ChatMessage::user(PROMPT.to_string())];
+    let mut res = ollama
+        .send_chat_messages_stream(ChatMessageRequest::new(
             "llama2:latest".to_string(),
-            PROMPT.into(),
+            messages,
         ))
         .await
         .unwrap();
@@ -36,15 +34,18 @@ async fn test_generation_stream() {
 }
 
 #[tokio::test]
-async fn test_generation() {
+async fn test_send_chat_messages() {
     let ollama = Ollama::default();
 
+    let messages = vec![ChatMessage::user(PROMPT.to_string())];
     let res = ollama
-        .generate(GenerationRequest::new(
+        .send_chat_messages(ChatMessageRequest::new(
             "llama2:latest".to_string(),
-            PROMPT.into(),
+            messages,
         ))
         .await
         .unwrap();
-    dbg!(res);
+    dbg!(&res);
+
+    assert!(res.done);
 }
