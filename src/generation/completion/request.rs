@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::generation::{format::FormatType, options::GenerationOptions};
+use crate::generation::{format::FormatType, images::Image, options::GenerationOptions};
 
 use super::GenerationContext;
 
@@ -10,6 +10,7 @@ pub struct GenerationRequest {
     #[serde(rename = "model")]
     pub model_name: String,
     pub prompt: String,
+    pub images: Vec<Image>,
     pub options: Option<GenerationOptions>,
     pub system: Option<String>,
     pub template: Option<String>,
@@ -23,6 +24,7 @@ impl GenerationRequest {
         Self {
             model_name,
             prompt,
+            images: Vec::new(),
             options: None,
             system: None,
             template: None,
@@ -31,6 +33,18 @@ impl GenerationRequest {
             // Stream value will be overwritten by Ollama::generate_stream() and Ollama::generate() methods
             stream: false,
         }
+    }
+
+    /// A list of images to be used with the prompt
+    pub fn images(mut self, images: Vec<Image>) -> Self {
+        self.images = images;
+        self
+    }
+
+    /// Add an image to be used with the prompt
+    pub fn add_image(mut self, image: Image) -> Self {
+        self.images.push(image);
+        self
     }
 
     /// Additional model parameters listed in the documentation for the Modelfile

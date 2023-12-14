@@ -1,7 +1,10 @@
 #![allow(unused_imports)]
-
+use base64::Engine;
 use ollama_rs::{
-    generation::completion::{request::GenerationRequest, GenerationResponseStream},
+    generation::{
+        completion::{request::GenerationRequest, GenerationResponseStream},
+        images::Image,
+    },
     Ollama,
 };
 use tokio::io::AsyncWriteExt;
@@ -44,6 +47,34 @@ async fn test_generation() {
             "llama2:latest".to_string(),
             PROMPT.into(),
         ))
+        .await
+        .unwrap();
+    dbg!(res);
+}
+
+const IMAGE_URL: &str = "https://images.pexels.com/photos/1054655/pexels-photo-1054655.jpeg";
+
+#[tokio::test]
+async fn test_generation_with_images() {
+    let ollama = Ollama::default();
+
+    let bytes = reqwest::get(IMAGE_URL)
+        .await
+        .unwrap()
+        .bytes()
+        .await
+        .unwrap();
+    let base64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+    let image = Image::from_base64(&base64);
+
+    let res = ollama
+        .generate(
+            GenerationRequest::new(
+                "llava:latest".to_string(),
+                "What can we see in this image?".to_string(),
+            )
+            .add_image(image),
+        )
         .await
         .unwrap();
     dbg!(res);

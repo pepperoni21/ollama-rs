@@ -1,5 +1,9 @@
+use base64::Engine;
 use ollama_rs::{
-    generation::chat::{request::ChatMessageRequest, ChatMessage},
+    generation::{
+        chat::{request::ChatMessageRequest, ChatMessage},
+        images::Image,
+    },
     Ollama,
 };
 use tokio_stream::StreamExt;
@@ -41,6 +45,35 @@ async fn test_send_chat_messages() {
     let res = ollama
         .send_chat_messages(ChatMessageRequest::new(
             "llama2:latest".to_string(),
+            messages,
+        ))
+        .await
+        .unwrap();
+    dbg!(&res);
+
+    assert!(res.done);
+}
+
+const IMAGE_URL: &str = "https://images.pexels.com/photos/1054655/pexels-photo-1054655.jpeg";
+
+#[tokio::test]
+async fn test_send_chat_messages_with_images() {
+    let ollama = Ollama::default();
+
+    let bytes = reqwest::get(IMAGE_URL)
+        .await
+        .unwrap()
+        .bytes()
+        .await
+        .unwrap();
+    let base64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+    let image = Image::from_base64(&base64);
+
+    let messages =
+        vec![ChatMessage::user("What can we see in this image?".to_string()).add_image(image)];
+    let res = ollama
+        .send_chat_messages(ChatMessageRequest::new(
+            "llava:latest".to_string(),
             messages,
         ))
         .await

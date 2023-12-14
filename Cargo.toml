@@ -24,3 +24,4 @@ rustls = ["reqwest/rustls-tls"]
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
 ollama-rs = { path = ".", features = ["stream"] }
+base64 = "0.21.5"
