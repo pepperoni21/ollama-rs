@@ -6,6 +6,8 @@ pub mod request;
 
 use request::ChatMessageRequest;
 
+use super::images::Image;
+
 #[cfg(feature = "stream")]
 /// A stream of `ChatMessageResponse` objects
 pub type ChatMessageResponseStream =
@@ -123,11 +125,16 @@ pub struct ChatMessageFinalResponseData {
 pub struct ChatMessage {
     pub role: MessageRole,
     pub content: String,
+    pub images: Option<Vec<Image>>,
 }
 
 impl ChatMessage {
     pub fn new(role: MessageRole, content: String) -> Self {
-        Self { role, content }
+        Self {
+            role,
+            content,
+            images: None,
+        }
     }
 
     pub fn user(content: String) -> Self {
@@ -140,6 +147,20 @@ impl ChatMessage {
 
     pub fn system(content: String) -> Self {
         Self::new(MessageRole::System, content)
+    }
+
+    pub fn with_images(mut self, images: Vec<Image>) -> Self {
+        self.images = Some(images);
+        self
+    }
+
+    pub fn add_image(mut self, image: Image) -> Self {
+        if let Some(images) = self.images.as_mut() {
+            images.push(image);
+        } else {
+            self.images = Some(vec![image]);
+        }
+        self
     }
 }
 

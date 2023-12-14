@@ -496,6 +496,7 @@ dependencies = [
 name = "ollama-rs"
 version = "0.1.4"
 dependencies = [
+ "base64",
  "ollama-rs",
  "reqwest",
  "serde",
