@@ -56,5 +56,5 @@ struct GenerateEmbeddingsRequest {
 pub struct GenerateEmbeddingsResponse {
     #[serde(rename = "embedding")]
     #[allow(dead_code)]
-    pub embeddings: Vec<f64>,
+    pub embeddings: Vec<Option<f64>>,
 }
