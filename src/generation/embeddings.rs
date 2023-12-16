@@ -35,7 +35,8 @@ impl Ollama {
         }
 
         let res = res.bytes().await.map_err(|e| e.to_string())?;
-        let res = serde_json::from_slice::<GenerateEmbeddingsResponse>(&res)
+        let res = String::from_utf8(res.to_vec()).map_err(|e| e.to_string())?;
+        let res = json5::from_str::<GenerateEmbeddingsResponse>(&res)
             .map_err(|e| e.to_string())?;
 
         Ok(res)
@@ -56,5 +57,5 @@ struct GenerateEmbeddingsRequest {
 pub struct GenerateEmbeddingsResponse {
     #[serde(rename = "embedding")]
     #[allow(dead_code)]
-    pub embeddings: Vec<Option<f64>>,
+    pub embeddings: Vec<f64>,
 }
