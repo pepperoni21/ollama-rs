@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::Ollama;
+use crate::{error::OllamaError, Ollama};
 
 use request::GenerationRequest;
 
@@ -9,7 +9,7 @@ pub mod request;
 #[cfg(feature = "stream")]
 /// A stream of `GenerationResponse` objects
 pub type GenerationResponseStream =
-    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponse, ()>>>>;
+    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponse, OllamaError>>>>;
 
 impl Ollama {
     #[cfg(feature = "stream")]
@@ -40,19 +40,14 @@ impl Ollama {
 
         let stream = Box::new(res.bytes_stream().map(|res| match res {
             Ok(bytes) => {
+                dbg!(
+                    "Trying to parse response: {:?}",
+                    String::from_utf8_lossy(&bytes)
+                );
                 let res = serde_json::from_slice::<GenerationResponse>(&bytes);
-                match res {
-                    Ok(res) => Ok(res),
-                    Err(e) => {
-                        eprintln!("Failed to deserialize response: {}", e);
-                        Err(())
-                    }
-                }
+                res.map_err(|e| OllamaError::from(e.to_string()))
             }
-            Err(e) => {
-                eprintln!("Failed to read response: {}", e);
-                Err(())
-            }
+            Err(e) => Err(OllamaError::from(format!("Failed to read response: {}", e))),
         }));
 
         Ok(std::pin::Pin::from(stream))
