@@ -28,10 +28,13 @@ async fn test_generation_stream() {
     let mut done = false;
     while let Some(res) = res.next().await {
         let res = res.unwrap();
-        dbg!(&res);
-        if res.done {
-            done = true;
-            break;
+        for ele in res {
+            let ele = ele.unwrap();
+            dbg!(&ele);
+            if ele.done {
+                done = true;
+                break;
+            }
         }
     }
 

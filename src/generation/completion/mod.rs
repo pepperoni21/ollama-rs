@@ -9,7 +9,8 @@ pub mod request;
 #[cfg(feature = "stream")]
 /// A stream of `GenerationResponse` objects
 pub type GenerationResponseStream =
-    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponse, OllamaError>>>>;
+    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponseStreamChunk, OllamaError>>>>;
+pub type GenerationResponseStreamChunk = Vec<Result<GenerationResponse, OllamaError>>;
 
 impl Ollama {
     #[cfg(feature = "stream")]
@@ -40,12 +41,18 @@ impl Ollama {
 
         let stream = Box::new(res.bytes_stream().map(|res| match res {
             Ok(bytes) => {
-                dbg!(
-                    "Trying to parse response: {:?}",
-                    String::from_utf8_lossy(&bytes)
-                );
-                let res = serde_json::from_slice::<GenerationResponse>(&bytes);
-                res.map_err(|e| OllamaError::from(e.to_string()))
+                // dbg!(
+                //     "Trying to parse response: {:?}",
+                //     String::from_utf8_lossy(&bytes)
+                // );
+                let res = serde_json::Deserializer::from_slice(&bytes).into_iter();
+                let res = res
+                    .map(|res| {
+                        let res = res.map_err(|e| OllamaError::from(e.to_string()));
+                        res
+                    })
+                    .collect::<Vec<Result<GenerationResponse, OllamaError>>>();
+                Ok(res)
             }
             Err(e) => Err(OllamaError::from(format!("Failed to read response: {}", e))),
         }));

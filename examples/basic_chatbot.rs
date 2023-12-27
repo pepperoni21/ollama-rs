@@ -34,11 +34,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut stream: GenerationResponseStream = ollama.generate_stream(request).await?;
 
         while let Some(Ok(res)) = stream.next().await {
-            stdout.write_all(res.response.as_bytes()).await?;
-            stdout.flush().await?;
+            for ele in res {
+                if let Ok(ele) = ele {
+                    stdout.write_all(ele.response.as_bytes()).await?;
+                    stdout.flush().await?;
 
-            if let Some(final_data) = res.final_data {
-                context = Some(final_data.context);
+                    if let Some(final_data) = ele.final_data {
+                        context = Some(final_data.context);
+                    }
+                }
             }
         }
     }
