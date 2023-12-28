@@ -29,7 +29,6 @@ async fn test_generation_stream() {
     while let Some(res) = res.next().await {
         let res = res.unwrap();
         for ele in res {
-            let ele = ele.unwrap();
             dbg!(&ele);
             if ele.done {
                 done = true;

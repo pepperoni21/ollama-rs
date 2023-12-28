@@ -35,13 +35,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         while let Some(Ok(res)) = stream.next().await {
             for ele in res {
-                if let Ok(ele) = ele {
-                    stdout.write_all(ele.response.as_bytes()).await?;
-                    stdout.flush().await?;
+                stdout.write_all(ele.response.as_bytes()).await?;
+                stdout.flush().await?;
 
-                    if let Some(final_data) = ele.final_data {
-                        context = Some(final_data.context);
-                    }
+                if let Some(final_data) = ele.final_data {
+                    context = Some(final_data.context);
                 }
             }
         }
