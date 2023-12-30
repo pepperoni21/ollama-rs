@@ -44,10 +44,7 @@ impl Ollama {
             Ok(bytes) => {
                 let res = serde_json::Deserializer::from_slice(&bytes).into_iter();
                 let res = res
-                    .map(|res| {
-                        
-                        res.map_err(|e| OllamaError::from(e.to_string()))
-                    })
+                    .map(|res| res.map_err(|e| OllamaError::from(e.to_string())))
                     .filter_map(Result::ok) // Filter out the errors
                     .collect::<Vec<GenerationResponse>>();
                 Ok(res)
