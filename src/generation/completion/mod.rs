@@ -8,8 +8,9 @@ pub mod request;
 
 #[cfg(feature = "stream")]
 /// A stream of `GenerationResponse` objects
-pub type GenerationResponseStream =
-    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponseStreamChunk, OllamaError>>>>;
+pub type GenerationResponseStream = std::pin::Pin<
+    Box<dyn tokio_stream::Stream<Item = Result<GenerationResponseStreamChunk, OllamaError>>>,
+>;
 pub type GenerationResponseStreamChunk = Vec<GenerationResponse>;
 
 impl Ollama {
@@ -44,8 +45,8 @@ impl Ollama {
                 let res = serde_json::Deserializer::from_slice(&bytes).into_iter();
                 let res = res
                     .map(|res| {
-                        let res = res.map_err(|e| OllamaError::from(e.to_string()));
-                        res
+                        
+                        res.map_err(|e| OllamaError::from(e.to_string()))
                     })
                     .filter_map(Result::ok) // Filter out the errors
                     .collect::<Vec<GenerationResponse>>();
@@ -59,7 +60,10 @@ impl Ollama {
 
     /// Completion generation with a single response.
     /// Returns a single `GenerationResponse` object
-    pub async fn generate(&self, request: GenerationRequest) -> Result<GenerationResponse, String> {
+    pub async fn generate(
+        &self,
+        request: GenerationRequest,
+    ) -> Result<GenerationResponse, OllamaError> {
         let mut request = request;
         request.stream = false;
 
@@ -74,7 +78,7 @@ impl Ollama {
             .map_err(|e| e.to_string())?;
 
         if !res.status().is_success() {
-            return Err(res.text().await.unwrap_or_else(|e| e.to_string()));
+            return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
         }
 
         let res = res.bytes().await.map_err(|e| e.to_string())?;
