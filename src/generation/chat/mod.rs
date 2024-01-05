@@ -11,7 +11,7 @@ use super::images::Image;
 #[cfg(feature = "stream")]
 /// A stream of `ChatMessageResponse` objects
 pub type ChatMessageResponseStream =
-    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<ChatMessageResponse, ()>>>>;
+    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<ChatMessageResponse, ()>> + Send>>;
 
 impl Ollama {
     #[cfg(feature = "stream")]
