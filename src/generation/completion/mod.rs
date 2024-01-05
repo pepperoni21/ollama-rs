@@ -9,7 +9,7 @@ pub mod request;
 #[cfg(feature = "stream")]
 /// A stream of `GenerationResponse` objects
 pub type GenerationResponseStream =
-    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponse, ()>>>>;
+    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponse, ()>> + Send>>;
 
 impl Ollama {
     #[cfg(feature = "stream")]

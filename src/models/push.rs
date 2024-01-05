@@ -4,8 +4,9 @@ use crate::Ollama;
 
 /// A stream of `PushModelStatus` objects.
 #[cfg(feature = "stream")]
-pub type PushModelStatusStream =
-    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = crate::error::Result<PushModelStatus>>>>;
+pub type PushModelStatusStream = std::pin::Pin<
+    Box<dyn tokio_stream::Stream<Item = crate::error::Result<PushModelStatus>> + Send>,
+>;
 
 impl Ollama {
     #[cfg(feature = "stream")]
