@@ -74,7 +74,7 @@ impl Ollama {
             .map_err(|e| e.to_string())?;
 
         if !res.status().is_success() {
-            return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
+            return Err(res.text().await.unwrap_or_else(|e| e.to_string()));
         }
 
         let res = res.bytes().await.map_err(|e| e.to_string())?;
