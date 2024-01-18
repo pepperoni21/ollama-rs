@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{error::OllamaError, Ollama};
+use crate::Ollama;
 
 use request::GenerationRequest;
 
@@ -9,7 +9,7 @@ pub mod request;
 #[cfg(feature = "stream")]
 /// A stream of `GenerationResponse` objects
 pub type GenerationResponseStream = std::pin::Pin<
-    Box<dyn tokio_stream::Stream<Item = Result<GenerationResponseStreamChunk, OllamaError>>>,
+    Box<dyn tokio_stream::Stream<Item = crate::error::Result<GenerationResponseStreamChunk>>>,
 >;
 pub type GenerationResponseStreamChunk = Vec<GenerationResponse>;
 
@@ -22,6 +22,8 @@ impl Ollama {
         request: GenerationRequest,
     ) -> crate::error::Result<GenerationResponseStream> {
         use tokio_stream::StreamExt;
+
+        use crate::error::OllamaError;
 
         let mut request = request;
         request.stream = true;
