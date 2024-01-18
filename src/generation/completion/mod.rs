@@ -57,10 +57,7 @@ impl Ollama {
 
     /// Completion generation with a single response.
     /// Returns a single `GenerationResponse` object
-    pub async fn generate(
-        &self,
-        request: GenerationRequest,
-    ) -> Result<GenerationResponse, OllamaError> {
+    pub async fn generate(&self, request: GenerationRequest) -> Result<GenerationResponse, String> {
         let mut request = request;
         request.stream = false;
 

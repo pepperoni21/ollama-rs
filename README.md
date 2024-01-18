@@ -18,7 +18,7 @@ let ollama = Ollama::new("http://localhost".to_string(), 11434);
 ```
 
 ## Usage
-Feel free to check the [Chatbot example](examples/chatbot.rs) that shows how to use the library to create a simple chatbot in less than 50 lines of code.
+Feel free to check the [Chatbot example](examples/basic_chatbot.rs) that shows how to use the library to create a simple chatbot in less than 50 lines of code.
 
 *These examples use poor error handling for simplicity, but you should handle errors properly in your code.*
 ### Completion generation
