@@ -8,8 +8,10 @@ pub mod request;
 
 #[cfg(feature = "stream")]
 /// A stream of `GenerationResponse` objects
-pub type GenerationResponseStream =
-    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<GenerationResponse, ()>> + Send>>;
+pub type GenerationResponseStream = std::pin::Pin<
+    Box<dyn tokio_stream::Stream<Item = crate::error::Result<GenerationResponseStreamChunk>>>,
+>;
+pub type GenerationResponseStreamChunk = Vec<GenerationResponse>;
 
 impl Ollama {
     #[cfg(feature = "stream")]
@@ -20,6 +22,8 @@ impl Ollama {
         request: GenerationRequest,
     ) -> crate::error::Result<GenerationResponseStream> {
         use tokio_stream::StreamExt;
+
+        use crate::error::OllamaError;
 
         let mut request = request;
         request.stream = true;
@@ -40,19 +44,14 @@ impl Ollama {
 
         let stream = Box::new(res.bytes_stream().map(|res| match res {
             Ok(bytes) => {
-                let res = serde_json::from_slice::<GenerationResponse>(&bytes);
-                match res {
-                    Ok(res) => Ok(res),
-                    Err(e) => {
-                        eprintln!("Failed to deserialize response: {}", e);
-                        Err(())
-                    }
-                }
+                let res = serde_json::Deserializer::from_slice(&bytes).into_iter();
+                let res = res
+                    .map(|res| res.map_err(|e| OllamaError::from(e.to_string())))
+                    .filter_map(Result::ok) // Filter out the errors
+                    .collect::<Vec<GenerationResponse>>();
+                Ok(res)
             }
-            Err(e) => {
-                eprintln!("Failed to read response: {}", e);
-                Err(())
-            }
+            Err(e) => Err(OllamaError::from(format!("Failed to read response: {}", e))),
         }));
 
         Ok(std::pin::Pin::from(stream))
@@ -60,10 +59,7 @@ impl Ollama {
 
     /// Completion generation with a single response.
     /// Returns a single `GenerationResponse` object
-    pub async fn generate(
-        &self,
-        request: GenerationRequest,
-    ) -> crate::error::Result<GenerationResponse> {
+    pub async fn generate(&self, request: GenerationRequest) -> Result<GenerationResponse, String> {
         let mut request = request;
         request.stream = false;
 
@@ -78,7 +74,7 @@ impl Ollama {
             .map_err(|e| e.to_string())?;
 
         if !res.status().is_success() {
-            return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
+            return Err(res.text().await.unwrap_or_else(|e| e.to_string()));
         }
 
         let res = res.bytes().await.map_err(|e| e.to_string())?;
