@@ -1,6 +1,10 @@
 use serde::Serialize;
 
-use crate::generation::{format::FormatType, images::Image, options::GenerationOptions};
+use crate::generation::{
+    images::Image,
+    options::GenerationOptions,
+    parameters::{FormatType, KeepAlive},
+};
 
 use super::GenerationContext;
 
@@ -16,6 +20,7 @@ pub struct GenerationRequest {
     pub template: Option<String>,
     pub context: Option<GenerationContext>,
     pub format: Option<FormatType>,
+    pub keep_alive: Option<KeepAlive>,
     pub(crate) stream: bool,
 }
 
@@ -30,6 +35,7 @@ impl GenerationRequest {
             template: None,
             context: None,
             format: None,
+            keep_alive: None,
             // Stream value will be overwritten by Ollama::generate_stream() and Ollama::generate() methods
             stream: false,
         }
@@ -74,6 +80,12 @@ impl GenerationRequest {
     // The format to return a response in. Currently the only accepted value is `json`
     pub fn format(mut self, format: FormatType) -> Self {
         self.format = Some(format);
+        self
+    }
+
+    /// Used to control how long a model stays loaded in memory, by default models are unloaded after 5 minutes of inactivity
+    pub fn keep_alive(mut self, keep_alive: KeepAlive) -> Self {
+        self.keep_alive = Some(keep_alive);
         self
     }
 }

@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::generation::{format::FormatType, options::GenerationOptions};
+use crate::generation::{options::GenerationOptions, parameters::FormatType};
 
 use super::ChatMessage;
 
