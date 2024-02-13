@@ -1,5 +1,5 @@
 # Ollama-rs
-### A simple and easy to use library for interacting with Ollama servers.
+### A simple and easy to use library for interacting with the Ollama API.
 It was made following the [Ollama API](https://github.com/jmorganca/ollama/blob/main/docs/api.md) documentation.
 
 ## Installation
