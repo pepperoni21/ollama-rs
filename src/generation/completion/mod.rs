@@ -88,7 +88,7 @@ impl Ollama {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenerationContext(Vec<i32>);
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenerationResponse {
     /// The name of the model used for the completion.
     pub model: String,
@@ -103,7 +103,7 @@ pub struct GenerationResponse {
     pub final_data: Option<GenerationFinalResponseData>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenerationFinalResponseData {
     /// An encoding of the conversation used in this response, this can be sent in the next request to keep a conversational memory
     pub context: GenerationContext,
