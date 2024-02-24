@@ -14,7 +14,7 @@ pub struct GenerationOptions {
     pub(super) repeat_penalty: Option<f32>,
     pub(super) temperature: Option<f32>,
     pub(super) seed: Option<i32>,
-    pub(super) stop: Option<String>,
+    pub(super) stop: Option<Vec<String>>,
     pub(super) tfs_z: Option<f32>,
     pub(super) num_predict: Option<i32>,
     pub(super) top_k: Option<u32>,
@@ -89,7 +89,7 @@ impl GenerationOptions {
     }
 
     /// Sets the stop sequences to use. When this pattern is encountered the LLM will stop generating text and return. Multiple stop patterns may be set by specifying multiple separate `stop` parameters in a modelfile.
-    pub fn stop(mut self, stop: String) -> Self {
+    pub fn stop(mut self, stop: Vec<String>) -> Self {
         self.stop = Some(stop);
         self
     }
