@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Options for generation requests to Ollama.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
