@@ -1,7 +1,7 @@
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 /// Options for generation requests to Ollama.
-#[derive(Debug, Clone, Serialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct GenerationOptions {
     pub(super) mirostat: Option<u8>,
     pub(super) mirostat_eta: Option<f32>,
