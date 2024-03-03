@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 use crate::Ollama;
@@ -91,6 +93,41 @@ impl Ollama {
 
         Ok(res)
     }
+
+    /// Chat message generation
+    /// Returns a `ChatMessageResponse` object
+    /// Manages the history of messages for the given `id`
+    pub async fn send_chat_message_with_history(
+        &mut self,
+        mut request: ChatMessageRequest,
+        id: String,
+    ) -> crate::error::Result<ChatMessageResponse> {
+        let mut backup = MessagesHistory::default();
+
+        let current_chat_messages = self
+            .messages_history
+            .as_mut()
+            .unwrap_or(&mut backup)
+            .messages_by_id
+            .entry(id.clone())
+            .or_default();
+
+        current_chat_messages.push(request.messages[0].clone());
+
+        request.messages = current_chat_messages.clone();
+
+        let result = self.send_chat_messages(request).await;
+
+        if let Ok(result) = result {
+            self.messages_history
+                .as_mut()
+                .unwrap_or(&mut backup)
+                .add_message(id, result.message.clone().unwrap());
+            return Ok(result);
+        }
+
+        result
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -164,7 +201,47 @@ impl ChatMessage {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default)]
+pub struct MessagesHistory {
+    pub(crate) messages_by_id: HashMap<String, Vec<ChatMessage>>,
+    pub(crate) messages_number_limit: u16,
+}
+
+impl MessagesHistory {
+    pub fn new(messages_number_limit: u16) -> Self {
+        Self {
+            messages_by_id: HashMap::new(),
+            messages_number_limit: messages_number_limit.max(2),
+        }
+    }
+
+    pub fn add_message(&mut self, entry_id: String, message: ChatMessage) {
+        let messages = self.messages_by_id.entry(entry_id).or_default();
+
+        // Replacing the oldest message if the limit is reached
+        // The oldest message is the first one, unless it's a system message
+        if messages.len() >= self.messages_number_limit as usize {
+            let index_to_remove = messages
+                .first()
+                .map(|m| if m.role == MessageRole::System { 1 } else { 0 })
+                .unwrap_or(0);
+
+            messages.remove(index_to_remove);
+        }
+
+        messages.push(message);
+    }
+
+    pub fn get_messages(&self, entry_id: &str) -> Option<&Vec<ChatMessage>> {
+        self.messages_by_id.get(entry_id)
+    }
+
+    pub fn clear_messages(&mut self, entry_id: &str) {
+        self.messages_by_id.remove(entry_id);
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum MessageRole {
     #[serde(rename = "user")]
     User,
