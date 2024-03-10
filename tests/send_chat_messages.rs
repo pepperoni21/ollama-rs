@@ -54,6 +54,42 @@ async fn test_send_chat_messages() {
     assert!(res.done);
 }
 
+#[tokio::test]
+async fn test_send_chat_messages_with_history() {
+    let mut ollama = Ollama::new_default_with_history(30);
+    let id = "default".to_string();
+
+    let messages = vec![ChatMessage::user(PROMPT.to_string())];
+    let res = ollama
+        .send_chat_messages_with_history(ChatMessageRequest::new(
+            "llama2:latest".to_string(),
+            messages.clone(),
+        ), id.clone())
+        .await
+        .unwrap();
+
+    dbg!(&res);
+    assert!(res.done);
+    // Should have user's message as well as AI's response
+    assert_eq!(ollama.get_messages_history(id.clone()).unwrap().len(), 2);
+
+    let res = ollama
+        .send_chat_messages_with_history(
+            ChatMessageRequest::new(
+                "llama2:latest".to_string(),
+                messages,
+            ),
+            id.clone()
+        )
+        .await
+        .unwrap();
+
+    dbg!(&res);
+    assert!(res.done);
+    // Should now have 2 user messages as well as AI's responses
+    assert_eq!(ollama.get_messages_history(id.clone()).unwrap().len(), 4);
+}
+
 const IMAGE_URL: &str = "https://images.pexels.com/photos/1054655/pexels-photo-1054655.jpeg";
 
 #[tokio::test]

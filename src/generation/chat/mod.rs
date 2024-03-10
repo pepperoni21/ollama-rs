@@ -93,11 +93,14 @@ impl Ollama {
 
         Ok(res)
     }
+}
 
+#[cfg(feature = "chat-history")]
+impl Ollama {
     /// Chat message generation
     /// Returns a `ChatMessageResponse` object
     /// Manages the history of messages for the given `id`
-    pub async fn send_chat_message_with_history(
+    pub async fn send_chat_messages_with_history(
         &mut self,
         mut request: ChatMessageRequest,
         id: String,
@@ -201,12 +204,14 @@ impl ChatMessage {
     }
 }
 
+#[cfg(feature = "chat-history")]
 #[derive(Debug, Clone, Default)]
 pub struct MessagesHistory {
     pub(crate) messages_by_id: HashMap<String, Vec<ChatMessage>>,
     pub(crate) messages_number_limit: u16,
 }
 
+#[cfg(feature = "chat-history")]
 impl MessagesHistory {
     pub fn new(messages_number_limit: u16) -> Self {
         Self {
@@ -229,7 +234,11 @@ impl MessagesHistory {
             messages.remove(index_to_remove);
         }
 
-        messages.push(message);
+        if message.role == MessageRole::System {
+            messages.insert(0, message);
+        } else {
+            messages.push(message);
+        }
     }
 
     pub fn get_messages(&self, entry_id: &str) -> Option<&Vec<ChatMessage>> {
