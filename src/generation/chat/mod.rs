@@ -107,25 +107,35 @@ impl Ollama {
     ) -> crate::error::Result<ChatMessageResponse> {
         let mut backup = MessagesHistory::default();
 
-        let current_chat_messages = self
+        // Clone the current chat messages to avoid borrowing issues
+        // And not to add message to the history if the request fails
+        let mut current_chat_messages = self
             .messages_history
             .as_mut()
             .unwrap_or(&mut backup)
             .messages_by_id
             .entry(id.clone())
-            .or_default();
+            .or_default()
+            .clone();
 
-        current_chat_messages.push(request.messages[0].clone());
+        if let Some(message) = request.messages.first() {
+            current_chat_messages.push(message.clone());
+        }
 
+        // The request is modified to include the current chat messages
         request.messages = current_chat_messages.clone();
 
-        let result = self.send_chat_messages(request).await;
+        let result = self.send_chat_messages(request.clone()).await;
 
         if let Ok(result) = result {
-            self.messages_history
-                .as_mut()
-                .unwrap_or(&mut backup)
-                .add_message(id, result.message.clone().unwrap());
+            let chat_by_id = self.messages_history.as_mut().unwrap_or(&mut backup);
+            // Previous message is duplicated to keep the history consistent
+            if let Some(message) = request.messages.first() {
+                chat_by_id.add_message(id.clone(), message.clone());
+            }
+            // AI's response store in the history
+            chat_by_id.add_message(id.clone(), result.message.clone().unwrap());
+
             return Ok(result);
         }
 

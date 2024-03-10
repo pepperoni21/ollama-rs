@@ -61,10 +61,10 @@ async fn test_send_chat_messages_with_history() {
 
     let messages = vec![ChatMessage::user(PROMPT.to_string())];
     let res = ollama
-        .send_chat_messages_with_history(ChatMessageRequest::new(
-            "llama2:latest".to_string(),
-            messages.clone(),
-        ), id.clone())
+        .send_chat_messages_with_history(
+            ChatMessageRequest::new("llama2:latest".to_string(), messages.clone()),
+            id.clone(),
+        )
         .await
         .unwrap();
 
@@ -75,11 +75,8 @@ async fn test_send_chat_messages_with_history() {
 
     let res = ollama
         .send_chat_messages_with_history(
-            ChatMessageRequest::new(
-                "llama2:latest".to_string(),
-                messages,
-            ),
-            id.clone()
+            ChatMessageRequest::new("llama2:latest".to_string(), messages),
+            id.clone(),
         )
         .await
         .unwrap();
@@ -88,6 +85,63 @@ async fn test_send_chat_messages_with_history() {
     assert!(res.done);
     // Should now have 2 user messages as well as AI's responses
     assert_eq!(ollama.get_messages_history(id.clone()).unwrap().len(), 4);
+}
+
+#[tokio::test]
+async fn test_send_chat_messages_remove_old_history_with_limit_less_than_min() {
+    // Setting history length to 1 but the minimum is 2
+    let mut ollama = Ollama::new_default_with_history(1);
+    let id = "default".to_string();
+
+    let messages = vec![ChatMessage::user(PROMPT.to_string())];
+    let res = ollama
+        .send_chat_messages_with_history(
+            ChatMessageRequest::new("llama2:latest".to_string(), messages.clone()),
+            id.clone(),
+        )
+        .await
+        .unwrap();
+
+    dbg!(&res);
+    assert!(res.done);
+    // Minimal history length is 2
+    assert_eq!(ollama.get_messages_history(id.clone()).unwrap().len(), 2);
+}
+
+#[tokio::test]
+async fn test_send_chat_messages_remove_old_history() {
+    let mut ollama = Ollama::new_default_with_history(3);
+    let id = "default".to_string();
+
+    let messages = vec![ChatMessage::user(PROMPT.to_string())];
+    let res = ollama
+        .send_chat_messages_with_history(
+            ChatMessageRequest::new("llama2:latest".to_string(), messages.clone()),
+            id.clone(),
+        )
+        .await
+        .unwrap();
+
+    dbg!(&res);
+
+    assert!(res.done);
+
+    assert_eq!(ollama.get_messages_history(id.clone()).unwrap().len(), 2);
+
+    // Duplicate to check that we have 3 messages stored
+    let res = ollama
+        .send_chat_messages_with_history(
+            ChatMessageRequest::new("llama2:latest".to_string(), messages),
+            id.clone(),
+        )
+        .await
+        .unwrap();
+
+    dbg!(&res);
+
+    assert!(res.done);
+
+    assert_eq!(ollama.get_messages_history(id.clone()).unwrap().len(), 3);
 }
 
 const IMAGE_URL: &str = "https://images.pexels.com/photos/1054655/pexels-photo-1054655.jpeg";
