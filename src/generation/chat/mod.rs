@@ -214,14 +214,12 @@ impl ChatMessage {
     }
 }
 
-#[cfg(feature = "chat-history")]
 #[derive(Debug, Clone, Default)]
 pub struct MessagesHistory {
     pub(crate) messages_by_id: HashMap<String, Vec<ChatMessage>>,
     pub(crate) messages_number_limit: u16,
 }
 
-#[cfg(feature = "chat-history")]
 impl MessagesHistory {
     pub fn new(messages_number_limit: u16) -> Self {
         Self {
