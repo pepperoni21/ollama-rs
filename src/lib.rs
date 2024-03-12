@@ -1,3 +1,4 @@
+#[cfg(feature = "chat-history")]
 use generation::chat::{ChatMessage, MessagesHistory};
 
 pub mod error;
@@ -26,7 +27,6 @@ impl Ollama {
     pub fn uri(&self) -> String {
         format!("{}:{}", self.host, self.port)
     }
-
 }
 
 #[cfg(feature = "chat-history")]
@@ -38,8 +38,8 @@ impl Ollama {
             ..Default::default()
         }
     }
-    
-    /// Create new instance with chat history 
+
+    /// Create new instance with chat history
     pub fn new_with_history(host: String, port: u16, messages_number_limit: u16) -> Self {
         Self {
             host,
@@ -48,7 +48,7 @@ impl Ollama {
             ..Default::default()
         }
     }
-    
+
     /// Add AI's message to a history
     pub fn add_assistant_response(&mut self, entry_id: String, message: String) {
         if let Some(messages_history) = self.messages_history.as_mut() {
