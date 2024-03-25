@@ -105,18 +105,7 @@ impl Ollama {
         mut request: ChatMessageRequest,
         id: String,
     ) -> crate::error::Result<ChatMessageResponse> {
-        let mut backup = MessagesHistory::default();
-
-        // Clone the current chat messages to avoid borrowing issues
-        // And not to add message to the history if the request fails
-        let mut current_chat_messages = self
-            .messages_history
-            .as_mut()
-            .unwrap_or(&mut backup)
-            .messages_by_id
-            .entry(id.clone())
-            .or_default()
-            .clone();
+        let mut current_chat_messages = self.get_chat_messages_by_id(id.clone());
 
         if let Some(message) = request.messages.first() {
             current_chat_messages.push(message.clone());
@@ -128,18 +117,39 @@ impl Ollama {
         let result = self.send_chat_messages(request.clone()).await;
 
         if let Ok(result) = result {
-            let chat_by_id = self.messages_history.as_mut().unwrap_or(&mut backup);
-            // Previous message is duplicated to keep the history consistent
+            // Message we sent to AI
             if let Some(message) = request.messages.first() {
-                chat_by_id.add_message(id.clone(), message.clone());
+                self.store_chat_message_by_id(id.clone(), message.clone());
             }
             // AI's response store in the history
-            chat_by_id.add_message(id.clone(), result.message.clone().unwrap());
+            self.store_chat_message_by_id(id, result.message.clone().unwrap());
 
             return Ok(result);
         }
 
         result
+    }
+
+    /// Helper function to get chat messages by id
+    fn get_chat_messages_by_id(&mut self, id: String) -> Vec<ChatMessage> {
+        let mut backup = MessagesHistory::default();
+
+        // Clone the current chat messages to avoid borrowing issues
+        // And not to add message to the history if the request fails
+        self.messages_history
+            .as_mut()
+            .unwrap_or(&mut backup)
+            .messages_by_id
+            .entry(id.clone())
+            .or_default()
+            .clone()
+    }
+
+    /// Helper function to store chat messages by id
+    fn store_chat_message_by_id(&mut self, id: String, message: ChatMessage) {
+        if let Some(messages_history) = self.messages_history.as_mut() {
+            messages_history.add_message(id, message);
+        }
     }
 }
 
