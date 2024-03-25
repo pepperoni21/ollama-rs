@@ -258,7 +258,7 @@ impl MessagesHistory {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum MessageRole {
     #[serde(rename = "user")]
     User,
