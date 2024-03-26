@@ -58,6 +58,7 @@ async fn test_send_chat_messages() {
 async fn test_send_chat_messages_with_history() {
     let mut ollama = Ollama::new_default_with_history(30);
     let id = "default".to_string();
+    let second_message = vec![ChatMessage::user("Second message".to_string())];
 
     let messages = vec![ChatMessage::user(PROMPT.to_string())];
     let res = ollama
@@ -75,7 +76,7 @@ async fn test_send_chat_messages_with_history() {
 
     let res = ollama
         .send_chat_messages_with_history(
-            ChatMessageRequest::new("llama2:latest".to_string(), messages),
+            ChatMessageRequest::new("llama2:latest".to_string(), second_message.clone()),
             id.clone(),
         )
         .await
@@ -85,6 +86,14 @@ async fn test_send_chat_messages_with_history() {
     assert!(res.done);
     // Should now have 2 user messages as well as AI's responses
     assert_eq!(ollama.get_messages_history(id.clone()).unwrap().len(), 4);
+
+    let second_user_message_in_history = ollama.get_messages_history(id.clone()).unwrap().get(2);
+
+    assert!(second_user_message_in_history.is_some());
+    assert_eq!(
+        second_user_message_in_history.unwrap().content,
+        "Second message".to_string()
+    );
 }
 
 #[tokio::test]

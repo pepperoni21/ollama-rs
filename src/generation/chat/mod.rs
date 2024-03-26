@@ -118,7 +118,7 @@ impl Ollama {
 
         if let Ok(result) = result {
             // Message we sent to AI
-            if let Some(message) = request.messages.first() {
+            if let Some(message) = request.messages.last() {
                 self.store_chat_message_by_id(id.clone(), message.clone());
             }
             // AI's response store in the history
