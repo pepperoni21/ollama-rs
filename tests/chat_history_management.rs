@@ -1,4 +1,4 @@
-use ollama_rs::{generation::chat::ChatMessage, Ollama};
+use ollama_rs::Ollama;
 
 #[test]
 fn test_chat_history_saved_as_should() {
