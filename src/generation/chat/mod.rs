@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 use crate::Ollama;
@@ -93,6 +95,64 @@ impl Ollama {
     }
 }
 
+#[cfg(feature = "chat-history")]
+impl Ollama {
+    /// Chat message generation
+    /// Returns a `ChatMessageResponse` object
+    /// Manages the history of messages for the given `id`
+    pub async fn send_chat_messages_with_history(
+        &mut self,
+        mut request: ChatMessageRequest,
+        id: String,
+    ) -> crate::error::Result<ChatMessageResponse> {
+        let mut current_chat_messages = self.get_chat_messages_by_id(id.clone());
+
+        if let Some(message) = request.messages.first() {
+            current_chat_messages.push(message.clone());
+        }
+
+        // The request is modified to include the current chat messages
+        request.messages = current_chat_messages.clone();
+
+        let result = self.send_chat_messages(request.clone()).await;
+
+        if let Ok(result) = result {
+            // Message we sent to AI
+            if let Some(message) = request.messages.last() {
+                self.store_chat_message_by_id(id.clone(), message.clone());
+            }
+            // AI's response store in the history
+            self.store_chat_message_by_id(id, result.message.clone().unwrap());
+
+            return Ok(result);
+        }
+
+        result
+    }
+
+    /// Helper function to get chat messages by id
+    fn get_chat_messages_by_id(&mut self, id: String) -> Vec<ChatMessage> {
+        let mut backup = MessagesHistory::default();
+
+        // Clone the current chat messages to avoid borrowing issues
+        // And not to add message to the history if the request fails
+        self.messages_history
+            .as_mut()
+            .unwrap_or(&mut backup)
+            .messages_by_id
+            .entry(id.clone())
+            .or_default()
+            .clone()
+    }
+
+    /// Helper function to store chat messages by id
+    fn store_chat_message_by_id(&mut self, id: String, message: ChatMessage) {
+        if let Some(messages_history) = self.messages_history.as_mut() {
+            messages_history.add_message(id, message);
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct ChatMessageResponse {
     /// The name of the model used for the completion.
@@ -161,6 +221,50 @@ impl ChatMessage {
             self.images = Some(vec![image]);
         }
         self
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct MessagesHistory {
+    pub(crate) messages_by_id: HashMap<String, Vec<ChatMessage>>,
+    pub(crate) messages_number_limit: u16,
+}
+
+impl MessagesHistory {
+    pub fn new(messages_number_limit: u16) -> Self {
+        Self {
+            messages_by_id: HashMap::new(),
+            messages_number_limit: messages_number_limit.max(2),
+        }
+    }
+
+    pub fn add_message(&mut self, entry_id: String, message: ChatMessage) {
+        let messages = self.messages_by_id.entry(entry_id).or_default();
+
+        // Replacing the oldest message if the limit is reached
+        // The oldest message is the first one, unless it's a system message
+        if messages.len() >= self.messages_number_limit as usize {
+            let index_to_remove = messages
+                .first()
+                .map(|m| if m.role == MessageRole::System { 1 } else { 0 })
+                .unwrap_or(0);
+
+            messages.remove(index_to_remove);
+        }
+
+        if message.role == MessageRole::System {
+            messages.insert(0, message);
+        } else {
+            messages.push(message);
+        }
+    }
+
+    pub fn get_messages(&self, entry_id: &str) -> Option<&Vec<ChatMessage>> {
+        self.messages_by_id.get(entry_id)
+    }
+
+    pub fn clear_messages(&mut self, entry_id: &str) {
+        self.messages_by_id.remove(entry_id);
     }
 }
 

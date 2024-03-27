@@ -20,8 +20,9 @@ tokio-stream = { version = "0.1.14", optional = true }
 default = ["reqwest/default-tls"]
 stream = ["tokio-stream", "reqwest/stream", "tokio"]
 rustls = ["reqwest/rustls-tls"]
+chat-history = []
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
-ollama-rs = { path = ".", features = ["stream"] }
+ollama-rs = { path = ".", features = ["stream", "chat-history"] }
 base64 = "0.21.5"
