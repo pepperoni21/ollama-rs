@@ -1,11 +1,11 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::generation::{options::GenerationOptions, parameters::FormatType};
 
 use super::ChatMessage;
 
 /// A chat message request to Ollama.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatMessageRequest {
     #[serde(rename = "model")]
     pub model_name: String,

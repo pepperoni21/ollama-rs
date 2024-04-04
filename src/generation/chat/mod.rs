@@ -154,7 +154,7 @@ impl Ollama {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ChatMessageResponse {
     /// The name of the model used for the completion.
     pub model: String,
@@ -168,7 +168,7 @@ pub struct ChatMessageResponse {
     pub final_data: Option<ChatMessageFinalResponseData>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ChatMessageFinalResponseData {
     /// Time spent generating the response
     pub total_duration: u64,
