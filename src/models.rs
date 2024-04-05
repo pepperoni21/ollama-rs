@@ -6,10 +6,10 @@ pub mod pull;
 pub mod push;
 pub mod show_info;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// A local model pulled from Ollama.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LocalModel {
     pub name: String,
     pub modified_at: String,
@@ -17,7 +17,7 @@ pub struct LocalModel {
 }
 
 /// A model's info.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelInfo {
     pub license: String,
     pub modelfile: String,
