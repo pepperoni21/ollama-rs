@@ -61,7 +61,10 @@ impl Ollama {
 
     /// Completion generation with a single response.
     /// Returns a single `GenerationResponse` object
-    pub async fn generate(&self, request: GenerationRequest) -> Result<GenerationResponse, String> {
+    pub async fn generate(
+        &self,
+        request: GenerationRequest,
+    ) -> crate::error::Result<GenerationResponse> {
         let mut request = request;
         request.stream = false;
 
@@ -76,7 +79,7 @@ impl Ollama {
             .map_err(|e| e.to_string())?;
 
         if !res.status().is_success() {
-            return Err(res.text().await.unwrap_or_else(|e| e.to_string()));
+            return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
         }
 
         let res = res.bytes().await.map_err(|e| e.to_string())?;
