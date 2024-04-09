@@ -56,9 +56,11 @@ let mut stream = ollama.generate_stream(GenerationRequest::new(model, prompt)).a
 
 let mut stdout = tokio::io::stdout();
 while let Some(res) = stream.next().await {
-    let res = res.unwrap();
-    stdout.write(res.response.as_bytes()).await.unwrap();
-    stdout.flush().await.unwrap();
+    let responses = res.unwrap();
+    for resp in responses {
+        stdout.write(resp.response.as_bytes()).await.unwrap();
+        stdout.flush().await.unwrap();
+    }
 }
 ```
 
