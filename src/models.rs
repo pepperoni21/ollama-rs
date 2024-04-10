@@ -16,11 +16,15 @@ pub struct LocalModel {
     pub size: u64,
 }
 
-/// A model's info.
+/// A model's info. Some fields may be empty if the model does not have them.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelInfo {
+    #[serde(default = "String::new")]
     pub license: String,
+    #[serde(default = "String::new")]
     pub modelfile: String,
+    #[serde(default = "String::new")]
     pub parameters: String,
+    #[serde(default = "String::new")]
     pub template: String,
 }
