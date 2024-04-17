@@ -10,7 +10,7 @@ It was made following the [Ollama API](https://github.com/jmorganca/ollama/blob/
 
 ```toml
 [dependencies]
-ollama-rs = "0.1.8"
+ollama-rs = "0.1.9"
 ```
 
 ### Initialize Ollama

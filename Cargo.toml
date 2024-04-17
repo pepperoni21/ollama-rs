@@ -1,6 +1,6 @@
 [package]
 name = "ollama-rs"
-version = "0.1.8"
+version = "0.1.9"
 edition = "2021"
 license-file = "LICENSE.md"
 description = "A Rust library for interacting with the Ollama API"
@@ -10,11 +10,11 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version = "0.11.22", default-features = false }
+reqwest = { version = "0.12.3", default-features = false }
 serde = { version = "1.0.190", features = ["derive"] }
-serde_json = "1.0.108"
+serde_json = "1.0.116"
 tokio = { version = "1", features = ["full"], optional = true }
-tokio-stream = { version = "0.1.14", optional = true }
+tokio-stream = { version = "0.1.15", optional = true }
 
 [features]
 default = ["reqwest/default-tls"]
@@ -25,4 +25,4 @@ chat-history = []
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
 ollama-rs = { path = ".", features = ["stream", "chat-history"] }
-base64 = "0.21.5"
+base64 = "0.22.0"
