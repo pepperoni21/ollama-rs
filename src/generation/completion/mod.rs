@@ -91,7 +91,7 @@ impl Ollama {
 
 /// An encoding of a conversation returned by Ollama after a completion request, this can be sent in a new request to keep a conversational memory.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GenerationContext(Vec<i32>);
+pub struct GenerationContext(pub Vec<i32>);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenerationResponse {
