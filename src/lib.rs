@@ -53,7 +53,7 @@ impl<'a> IntoUrlSealed for &'a String {
     }
 }
 
-impl<'a> IntoUrlSealed for String {
+impl IntoUrlSealed for String {
     fn into_url(self) -> Result<Url, url::ParseError> {
         (&*self).into_url()
     }
