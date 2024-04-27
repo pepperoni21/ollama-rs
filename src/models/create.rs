@@ -21,11 +21,11 @@ impl Ollama {
 
         request.stream = true;
 
-        let uri = format!("{}/api/create", self.uri());
+        let url = format!("{}api/create", self.url_str());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
         let res = self
             .reqwest_client
-            .post(uri)
+            .post(url)
             .body(serialized)
             .send()
             .await
@@ -63,11 +63,11 @@ impl Ollama {
         &self,
         request: CreateModelRequest,
     ) -> crate::error::Result<CreateModelStatus> {
-        let uri = format!("{}/api/create", self.uri());
+        let url = format!("{}api/create", self.url_str());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
         let res = self
             .reqwest_client
-            .post(uri)
+            .post(url)
             .body(serialized)
             .send()
             .await

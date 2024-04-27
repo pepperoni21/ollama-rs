@@ -29,13 +29,13 @@ impl Ollama {
         let mut request = request;
         request.stream = true;
 
-        let uri = format!("{}/api/chat", self.uri());
+        let url = format!("{}api/chat", self.url_str());
         let serialized = serde_json::to_string(&request)
             .map_err(|e| e.to_string())
             .unwrap();
         let res = self
             .reqwest_client
-            .post(uri)
+            .post(url)
             .body(serialized)
             .send()
             .await
@@ -74,11 +74,11 @@ impl Ollama {
         let mut request = request;
         request.stream = false;
 
-        let uri = format!("{}/api/chat", self.uri());
+        let url = format!("{}api/chat", self.url_str());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
         let res = self
             .reqwest_client
-            .post(uri)
+            .post(url)
             .body(serialized)
             .send()
             .await

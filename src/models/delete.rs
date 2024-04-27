@@ -7,11 +7,11 @@ impl Ollama {
     pub async fn delete_model(&self, model_name: String) -> crate::error::Result<()> {
         let request = DeleteModelRequest { model_name };
 
-        let uri = format!("{}/api/delete", self.uri());
+        let url = format!("{}api/delete", self.url_str());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
         let res = self
             .reqwest_client
-            .delete(uri)
+            .delete(url)
             .body(serialized)
             .send()
             .await
