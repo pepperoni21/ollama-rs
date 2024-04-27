@@ -59,10 +59,25 @@ impl Ollama {
     }
 
     /// Create new instance with chat history
-    pub fn new_with_history(host: String, port: u16, messages_number_limit: u16) -> Self {
+    ///
+    /// # Panics
+    ///
+    /// Panics if the host is not a valid URL or if the URL cannot have a port.
+    pub fn new_with_history(
+        host: impl Into<url::Url>,
+        port: u16,
+        messages_number_limit: u16,
+    ) -> Self {
+        let mut url = host.into();
+        url.set_port(Some(port)).unwrap();
+        Self::new_with_history_from_url(url, messages_number_limit)
+    }
+
+    /// Create new instance with chat history from a [`url::Url`].
+    #[inline]
+    pub fn new_with_history_from_url(url: url::Url, messages_number_limit: u16) -> Self {
         Self {
-            host,
-            port,
+            url,
             messages_history: Some(MessagesHistory::new(messages_number_limit)),
             ..Default::default()
         }
