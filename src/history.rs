@@ -83,6 +83,18 @@ impl Ollama {
         }
     }
 
+    #[inline]
+    pub fn new_with_history_try_new(
+        url: impl crate::IntoUrl,
+        messages_number_limit: u16,
+    ) -> Result<Self, url::ParseError> {
+        Ok(Self {
+            url: url.into_url()?,
+            messages_history: Some(MessagesHistory::new(messages_number_limit)),
+            ..Default::default()
+        })
+    }
+
     /// Add AI's message to a history
     pub fn add_assistant_response(&mut self, entry_id: String, message: String) {
         if let Some(messages_history) = self.messages_history.as_mut() {

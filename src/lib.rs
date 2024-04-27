@@ -82,6 +82,12 @@ impl Ollama {
         Self::from_url(url)
     }
 
+    /// Tries to create new instance by converting `url` into [`Url`].
+    #[inline]
+    pub fn try_new(url: impl IntoUrl) -> Result<Self, url::ParseError> {
+        Ok(Self::from_url(url.into_url()?))
+    }
+
     /// Create new instance from a [`Url`].
     #[inline]
     pub fn from_url(url: Url) -> Self {
