@@ -84,7 +84,7 @@ impl Ollama {
     }
 
     #[inline]
-    pub fn new_with_history_try_new(
+    pub fn try_new_with_history(
         url: impl crate::IntoUrl,
         messages_number_limit: u16,
     ) -> Result<Self, url::ParseError> {
