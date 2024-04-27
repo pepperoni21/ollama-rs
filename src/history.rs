@@ -64,11 +64,11 @@ impl Ollama {
     ///
     /// Panics if the host is not a valid URL or if the URL cannot have a port.
     pub fn new_with_history(
-        host: impl Into<url::Url>,
+        host: impl crate::IntoUrl,
         port: u16,
         messages_number_limit: u16,
     ) -> Self {
-        let mut url = host.into();
+        let mut url = host.into_url().unwrap();
         url.set_port(Some(port)).unwrap();
         Self::new_with_history_from_url(url, messages_number_limit)
     }

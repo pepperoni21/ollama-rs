@@ -4,9 +4,68 @@ pub mod generation;
 pub mod history;
 pub mod models;
 
+use url::Url;
+
+/// A trait to try to convert some type into a [`Url`].
+///
+/// This trait is "sealed", such that only types within ollama-rs can
+/// implement it.
+pub trait IntoUrl: IntoUrlSealed {}
+
+impl IntoUrl for Url {}
+impl IntoUrl for String {}
+impl<'a> IntoUrl for &'a str {}
+impl<'a> IntoUrl for &'a String {}
+
+pub trait IntoUrlSealed {
+    fn into_url(self) -> Result<Url, url::ParseError>;
+
+    fn as_str(&self) -> &str;
+}
+
+impl IntoUrlSealed for Url {
+    fn into_url(self) -> Result<Url, url::ParseError> {
+        Ok(self)
+    }
+
+    fn as_str(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl<'a> IntoUrlSealed for &'a str {
+    fn into_url(self) -> Result<Url, url::ParseError> {
+        Url::parse(self)?.into_url()
+    }
+
+    fn as_str(&self) -> &str {
+        self
+    }
+}
+
+impl<'a> IntoUrlSealed for &'a String {
+    fn into_url(self) -> Result<Url, url::ParseError> {
+        (&**self).into_url()
+    }
+
+    fn as_str(&self) -> &str {
+        self.as_ref()
+    }
+}
+
+impl<'a> IntoUrlSealed for String {
+    fn into_url(self) -> Result<Url, url::ParseError> {
+        (&*self).into_url()
+    }
+
+    fn as_str(&self) -> &str {
+        self.as_ref()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Ollama {
-    pub(crate) url: url::Url,
+    pub(crate) url: Url,
     pub(crate) reqwest_client: reqwest::Client,
     #[cfg(feature = "chat-history")]
     pub(crate) messages_history: Option<history::MessagesHistory>,
@@ -16,16 +75,16 @@ impl Ollama {
     /// # Panics
     ///
     /// Panics if the host is not a valid URL or if the URL cannot have a port.
-    pub fn new(host: impl Into<url::Url>, port: u16) -> Self {
-        let mut url = host.into();
+    pub fn new(host: impl IntoUrl, port: u16) -> Self {
+        let mut url: Url = host.into_url().unwrap();
         url.set_port(Some(port)).unwrap();
 
         Self::from_url(url)
     }
 
-    /// Create new instance from a [`url::Url`].
+    /// Create new instance from a [`Url`].
     #[inline]
-    pub fn from_url(url: url::Url) -> Self {
+    pub fn from_url(url: Url) -> Self {
         Self {
             url,
             ..Default::default()
@@ -42,8 +101,8 @@ impl Ollama {
         self.url.host().unwrap().to_string()
     }
 
-    /// Returns the URL of the Ollama instance as a [`url::Url`].
-    pub fn url(&self) -> &url::Url {
+    /// Returns the URL of the Ollama instance as a [`Url`].
+    pub fn url(&self) -> &Url {
         &self.url
     }
 
@@ -66,8 +125,8 @@ impl Ollama {
     }
 }
 
-impl From<url::Url> for Ollama {
-    fn from(url: url::Url) -> Self {
+impl From<Url> for Ollama {
+    fn from(url: Url) -> Self {
         Self::from_url(url)
     }
 }
@@ -76,7 +135,7 @@ impl Default for Ollama {
     /// Returns a default Ollama instance with the host set to `http://127.0.0.1:11434`.
     fn default() -> Self {
         Self {
-            url: url::Url::parse("http://127.0.0.1:11434").unwrap(),
+            url: Url::parse("http://127.0.0.1:11434").unwrap(),
             reqwest_client: reqwest::Client::new(),
             #[cfg(feature = "chat-history")]
             messages_history: None,
