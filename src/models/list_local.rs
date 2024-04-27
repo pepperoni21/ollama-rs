@@ -6,7 +6,7 @@ use super::LocalModel;
 
 impl Ollama {
     pub async fn list_local_models(&self) -> crate::error::Result<Vec<LocalModel>> {
-        let url = format!("{}/api/tags", self.url_str());
+        let url = format!("{}api/tags", self.url_str());
         let res = self
             .reqwest_client
             .get(url)

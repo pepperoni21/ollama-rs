@@ -7,7 +7,7 @@ use super::ModelInfo;
 impl Ollama {
     /// Show details about a model including modelfile, template, parameters, license, and system prompt.
     pub async fn show_model_info(&self, model_name: String) -> crate::error::Result<ModelInfo> {
-        let url = format!("{}/api/show", self.url_str());
+        let url = format!("{}api/show", self.url_str());
         let serialized =
             serde_json::to_string(&ModelInfoRequest { model_name }).map_err(|e| e.to_string())?;
         let res = self

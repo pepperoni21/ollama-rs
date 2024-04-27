@@ -28,7 +28,7 @@ impl Ollama {
             stream: true,
         };
 
-        let url = format!("{}/api/push", self.url_str());
+        let url = format!("{}api/push", self.url_str());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
         let res = self
             .reqwest_client
@@ -80,7 +80,7 @@ impl Ollama {
             stream: false,
         };
 
-        let url = format!("{}/api/push", self.url_str());
+        let url = format!("{}api/push", self.url_str());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
         let res = self
             .reqwest_client
