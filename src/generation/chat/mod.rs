@@ -104,52 +104,65 @@ impl Ollama {
     pub async fn send_chat_messages_with_history(
         &mut self,
         mut request: ChatMessageRequest,
-        id: String,
+        history_id: &str,
     ) -> crate::error::Result<ChatMessageResponse> {
-        let mut current_chat_messages = self.get_chat_messages_by_id(id.clone());
-
-        if let Some(message) = request.messages.first() {
-            current_chat_messages.push(message.clone());
-        }
-
         // The request is modified to include the current chat messages
-        request.messages = current_chat_messages.clone();
+        request.messages = self.get_prefill_messages(history_id, request.messages.clone());
 
-        let result = self.send_chat_messages(request.clone()).await;
+        let result = self.send_chat_messages(request).await;
 
-        if let Ok(result) = result {
-            // Message we sent to AI
-            if let Some(message) = request.messages.last() {
-                self.store_chat_message_by_id(id.clone(), message.clone());
+        match result {
+            Ok(result) => {
+                // Store AI's response in the history
+                self.store_chat_message_by_id(history_id, result.message.clone().unwrap());
+
+                return Ok(result);
             }
-            // AI's response store in the history
-            self.store_chat_message_by_id(id, result.message.clone().unwrap());
-
-            return Ok(result);
+            Err(_) => {
+                self.remove_history_last_message(history_id);
+            }
         }
 
         result
     }
 
-    /// Helper function to get chat messages by id
-    fn get_chat_messages_by_id(&mut self, id: String) -> Vec<ChatMessage> {
+    /// Helper function to store chat messages by id
+    fn store_chat_message_by_id(&mut self, id: &str, message: ChatMessage) {
+        if let Some(messages_history) = self.messages_history.as_mut() {
+            messages_history.add_message(id, message);
+        }
+    }
+
+    /// Let get existing history with a new message in it
+    /// Without impact for existing history
+    /// Used to prepare history for request
+    fn get_prefill_messages(
+        &mut self,
+        history_id: &str,
+        request_messages: Vec<ChatMessage>,
+    ) -> Vec<ChatMessage> {
         let mut backup = MessagesHistory::default();
 
         // Clone the current chat messages to avoid borrowing issues
         // And not to add message to the history if the request fails
-        self.messages_history
+        let current_chat_messages = self
+            .messages_history
             .as_mut()
             .unwrap_or(&mut backup)
             .messages_by_id
-            .entry(id.clone())
-            .or_default()
-            .clone()
+            .entry(history_id.to_string())
+            .or_default();
+
+        if let Some(message) = request_messages.first() {
+            current_chat_messages.push(message.clone());
+        }
+
+        current_chat_messages.clone()
     }
 
-    /// Helper function to store chat messages by id
-    fn store_chat_message_by_id(&mut self, id: String, message: ChatMessage) {
-        if let Some(messages_history) = self.messages_history.as_mut() {
-            messages_history.add_message(id, message);
+    fn remove_history_last_message(&mut self, history_id: &str) {
+        if let Some(history) = self.messages_history.as_mut() {
+            history.pop_last_message_for_id(history_id);
         }
     }
 }
