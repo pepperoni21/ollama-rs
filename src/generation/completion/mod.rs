@@ -103,23 +103,16 @@ pub struct GenerationResponse {
     pub response: String,
     /// Whether the completion is done. If the completion is streaming, this will be false until the last response.
     pub done: bool,
-    #[serde(flatten)]
-    /// The final data of the completion. This is only present if the completion is done.
-    pub final_data: Option<GenerationFinalResponseData>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GenerationFinalResponseData {
     /// An encoding of the conversation used in this response, this can be sent in the next request to keep a conversational memory
-    pub context: GenerationContext,
+    pub context: Option<GenerationContext>,
     /// Time spent generating the response
-    pub total_duration: u64,
+    pub total_duration: Option<u64>,
     /// Number of tokens in the prompt
-    pub prompt_eval_count: u16,
+    pub prompt_eval_count: Option<u16>,
     /// Time spent in nanoseconds evaluating the prompt
-    pub prompt_eval_duration: u64,
-    /// Number of tokens the response
-    pub eval_count: u16,
-    /// Time in nanoseconds spent generating the response
-    pub eval_duration: u64,
+    pub prompt_eval_duration: Option<u64>,
+    /// Number of tokens in the response
+    pub eval_count: Option<u16>,
+    /// Time spent in nanoseconds generating the response
+    pub eval_duration: Option<u64>,
 }
