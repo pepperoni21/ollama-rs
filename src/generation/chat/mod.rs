@@ -113,7 +113,7 @@ impl Ollama {
         }
 
         // The request is modified to include the current chat messages
-        request.messages = current_chat_messages.clone();
+        request.messages.clone_from(&current_chat_messages);
 
         let result = self.send_chat_messages(request.clone()).await;
 
