@@ -38,8 +38,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 stdout.write_all(ele.response.as_bytes()).await?;
                 stdout.flush().await?;
 
-                if ele.context.is_some() {
-                    context = ele.context;
+                 if let Some(final_data) = ele.final_data {
+                    context = Some(final_data.context);
                 }
             }
         }
