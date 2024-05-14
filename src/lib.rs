@@ -5,6 +5,8 @@ pub mod history;
 #[cfg(all(feature = "chat-history", feature = "stream"))]
 pub mod history_async;
 pub mod models;
+#[cfg(feature = "function-calling")]
+pub mod functions;
 
 use url::Url;
 
