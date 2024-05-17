@@ -1,91 +1,83 @@
-use serde::Serialize;
+use serde_json::Value;
+use std::sync::Arc;
+use crate::generation::chat::{ChatMessage, ChatMessageResponse};
+use crate::generation::functions::pipelines::openai::DEFAULT_SYSTEM_TEMPLATE;
+use crate::generation::functions::tools::Tool;
+use crate::error::OllamaError;
+use crate::generation::functions::pipelines::RequestParserBase;
+use serde_json::json;
+use serde::{Deserialize, Serialize};
+use async_trait::async_trait;
 
-use crate::generation::{
-    images::Image,
-    options::GenerationOptions,
-    parameters::{FormatType, KeepAlive},
-};
-
-use super::GenerationContext;
-
-/// A generation request to Ollama.
-#[derive(Debug, Clone, Serialize)]
-pub struct GenerationRequest {
-    #[serde(rename = "model")]
-    pub model_name: String,
-    pub prompt: String,
-    pub images: Vec<Image>,
-    pub options: Option<GenerationOptions>,
-    pub system: Option<String>,
-    pub template: Option<String>,
-    pub context: Option<GenerationContext>,
-    pub format: Option<FormatType>,
-    pub keep_alive: Option<KeepAlive>,
-    pub(crate) stream: bool,
+pub fn convert_to_ollama_tool(tool: &Arc<dyn Tool>) -> Value {
+    let schema = tool.parameters();
+    json!({
+        "name": tool.name(),
+        "properties": schema["properties"],
+        "required": schema["required"]
+    })
 }
 
-impl GenerationRequest {
-    pub fn new(model_name: String, prompt: String) -> Self {
-        Self {
-            model_name,
-            prompt,
-            images: Vec::new(),
-            options: None,
-            system: None,
-            template: None,
-            context: None,
-            format: None,
-            keep_alive: None,
-            // Stream value will be overwritten by Ollama::generate_stream() and Ollama::generate() methods
-            stream: false,
+#[derive(Debug, Deserialize, Serialize)]
+pub struct OpenAIFunctionCallSignature {
+    pub tool: String, //name of the tool
+    pub tool_input: Value,
+}
+
+pub struct OpenAIFunctionCall {}
+
+impl OpenAIFunctionCall {
+
+    pub async fn function_call_with_history(
+        &self,
+        model_name: String,
+        tool_params: Value,
+        tool: Arc<dyn Tool>,
+    ) -> Result<ChatMessageResponse, OllamaError> {
+
+        let result = tool.run(tool_params).await;
+        return match result {
+            Ok(result) => {
+                Ok(ChatMessageResponse {
+                    model: model_name.clone(),
+                    created_at: "".to_string(),
+                    message: Some(ChatMessage::assistant(result.to_string())),
+                    done: true,
+                    final_data: None,
+                })
+            },
+            Err(e) => Err(OllamaError::from(e))
+        };
+    }
+}
+
+#[async_trait]
+impl RequestParserBase for OpenAIFunctionCall {
+    async fn parse(&self, input: &str, model_name: String, tools: Vec<Arc<dyn Tool>>) -> Result<ChatMessageResponse, OllamaError> {
+        let response_value: Result<OpenAIFunctionCallSignature, serde_json::Error> = serde_json::from_str(input);
+        match response_value {
+            Ok(response) => {
+                if let Some(tool) = tools.iter().find(|t| t.name() == response.tool) {
+                    let tool_params = response.tool_input;
+                    let result = self.function_call_with_history(model_name.clone(),
+                                                                 tool_params.clone(),
+                                                                 tool.clone(),
+                    ).await?;
+                    return Ok(result);
+                } else {
+                    return Err(OllamaError::from("Tool not found".to_string()));
+                }
+            },
+            Err(e) => {
+                return Err(OllamaError::from(e));
+            }
         }
     }
 
-    /// A list of images to be used with the prompt
-    pub fn images(mut self, images: Vec<Image>) -> Self {
-        self.images = images;
-        self
-    }
-
-    /// Add an image to be used with the prompt
-    pub fn add_image(mut self, image: Image) -> Self {
-        self.images.push(image);
-        self
-    }
-
-    /// Additional model parameters listed in the documentation for the Modelfile
-    pub fn options(mut self, options: GenerationOptions) -> Self {
-        self.options = Some(options);
-        self
-    }
-
-    /// System prompt to (overrides what is defined in the Modelfile)
-    pub fn system(mut self, system: String) -> Self {
-        self.system = Some(system);
-        self
-    }
-
-    /// The full prompt or prompt template (overrides what is defined in the Modelfile)
-    pub fn template(mut self, template: String) -> Self {
-        self.template = Some(template);
-        self
-    }
-
-    /// The context parameter returned from a previous request to /generate, this can be used to keep a short conversational memory
-    pub fn context(mut self, context: GenerationContext) -> Self {
-        self.context = Some(context);
-        self
-    }
-
-    // The format to return a response in. Currently the only accepted value is `json`
-    pub fn format(mut self, format: FormatType) -> Self {
-        self.format = Some(format);
-        self
-    }
-
-    /// Used to control how long a model stays loaded in memory, by default models are unloaded after 5 minutes of inactivity
-    pub fn keep_alive(mut self, keep_alive: KeepAlive) -> Self {
-        self.keep_alive = Some(keep_alive);
-        self
+    async fn get_system_message(&self, tools: &[Arc<dyn Tool>]) -> ChatMessage { // Corrected here to use a slice
+        let tools_info: Vec<Value> = tools.iter().map(|tool| convert_to_ollama_tool(tool)).collect();
+        let tools_json = serde_json::to_string(&tools_info).unwrap();
+        let system_message_content = DEFAULT_SYSTEM_TEMPLATE.replace("{tools}", &tools_json);
+        ChatMessage::system(system_message_content)
     }
 }

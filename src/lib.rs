@@ -3,8 +3,6 @@ pub mod generation;
 #[cfg(feature = "chat-history")]
 pub mod history;
 pub mod models;
-#[cfg(feature = "function-calling")]
-pub mod functions;
 
 use url::Url;
 

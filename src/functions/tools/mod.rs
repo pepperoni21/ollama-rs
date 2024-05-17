@@ -1,8 +1,6 @@
 pub mod search_ddg;
-pub mod weather;
 pub mod scraper;
 
-pub use self::weather::WeatherTool;
 pub use self::scraper::Scraper;
 pub use self::search_ddg::DDGSearcher;
 
