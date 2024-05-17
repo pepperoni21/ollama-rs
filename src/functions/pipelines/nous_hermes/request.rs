@@ -8,6 +8,7 @@ use crate::generation::functions::tools::Tool;
 use crate::error::OllamaError;
 use crate::generation::functions::pipelines::RequestParserBase;
 use serde::{Deserialize, Serialize};
+use regex::Regex;
 
 pub fn convert_to_openai_tool(tool: Arc<dyn Tool>) -> Value {
     let mut function = HashMap::new();
@@ -26,8 +27,8 @@ pub fn convert_to_openai_tool(tool: Arc<dyn Tool>) -> Value {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct NousFunctionCallSignature {
-    pub tool: String, // name of the tool
-    pub tool_input: Value,
+    pub name: String,
+    pub arguments: Value,
 }
 
 pub struct NousFunctionCall {}
@@ -53,7 +54,12 @@ impl NousFunctionCall {
     }
 
     pub fn format_tool_response(&self, function_response: &str) -> String {
-        format!("<tool_response>\n{}\n</tool_response>\n", function_response)
+        format!("<tool_call>\n{}\n</tool_call>\n", function_response)
+    }
+
+    pub fn extract_tool_response(&self, content: &str) -> Option<String> {
+        let re = Regex::new(r"(?s)<tool_call>(.*?)</tool_call>").unwrap();
+        re.captures(content).and_then(|cap| cap.get(1).map(|m| m.as_str().to_string()))
     }
 }
 
@@ -65,24 +71,31 @@ impl RequestParserBase for NousFunctionCall {
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
     ) -> Result<ChatMessageResponse, OllamaError> {
-        let response_value: Result<NousFunctionCallSignature, serde_json::Error> = serde_json::from_str(input);
-        match response_value {
-            Ok(response) => {
-                if let Some(tool) = tools.iter().find(|t| t.name() == response.tool) {
-                    let tool_params = response.tool_input;
-                    let result = self
-                        .function_call_with_history(
-                            model_name.clone(),
-                            tool_params.clone(),
-                            tool.clone(),
-                        )
-                        .await?;
-                    return Ok(result);
-                } else {
-                    return Err(OllamaError::from("Tool not found".to_string()));
+        //Extract between <tool_response> and </tool_response>
+        let tool_response = self.extract_tool_response(input);
+        match tool_response {
+            Some(tool_response_str) => {
+                let response_value: Result<NousFunctionCallSignature, serde_json::Error> = serde_json::from_str(&tool_response_str);
+                match response_value {
+                    Ok(response) => {
+                        if let Some(tool) = tools.iter().find(|t| t.name() == response.name) {
+                            let tool_params = response.arguments;
+                            let result = self
+                                .function_call_with_history(
+                                    model_name.clone(),
+                                    tool_params.clone(),
+                                    tool.clone(),
+                                )
+                                .await?;
+                            return Ok(result);
+                        } else {
+                            return Err(OllamaError::from("Tool not found".to_string()));
+                        }
+                    }
+                    Err(e) => return Err(OllamaError::from(e)),
                 }
             }
-            Err(e) => return Err(OllamaError::from(e)),
+            None => return Err(OllamaError::from("Tool response not found".to_string())),
         }
     }
 
