@@ -14,7 +14,6 @@ use crate::error::OllamaError;
 use std::sync::Arc;
 use crate::generation::functions::pipelines::RequestParserBase;
 
-
 #[cfg(feature = "function-calling")]
 impl crate::Ollama {
 
@@ -44,7 +43,9 @@ impl crate::Ollama {
                 "default".to_string(),
             ).await?;
 
+
         let response_content: String = result.message.clone().unwrap().content;
+
         let result = parser.parse(&response_content, request.chat.model_name.clone(), request.tools).await?;
         return Ok(result);
     }
@@ -67,6 +68,7 @@ impl crate::Ollama {
         }
         let result = self.send_chat_messages(request.chat).await?;
         let response_content: String = result.message.clone().unwrap().content;
+
         let result = parser.parse(&response_content, model_name, request.tools).await?;
         return Ok(result);
     }

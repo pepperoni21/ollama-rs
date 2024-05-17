@@ -6,9 +6,6 @@ use ollama_rs::{
 };
 use tokio::io::{stdout, AsyncWriteExt};
 use std::sync::Arc;
-use log::info;
-use env_logger;
-use std::env;
 use ollama_rs::generation::functions::pipelines::nous_hermes::request::NousFunctionCall;
 
 #[tokio::test]
@@ -18,9 +15,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ddg_search_tool = Arc::new(DDGSearcher::new());
     //adrienbrault/nous-hermes2pro:Q8_0  "openhermes:latest"
     let mut stdout = stdout();
-
-    env::set_var("RUST_LOG", "info");
-    env_logger::init();
 
     loop {
         stdout.write_all(b"\n> ").await?;
