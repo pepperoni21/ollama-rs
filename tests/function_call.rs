@@ -11,7 +11,7 @@ use env_logger;
 use std::env;
 use ollama_rs::generation::functions::pipelines::nous_hermes::request::NousFunctionCall;
 
-#[tokio::main]
+#[tokio::test]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut ollama = Ollama::new_default_with_history(30);
     let scraper_tool = Arc::new(Scraper {});

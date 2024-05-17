@@ -10,6 +10,7 @@ use crate::generation::functions::pipelines::RequestParserBase;
 use serde::{Deserialize, Serialize};
 use regex::Regex;
 
+
 pub fn convert_to_openai_tool(tool: Arc<dyn Tool>) -> Value {
     let mut function = HashMap::new();
     function.insert("name".to_string(), Value::String(tool.name()));

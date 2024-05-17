@@ -689,6 +689,7 @@ dependencies = [
  "base64",
  "log",
  "ollama-rs",
+ "regex",
  "reqwest",
  "scraper",
  "serde",
