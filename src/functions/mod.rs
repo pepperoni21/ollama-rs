@@ -1,53 +1,53 @@
 pub mod tools;
 pub mod pipelines;
+pub mod request;
 
 pub use tools::WeatherTool;
 pub use tools::Scraper;
 pub use tools::DDGSearcher;
+pub use crate::generation::functions::request::FunctionCallRequest;
+pub use crate::generation::functions::pipelines::openai::request::OpenAIFunctionCall;
 
-use async_trait::async_trait;
-use serde_json::{Value, json};
-use std::error::Error;
-use crate::generation::chat::ChatMessage;
+use crate::generation::chat::ChatMessageResponse;
+use crate::generation::chat::request::{ChatMessageRequest};
+use crate::generation::functions::tools::Tool;
+use crate::error::OllamaError;
+use std::sync::Arc;
+use crate::generation::functions::pipelines::RequestParserBase;
 
 
-pub trait FunctionCallBase: Send + Sync {
-    fn name(&self) -> String;
-}
-
-#[async_trait]
-pub trait FunctionCall: FunctionCallBase {
-    async fn call(&self, params: Value) -> Result<Value, Box<dyn Error>>;
-}
-
-pub struct DefaultFunctionCall {}
-
-impl FunctionCallBase for DefaultFunctionCall {
-    fn name(&self) -> String {
-        "default_function".to_string()
+/*impl Ollama {
+    pub fn new_with_function_calling() -> Self{
+        let m: Ollama = Ollama::new_default_with_history(30);
+        m.add_assistant_response("default".to_string(), "openai".to_string());
+        return m
     }
-}
+}*/
 
 
-pub fn convert_to_ollama_tool(tool: &dyn crate::generation::functions::tools::Tool) -> Value {
-    let schema = tool.parameters();
-    json!({
-        "name": tool.name(),
-        "properties": schema["properties"],
-        "required": schema["required"]
-    })
-}
+#[cfg(feature = "function-calling")]
+impl crate::Ollama {
 
+    pub async fn send_function_call_with_history(
+        &mut self,
+        request: FunctionCallRequest,
+        parser: Arc<dyn RequestParserBase>,
+    ) -> Result<ChatMessageResponse, OllamaError> {
+        //let system_message = request.chat.messages.first().unwrap().clone();
+        let system_prompt = parser.get_system_message(&request.tools).await; //TODO: Check if system prompt is added
+        self.send_chat_messages_with_history(
+            ChatMessageRequest::new(request.chat.model_name.clone(), vec![system_prompt.clone()]),
+            "default".to_string(),
+        ).await?;
 
-pub fn parse_response(message: &ChatMessage) -> Result<String, String> {
-    let content = &message.content;
-    let value: Value = serde_json::from_str(content).map_err(|e| e.to_string())?;
+        let result = self
+            .send_chat_messages_with_history(
+                ChatMessageRequest::new(request.chat.model_name.clone(), request.chat.messages),
+                "default".to_string(),
+            ).await?;
 
-    if let Some(function_call) = value.get("function_call") {
-        if let Some(arguments) = function_call.get("arguments") {
-            return Ok(arguments.to_string());
-        }
-        return Err("`arguments` missing from `function_call`".to_string());
+        let response_content: String = result.message.clone().unwrap().content;
+        let result = parser.parse(&response_content, request.chat.model_name.clone(), request.tools).await?;
+        return Ok(result);
     }
-    Err("`function_call` missing from `content`".to_string())
 }

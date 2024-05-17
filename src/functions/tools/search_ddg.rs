@@ -1,7 +1,5 @@
 use reqwest;
 
-use url::Url;
-
 use scraper::{Html, Selector};
 use std::error::Error;
 
@@ -16,12 +14,6 @@ pub struct SearchResult {
     title: String,
     link: String,
     snippet: String,
-}
-
-impl SearchResult {
-    fn extract_domain(url: &str) -> Option<String> {
-        Url::parse(url).ok()?.domain().map(|d| d.to_string())
-    }
 }
 
 pub struct DDGSearcher {
@@ -82,8 +74,8 @@ impl Tool for DDGSearcher {
             "type": "object",
             "properties": {
                 "query": {
-                    "description": "The search query to send to DuckDuckGo",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The search query to send to DuckDuckGo"
                 }
             },
             "required": ["query"]
@@ -96,14 +88,13 @@ impl Tool for DDGSearcher {
     }
 
     async fn run(&self, input: Value) -> Result<String, Box<dyn Error>> {
-        let query = input.as_str().ok_or("Input should be a string")?;
+        let query = input["query"].as_str().unwrap();
         let results = self.search(query).await?;
         let results_json = serde_json::to_string(&results)?;
         Ok(results_json)
     }
 
     async fn parse_input(&self, input: &str) -> Value {
-        // Use default implementation provided in the Tool trait
         Tool::parse_input(self, input).await
     }
 }
