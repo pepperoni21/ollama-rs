@@ -1,12 +1,12 @@
+use ollama_rs::generation::functions::pipelines::nous_hermes::request::NousFunctionCall;
 use ollama_rs::{
-    generation::functions::tools::{Scraper, DDGSearcher},
-    generation::functions::{FunctionCallRequest, OpenAIFunctionCall},
     generation::chat::ChatMessage,
+    generation::functions::tools::{DDGSearcher, Scraper},
+    generation::functions::{FunctionCallRequest, OpenAIFunctionCall},
     Ollama,
 };
-use tokio::io::{stdout, AsyncWriteExt};
 use std::sync::Arc;
-use ollama_rs::generation::functions::pipelines::nous_hermes::request::NousFunctionCall;
+use tokio::io::{stdout, AsyncWriteExt};
 
 #[tokio::test]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -30,15 +30,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let user_message = ChatMessage::user(input.to_string());
 
-
         let parser = Arc::new(NousFunctionCall {});
-        let result  = ollama.send_function_call(
-            FunctionCallRequest::new(
-                "adrienbrault/nous-hermes2pro:Q8_0".to_string(),
-                vec![scraper_tool.clone(), ddg_search_tool.clone()],
-                vec![user_message.clone()]
-            ),
-            parser.clone()).await?;
+        let result = ollama
+            .send_function_call(
+                FunctionCallRequest::new(
+                    "adrienbrault/nous-hermes2pro:Q8_0".to_string(),
+                    vec![scraper_tool.clone(), ddg_search_tool.clone()],
+                    vec![user_message.clone()],
+                ),
+                parser.clone(),
+            )
+            .await?;
 
         if let Some(message) = result.message {
             stdout.write_all(message.content.as_bytes()).await?;

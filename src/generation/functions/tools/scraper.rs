@@ -3,13 +3,12 @@ use scraper::{Html, Selector};
 use std::env;
 use text_splitter::TextSplitter;
 
-use std::error::Error;
-use serde_json::{Value, json};
 use crate::generation::functions::tools::Tool;
 use async_trait::async_trait;
+use serde_json::{json, Value};
+use std::error::Error;
 
 pub struct Scraper {}
-
 
 #[async_trait]
 impl Tool for Scraper {
@@ -36,11 +35,12 @@ impl Tool for Scraper {
 
     async fn run(&self, input: Value) -> Result<String, Box<dyn Error>> {
         let website = input["website"].as_str().ok_or("Website URL is required")?;
-        let browserless_token = env::var("BROWSERLESS_TOKEN").expect("BROWSERLESS_TOKEN must be set");
+        let browserless_token =
+            env::var("BROWSERLESS_TOKEN").expect("BROWSERLESS_TOKEN must be set");
         let url = format!("http://0.0.0.0:3000/content?token={}", browserless_token);
         let payload = json!({
-        "url": website
-    });
+            "url": website
+        });
         let client = Client::new();
         let response = client
             .post(&url)
@@ -66,4 +66,3 @@ impl Tool for Scraper {
         Ok(sentences)
     }
 }
-
