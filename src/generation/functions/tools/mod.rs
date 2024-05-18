@@ -1,5 +1,5 @@
-pub mod scraper;
 pub mod search_ddg;
+pub mod scraper;
 
 pub use self::scraper::Scraper;
 pub use self::search_ddg::DDGSearcher;

@@ -1,12 +1,9 @@
 use reqwest::Client;
 use scraper::{Html, Selector};
-use std::env;
-use text_splitter::TextSplitter;
-
+use std::error::Error;
+use serde_json::{Value, json};
 use crate::generation::functions::tools::Tool;
 use async_trait::async_trait;
-use serde_json::{json, Value};
-use std::error::Error;
 
 pub struct Scraper {}
 
@@ -35,34 +32,20 @@ impl Tool for Scraper {
 
     async fn run(&self, input: Value) -> Result<String, Box<dyn Error>> {
         let website = input["website"].as_str().ok_or("Website URL is required")?;
-        let browserless_token =
-            env::var("BROWSERLESS_TOKEN").expect("BROWSERLESS_TOKEN must be set");
-        let url = format!("http://0.0.0.0:3000/content?token={}", browserless_token);
-        let payload = json!({
-            "url": website
-        });
         let client = Client::new();
-        let response = client
-            .post(&url)
-            .header("cache-control", "no-cache")
-            .header("content-type", "application/json")
-            .json(&payload)
-            .send()
-            .await?;
+        let response = client.get(website).send().await?.text().await?;
 
-        let response_text = response.text().await?;
-        let document = Html::parse_document(&response_text);
+        let document = Html::parse_document(&response);
         let selector = Selector::parse("p, h1, h2, h3, h4, h5, h6").unwrap();
         let elements: Vec<String> = document
             .select(&selector)
-            .map(|el| el.text().collect::<String>())
+            .map(|el| el.text().collect::<Vec<_>>().join(" "))
             .collect();
         let body = elements.join(" ");
 
-        let splitter = TextSplitter::new(1000);
-        let chunks = splitter.chunks(&body);
-        let sentences: Vec<String> = chunks.map(|s| s.to_string()).collect();
-        let sentences = sentences.join("\n \n");
-        Ok(sentences)
+        let sentences: Vec<String> = body.split(". ").map(|s| s.to_string()).collect();
+        let formatted_content = sentences.join("\n\n");
+
+        Ok(formatted_content)
     }
 }
