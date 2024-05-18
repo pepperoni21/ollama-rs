@@ -26,7 +26,7 @@ async fn test_send_function_call() {
             ),
             parser.clone(),
         )
-        .await?;
+        .await.unwrap();
 
     dbg!(&result);
 
