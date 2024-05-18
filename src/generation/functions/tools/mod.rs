@@ -1,5 +1,5 @@
-pub mod search_ddg;
 pub mod scraper;
+pub mod search_ddg;
 
 pub use self::scraper::Scraper;
 pub use self::search_ddg::DDGSearcher;
@@ -17,7 +17,7 @@ pub trait Tool: Send + Sync {
     /// Provides a description of what the tool does and when to use it.
     fn description(&self) -> String;
 
-    /// This are the parameters for OpenAI-like function call.
+    /// Returns the parameters for OpenAI-like function call.
     fn parameters(&self) -> Value {
         json!({
             "type": "object",
