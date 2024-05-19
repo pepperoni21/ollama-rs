@@ -22,8 +22,8 @@ impl MessagesHistory {
     }
 
     /// Add message for entry even no history exists for an entry
-    pub fn add_message(&mut self, entry_id: &str, message: ChatMessage) {
-        let messages = self.messages_by_id.entry(entry_id.to_string()).or_default();
+    pub fn add_message<S: Into<String>>(&mut self, entry_id: S, message: ChatMessage) {
+        let messages = self.messages_by_id.entry(entry_id.into()).or_default();
 
         // Replacing the oldest message if the limit is reached
         // The oldest message is the first one, unless it's a system message
@@ -54,8 +54,8 @@ impl MessagesHistory {
     }
 
     /// Remove last message added in history
-    pub fn pop_last_message_for_id(&mut self, entry_id: &str) {
-        if let Some(messages) = self.messages_by_id.get_mut(entry_id) {
+    pub fn pop_last_message_for_id<S: Into<String>>(&mut self, entry_id: S) {
+        if let Some(messages) = self.messages_by_id.get_mut(&entry_id.into()) {
             messages.pop();
         }
     }
@@ -113,22 +113,22 @@ impl Ollama {
     }
 
     /// Add AI's message to a history
-    pub fn add_assistant_response(&mut self, entry_id: &str, message: String) {
-        self.add_history_message(entry_id, ChatMessage::assistant(message));
+    pub fn add_assistant_response<S: Into<String>>(&mut self, entry_id: S, message: S) {
+        self.add_history_message(entry_id, ChatMessage::assistant(message.into()));
     }
 
     /// Add user's message to a history
-    pub fn add_user_response(&mut self, entry_id: &str, message: String) {
-        self.add_history_message(entry_id, ChatMessage::user(message));
+    pub fn add_user_response<S: Into<String>>(&mut self, entry_id: S, message: S) {
+        self.add_history_message(entry_id, ChatMessage::user(message.into()));
     }
 
     /// Set system prompt for chat history
-    pub fn set_system_response(&mut self, entry_id: &str, message: String) {
-        self.add_history_message(entry_id, ChatMessage::system(message));
+    pub fn set_system_response<S: Into<String>>(&mut self, entry_id: S, message: S) {
+        self.add_history_message(entry_id, ChatMessage::system(message.into()));
     }
 
     /// Helper for message add to history
-    fn add_history_message(&mut self, entry_id: &str, message: ChatMessage) {
+    fn add_history_message<S: Into<String>>(&mut self, entry_id: S, message: ChatMessage) {
         if let Some(messages_history) = self.messages_history.as_mut() {
             messages_history.add_message(entry_id, message);
         }

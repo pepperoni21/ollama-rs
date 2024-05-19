@@ -1,15 +1,16 @@
+#[cfg(all(feature = "chat-history", feature = "stream"))]
+use async_stream::stream;
 use serde::{Deserialize, Serialize};
 
 use crate::Ollama;
-
 pub mod request;
-
-use request::ChatMessageRequest;
-
 use super::images::Image;
+use request::ChatMessageRequest;
 
 #[cfg(feature = "chat-history")]
 use crate::history::MessagesHistory;
+#[cfg(all(feature = "chat-history", feature = "stream"))]
+use crate::history_async::MessagesHistoryAsync;
 
 #[cfg(feature = "stream")]
 /// A stream of `ChatMessageResponse` objects
@@ -101,13 +102,13 @@ impl Ollama {
     /// Chat message generation
     /// Returns a `ChatMessageResponse` object
     /// Manages the history of messages for the given `id`
-    pub async fn send_chat_messages_with_history(
+    pub async fn send_chat_messages_with_history<S: Into<String> + Clone>(
         &mut self,
         mut request: ChatMessageRequest,
-        history_id: &str,
+        history_id: S,
     ) -> crate::error::Result<ChatMessageResponse> {
         // The request is modified to include the current chat messages
-        request.messages = self.get_prefill_messages(history_id, request.messages.clone());
+        request.messages = self.get_prefill_messages(history_id.clone(), request.messages);
 
         let result = self.send_chat_messages(request).await;
 
@@ -127,7 +128,7 @@ impl Ollama {
     }
 
     /// Helper function to store chat messages by id
-    fn store_chat_message_by_id(&mut self, id: &str, message: ChatMessage) {
+    fn store_chat_message_by_id<S: Into<String>>(&mut self, id: S, message: ChatMessage) {
         if let Some(messages_history) = self.messages_history.as_mut() {
             messages_history.add_message(id, message);
         }
@@ -136,9 +137,9 @@ impl Ollama {
     /// Let get existing history with a new message in it
     /// Without impact for existing history
     /// Used to prepare history for request
-    fn get_prefill_messages(
+    fn get_prefill_messages<S: Into<String>>(
         &mut self,
-        history_id: &str,
+        history_id: S,
         request_messages: Vec<ChatMessage>,
     ) -> Vec<ChatMessage> {
         let mut backup = MessagesHistory::default();
@@ -150,7 +151,7 @@ impl Ollama {
             .as_mut()
             .unwrap_or(&mut backup)
             .messages_by_id
-            .entry(history_id.to_string())
+            .entry(history_id.into())
             .or_default();
 
         if let Some(message) = request_messages.first() {
@@ -160,10 +161,98 @@ impl Ollama {
         current_chat_messages.clone()
     }
 
-    fn remove_history_last_message(&mut self, history_id: &str) {
+    fn remove_history_last_message<S: Into<String>>(&mut self, history_id: S) {
         if let Some(history) = self.messages_history.as_mut() {
             history.pop_last_message_for_id(history_id);
         }
+    }
+}
+
+#[cfg(all(feature = "chat-history", feature = "stream"))]
+impl Ollama {
+    async fn get_chat_messages_by_id_async(&mut self, id: String) -> Vec<ChatMessage> {
+        // Clone the current chat messages to avoid borrowing issues
+        // And not to add message to the history if the request fails
+        self.messages_history_async
+            .as_mut()
+            .unwrap_or(&mut MessagesHistoryAsync::default())
+            .messages_by_id
+            .lock()
+            .await
+            .entry(id.clone())
+            .or_default()
+            .clone()
+    }
+
+    pub async fn store_chat_message_by_id_async(&mut self, id: String, message: ChatMessage) {
+        if let Some(messages_history_async) = self.messages_history_async.as_mut() {
+            messages_history_async.add_message(id, message).await;
+        }
+    }
+
+    pub async fn send_chat_messages_with_history_stream(
+        &mut self,
+        mut request: ChatMessageRequest,
+        id: String,
+    ) -> crate::error::Result<ChatMessageResponseStream> {
+        use tokio_stream::StreamExt;
+
+        let (tx, mut rx) =
+            tokio::sync::mpsc::unbounded_channel::<Result<ChatMessageResponse, ()>>(); // create a channel for sending and receiving messages
+
+        let mut current_chat_messages = self.get_chat_messages_by_id_async(id.clone()).await;
+
+        if let Some(messaeg) = request.messages.first() {
+            current_chat_messages.push(messaeg.clone());
+        }
+
+        request.messages.clone_from(&current_chat_messages);
+
+        let mut stream = self.send_chat_messages_stream(request.clone()).await?;
+
+        let message_history_async = self.messages_history_async.clone();
+
+        tokio::spawn(async move {
+            let mut result = String::new();
+            while let Some(res) = rx.recv().await {
+                match res {
+                    Ok(res) => {
+                        if let Some(message) = res.message.clone() {
+                            result += message.content.as_str();
+                        }
+                    }
+                    Err(_) => {
+                        break;
+                    }
+                }
+            }
+
+            if let Some(message_history_async) = message_history_async {
+                message_history_async
+                    .add_message(id.clone(), ChatMessage::assistant(result))
+                    .await;
+            } else {
+                eprintln!("not using chat-history and stream features"); // this should not happen if the features are enabled
+            }
+        });
+
+        let s = stream! {
+            while let Some(res) = stream.next().await {
+                match res {
+                    Ok(res) => {
+                        if let Err(e) = tx.send(Ok(res.clone())) {
+                            eprintln!("Failed to send response: {}", e);
+                        };
+                        yield Ok(res);
+                    }
+                    Err(_) => {
+                        yield Err(());
+                    }
+                }
+            }
+        };
+
+        Ok(Box::pin(s))
     }
 }
 

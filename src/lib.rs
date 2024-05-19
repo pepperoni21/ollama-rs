@@ -2,6 +2,8 @@ pub mod error;
 pub mod generation;
 #[cfg(feature = "chat-history")]
 pub mod history;
+#[cfg(all(feature = "chat-history", feature = "stream"))]
+pub mod history_async;
 pub mod models;
 
 use url::Url;
@@ -69,6 +71,8 @@ pub struct Ollama {
     pub(crate) reqwest_client: reqwest::Client,
     #[cfg(feature = "chat-history")]
     pub(crate) messages_history: Option<history::MessagesHistory>,
+    #[cfg(all(feature = "chat-history", feature = "stream"))]
+    pub(crate) messages_history_async: Option<history_async::MessagesHistoryAsync>,
 }
 
 impl Ollama {
@@ -145,6 +149,8 @@ impl Default for Ollama {
             reqwest_client: reqwest::Client::new(),
             #[cfg(feature = "chat-history")]
             messages_history: None,
+            #[cfg(all(feature = "chat-history", feature = "stream"))]
+            messages_history_async: None,
         }
     }
 }

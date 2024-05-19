@@ -10,7 +10,7 @@ It was made following the [Ollama API](https://github.com/jmorganca/ollama/blob/
 
 ```toml
 [dependencies]
-ollama-rs = "0.1.9"
+ollama-rs = "0.2.0"
 ```
 
 ### Initialize Ollama
@@ -25,7 +25,8 @@ let ollama = Ollama::new("http://localhost".to_string(), 11434);
 
 ## Usage
 
-Feel free to check the [Chatbot example](examples/basic_chatbot.rs) that shows how to use the library to create a simple chatbot in less than 50 lines of code.
+Feel free to check the [Chatbot example](https://github.com/pepperoni21/ollama-rs/blob/0.2.0/examples/basic_chatbot.rs) that shows how to use the library to create a simple chatbot in less than 50 lines of code.
+You can also check some [other examples](https://github.com/pepperoni21/ollama-rs/tree/0.2.0/examples).
 
 _These examples use poor error handling for simplicity, but you should handle errors properly in your code._
 
@@ -146,3 +147,21 @@ let res = ollama.generate_embeddings("llama2:latest".to_string(), prompt, None).
 ```
 
 _Returns a `GenerateEmbeddingsResponse` struct containing the embeddings (a vector of floats)._
+
+### Make a function call
+
+```rust
+let tools = vec![Arc::new(Scraper::new())];
+let parser = Arc::new(NousFunctionCall::new());
+let message = ChatMessage::user("What is the current oil price?".to_string());
+let res = ollama.send_function_call(
+    FunctionCallRequest::new(
+        "adrienbrault/nous-hermes2pro:Q8_0".to_string(),
+        tools,
+        vec![message],
+    ),
+    parser,
+  ).await.unwrap();
+```
+
+_Uses the given tools (such as searching the web) to find an answer, returns a `ChatMessageResponse` with the answer to the question._
