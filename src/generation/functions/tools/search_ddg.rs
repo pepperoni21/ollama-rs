@@ -4,10 +4,9 @@ use scraper::{Html, Selector};
 use std::error::Error;
 
 use crate::generation::functions::tools::Tool;
-use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
 use async_trait::async_trait;
-
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchResult {
@@ -40,19 +39,41 @@ impl DDGSearcher {
         let result_url_selector = Selector::parse(".result__url").unwrap();
         let result_snippet_selector = Selector::parse(".result__snippet").unwrap();
 
-        let results = document.select(&result_selector).map(|result| {
+        let results = document
+            .select(&result_selector)
+            .map(|result| {
+                let title = result
+                    .select(&result_title_selector)
+                    .next()
+                    .unwrap()
+                    .text()
+                    .collect::<Vec<_>>()
+                    .join("");
+                let link = result
+                    .select(&result_url_selector)
+                    .next()
+                    .unwrap()
+                    .text()
+                    .collect::<Vec<_>>()
+                    .join("")
+                    .trim()
+                    .to_string();
+                let snippet = result
+                    .select(&result_snippet_selector)
+                    .next()
+                    .unwrap()
+                    .text()
+                    .collect::<Vec<_>>()
+                    .join("");
 
-            let title = result.select(&result_title_selector).next().unwrap().text().collect::<Vec<_>>().join("");
-            let link = result.select(&result_url_selector).next().unwrap().text().collect::<Vec<_>>().join("").trim().to_string();
-            let snippet = result.select(&result_snippet_selector).next().unwrap().text().collect::<Vec<_>>().join("");
-
-            SearchResult {
-                title,
-                link,
-                //url: String::from(url.value().attr("href").unwrap()),
-                snippet,
-            }
-        }).collect::<Vec<_>>();
+                SearchResult {
+                    title,
+                    link,
+                    //url: String::from(url.value().attr("href").unwrap()),
+                    snippet,
+                }
+            })
+            .collect::<Vec<_>>();
 
         Ok(results)
     }

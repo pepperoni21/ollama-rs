@@ -1,11 +1,17 @@
-use reqwest::Client;
-use scraper::{Html, Selector};
-use std::error::Error;
-use serde_json::{Value, json};
 use crate::generation::functions::tools::Tool;
 use async_trait::async_trait;
+use reqwest::Client;
+use scraper::{Html, Selector};
+use serde_json::{json, Value};
+use std::error::Error;
 
 pub struct Scraper {}
+
+impl Scraper {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 #[async_trait]
 impl Tool for Scraper {

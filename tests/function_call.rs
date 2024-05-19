@@ -1,3 +1,5 @@
+// #![cfg(feature = "function-calling")]
+
 use ollama_rs::{
     generation::chat::ChatMessage,
     generation::functions::tools::{DDGSearcher, Scraper},
@@ -5,29 +7,33 @@ use ollama_rs::{
     Ollama,
 };
 use std::sync::Arc;
-use tokio::io::{stdout, AsyncWriteExt};
 
 #[tokio::test]
 async fn test_send_function_call() {
-    let mut ollama = Ollama::new_default_with_history(30);
-    let scraper_tool = Arc::new(Scraper {});
+    /// Model to be used, make sure it is tailored towards "function calling", such as:
+    /// - openhermes:latest
+    /// - adrienbrault/nous-hermes2pro:Q8_0
+    const MODEL: &str = "adrienbrault/nous-hermes2pro:Q8_0";
+
+    const PROMPT: &str = "";
+    let user_message = ChatMessage::user(PROMPT.to_string());
+
+    let scraper_tool = Arc::new(Scraper::new());
     let ddg_search_tool = Arc::new(DDGSearcher::new());
+    let parser = Arc::new(NousFunctionCall::new());
 
-    let query = "".to_string();
-    let user_message = ChatMessage::user(query.to_string());
-
-    let parser = Arc::new(NousFunctionCall {});
+    let ollama = Ollama::new_default_with_history(30);
     let result = ollama
         .send_function_call(
             FunctionCallRequest::new(
-                "adrienbrault/nous-hermes2pro:Q8_0".to_string(),
-                vec![scraper_tool.clone(), ddg_search_tool.clone()],
-                vec![user_message.clone()],
+                MODEL.to_string(),
+                vec![scraper_tool, ddg_search_tool],
+                vec![user_message],
             ),
-            parser.clone(),
+            parser,
         )
-        .await.unwrap();
+        .await
+        .unwrap();
 
-    dbg!(&result);
-
+    assert!(result.done);
 }
