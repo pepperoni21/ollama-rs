@@ -15,6 +15,12 @@ pub trait RequestParserBase {
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
     ) -> Result<ChatMessageResponse, ChatMessageResponse>;
+    fn format_query(&self, input: &str) -> String {
+        input.to_string()
+    }
+    fn format_response(&self, response: &str) -> String {
+        response.to_string()
+    }
     async fn get_system_message(&self, tools: &[Arc<dyn Tool>]) -> ChatMessage;
     fn error_handler(&self, error: OllamaError) -> ChatMessageResponse;
 }

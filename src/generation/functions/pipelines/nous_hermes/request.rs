@@ -49,7 +49,7 @@ impl NousFunctionCall {
             Ok(result) => Ok(ChatMessageResponse {
                 model: model_name.clone(),
                 created_at: "".to_string(),
-                message: Some(ChatMessage::tool(self.format_tool_response(&result))),
+                message: Some(ChatMessage::assistant(self.format_tool_response(&result))),
                 done: true,
                 final_data: None,
             }),
@@ -61,10 +61,19 @@ impl NousFunctionCall {
         format!("<tool_response>\n{}\n</tool_response>\n", function_response)
     }
 
-    pub fn extract_tool_response(&self, content: &str) -> Option<String> {
+    pub fn extract_tool_call(&self, content: &str) -> Option<String> {
         let re = Regex::new(r"(?s)<tool_call>(.*?)</tool_call>").unwrap();
-        re.captures(content)
-            .and_then(|cap| cap.get(1).map(|m| m.as_str().to_string()))
+        if let Some(captures) = re.captures(content) {
+            if let Some(matched) = captures.get(1) {
+                let result = matched
+                    .as_str()
+                    .replace("\n", "")
+                    .replace("{{", "{")
+                    .replace("}}", "}");
+                return Some(result);
+            }
+        }
+        None
     }
 }
 
@@ -76,8 +85,8 @@ impl RequestParserBase for NousFunctionCall {
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
     ) -> Result<ChatMessageResponse, ChatMessageResponse> {
-        //Extract between <tool_response> and </tool_response>
-        let tool_response = self.extract_tool_response(input);
+        //Extract between <tool_call> and </tool_call>
+        let tool_response = self.extract_tool_call(input);
         match tool_response {
             Some(tool_response_str) => {
                 let response_value: Result<NousFunctionCallSignature, serde_json::Error> =
@@ -95,18 +104,31 @@ impl RequestParserBase for NousFunctionCall {
                                 .await?; //Error is also returned as String for LLM feedback
                             return Ok(result);
                         } else {
-                            return Err(
-                                self.error_handler(OllamaError::from("Tool not found".to_string()))
-                            );
+                            return Err(self.error_handler(OllamaError::from(
+                                "Tool name not found".to_string(),
+                            )));
                         }
                     }
                     Err(e) => return Err(self.error_handler(OllamaError::from(e))),
                 }
             }
             None => {
-                return Err(self.error_handler(OllamaError::from("Tool call not found".to_string())))
+                return Err(self.error_handler(OllamaError::from(
+                    "Error while extracting <tool_call> tags.".to_string(),
+                )))
             }
         }
+    }
+
+    fn format_query(&self, input: &str) -> String {
+        format!(
+            "{}\nThis is the first turn and you don't have <tool_results> to analyze yet",
+            input
+        )
+    }
+
+    fn format_response(&self, response: &str) -> String {
+        format!("Agent iteration to assist with user query: {}", response)
     }
 
     async fn get_system_message(&self, tools: &[Arc<dyn Tool>]) -> ChatMessage {
@@ -128,7 +150,7 @@ impl RequestParserBase for NousFunctionCall {
         ChatMessageResponse {
             model: "".to_string(),
             created_at: "".to_string(),
-            message: Some(ChatMessage::tool(error_message)),
+            message: Some(ChatMessage::assistant(error_message)),
             done: true,
             final_data: None,
         }

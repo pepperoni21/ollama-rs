@@ -17,13 +17,13 @@ use std::sync::Arc;
 
 #[cfg(feature = "function-calling")]
 impl crate::Ollama {
-    pub async fn check_system_message(
-        &self,
-        messages: &Vec<ChatMessage>,
-        system_prompt: &str,
-    ) -> bool {
+    fn has_system_prompt(&self, messages: &Vec<ChatMessage>, system_prompt: &str) -> bool {
         let system_message = messages.first().unwrap().clone();
         return system_message.content == system_prompt;
+    }
+
+    fn has_system_prompt_history(&mut self) -> bool {
+        return self.get_messages_history("default".to_string()).is_some();
     }
 
     #[cfg(feature = "chat-history")]
@@ -32,43 +32,53 @@ impl crate::Ollama {
         request: FunctionCallRequest,
         parser: Arc<dyn RequestParserBase>,
     ) -> Result<ChatMessageResponse, OllamaError> {
-        let system_prompt = parser.get_system_message(&request.tools).await;
-        if request.chat.messages.len() == 0 {
-            // If there are no messages in the chat, add a system prompt
-            self.send_chat_messages_with_history(
-                ChatMessageRequest::new(
-                    request.chat.model_name.clone(),
-                    vec![system_prompt.clone()],
-                ),
-                "default".to_string(),
-            )
-            .await?;
+        let mut request = request;
+
+        if !self.has_system_prompt_history() {
+            let system_prompt = parser.get_system_message(&request.tools).await;
+            self.set_system_response("default".to_string(), system_prompt.content);
+
+            //format input
+            let formatted_query = ChatMessage::user(
+                parser.format_query(&request.chat.messages.first().unwrap().content),
+            );
+            //replace with formatted_query with previous chat_message
+            request.chat.messages.remove(0);
+            request.chat.messages.insert(0, formatted_query);
         }
 
-        let result = self
+        let tool_call_result = self
             .send_chat_messages_with_history(
                 ChatMessageRequest::new(request.chat.model_name.clone(), request.chat.messages),
                 "default".to_string(),
             )
             .await?;
 
-        let response_content: String = result.message.clone().unwrap().content;
-
+        let tool_call_content: String = tool_call_result.message.clone().unwrap().content;
         let result = parser
             .parse(
-                &response_content,
+                &tool_call_content,
                 request.chat.model_name.clone(),
                 request.tools,
             )
             .await;
-        match result {
+
+        return match result {
             Ok(r) => {
-                return Ok(r);
+                self.add_assistant_response(
+                    "default".to_string(),
+                    r.message.clone().unwrap().content,
+                );
+                Ok(r)
             }
             Err(e) => {
-                return Ok(e);
+                self.add_assistant_response(
+                    "default".to_string(),
+                    e.message.clone().unwrap().content,
+                );
+                Ok(e)
             }
-        }
+        };
     }
 
     pub async fn send_function_call(
@@ -83,26 +93,18 @@ impl crate::Ollama {
         let model_name = request.chat.model_name.clone();
 
         //Make sure the first message in chat is the system prompt
-        if !self
-            .check_system_message(&request.chat.messages, &system_prompt.content)
-            .await
-        {
+        if !self.has_system_prompt(&request.chat.messages, &system_prompt.content) {
             request.chat.messages.insert(0, system_prompt);
         }
-
         let result = self.send_chat_messages(request.chat).await?;
         let response_content: String = result.message.clone().unwrap().content;
 
         let result = parser
             .parse(&response_content, model_name, request.tools)
             .await;
-        match result {
-            Ok(r) => {
-                return Ok(r);
-            }
-            Err(e) => {
-                return Ok(e);
-            }
-        }
+        return match result {
+            Ok(r) => Ok(r),
+            Err(e) => Ok(e),
+        };
     }
 }

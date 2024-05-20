@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::Ollama;
 pub mod request;
-use request::ChatMessageRequest;
 use super::images::Image;
+use request::ChatMessageRequest;
 
 #[cfg(feature = "chat-history")]
 use crate::history::MessagesHistory;
@@ -11,7 +11,7 @@ use crate::history::MessagesHistory;
 #[cfg(feature = "stream")]
 /// A stream of `ChatMessageResponse` objects
 pub type ChatMessageResponseStream =
-std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<ChatMessageResponse, ()>> + Send>>;
+    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<ChatMessageResponse, ()>> + Send>>;
 
 impl Ollama {
     #[cfg(feature = "stream")]
@@ -207,11 +207,6 @@ impl ChatMessage {
         Self::new(MessageRole::System, content)
     }
 
-    #[cfg(feature = "function-calling")]
-    pub fn tool(content: String) -> Self {
-        Self::new(MessageRole::Tool, content)
-    }
-
     pub fn with_images(mut self, images: Vec<Image>) -> Self {
         self.images = Some(images);
         self
@@ -235,7 +230,4 @@ pub enum MessageRole {
     Assistant,
     #[serde(rename = "system")]
     System,
-    #[cfg(feature = "function-calling")]
-    #[serde(rename = "tool")]
-    Tool,
 }

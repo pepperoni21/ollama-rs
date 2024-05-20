@@ -16,17 +16,44 @@ Objective: |
 Tools: |
   Here are the available tools:
   <tools> {tools} </tools>
-  If the provided function signatures doesn't have the function you must call, you may write executable python code in markdown syntax and call code_interpreter() function as follows:
+  If the provided function signatures doesn't have the function you must call, you may write executable rust code in markdown syntax and call code_interpreter() function as follows:
   <tool_call>
-  {{"arguments": {{"code_markdown": <python-code>, "name": "code_interpreter"}}}}
+  {"arguments": {"code_markdown": <rust-code>, "name": "code_interpreter"}}
   </tool_call>
   Make sure that the json object above with code markdown block is parseable with json.loads() and the XML block with XML ElementTree.
 Examples: |
   Here are some example usage of functions:
-  {examples}
+  [
+    {
+        "example": "```\nSYSTEM: You are a helpful assistant who has access to functions. Use them if required\n<tools>[\n {\n \"name\": \"calculate_distance\",\n \"description\": \"Calculate the distance between two locations\",\n \"parameters\": {\n \"type\": \"object\",\n \"properties\": {\n \"origin\": {\n \"type\": \"string\",\n \"description\": \"The starting location\"\n },\n \"destination\": {\n \"type\": \"string\",\n \"description\": \"The destination location\"\n },\n \"mode\": {\n \"type\": \"string\",\n \"description\": \"The mode of transportation\"\n }\n },\n \"required\": [\n \"origin\",\n \"destination\",\n \"mode\"\n ]\n }\n },\n {\n \"name\": \"generate_password\",\n \"description\": \"Generate a random password\",\n \"parameters\": {\n \"type\": \"object\",\n \"properties\": {\n \"length\": {\n \"type\": \"integer\",\n \"description\": \"The length of the password\"\n }\n },\n \"required\": [\n \"length\"\n ]\n }\n }\n]\n\n</tools>\nUSER: Hi, I need to know the distance from New York to Los Angeles by car.\nASSISTANT:\n<tool_call>\n{\"arguments\": {\"origin\": \"New York\",\n \"destination\": \"Los Angeles\", \"mode\": \"car\"}, \"name\": \"calculate_distance\"}\n</tool_call>\n```\n"
+    },
+    {
+        "example": "```\nSYSTEM: You are a helpful assistant with access to functions. Use them if required\n<tools>[\n {\n \"name\": \"calculate_distance\",\n \"description\": \"Calculate the distance between two locations\",\n \"parameters\": {\n \"type\": \"object\",\n \"properties\": {\n \"origin\": {\n \"type\": \"string\",\n \"description\": \"The starting location\"\n },\n \"destination\": {\n \"type\": \"string\",\n \"description\": \"The destination location\"\n },\n \"mode\": {\n \"type\": \"string\",\n \"description\": \"The mode of transportation\"\n }\n },\n \"required\": [\n \"origin\",\n \"destination\",\n \"mode\"\n ]\n }\n },\n {\n \"name\": \"generate_password\",\n \"description\": \"Generate a random password\",\n \"parameters\": {\n \"type\": \"object\",\n \"properties\": {\n \"length\": {\n \"type\": \"integer\",\n \"description\": \"The length of the password\"\n }\n },\n \"required\": [\n \"length\"\n ]\n }\n }\n]\n\n</tools>\nUSER: Can you help me generate a random password with a length of 8 characters?\nASSISTANT:\n<tool_call>\n{\"arguments\": {\"length\": 8}, \"name\": \"generate_password\"}\n</tool_call>\n```"
+    }
+]
 Schema: |
   Use the following pydantic model json schema for each tool call you will make:
-  {schema}
+    {
+        "name": "tool name",
+        "description": "tool description",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "parameter1": {
+                    "type": "string",
+                    "description": "parameter description"
+                },
+                "parameter2": {
+                    "type": "string",
+                    "description": "parameter description"
+                }
+            },
+            "required": [
+                "parameter1",
+                "parameter2"
+            ]
+        }
+    }
 Instructions: |
   At the very first turn you don't have <tool_results> so you shouldn't not make up the results.
   Please keep a running summary with analysis of previous function results and summaries from previous iterations.
@@ -35,6 +62,6 @@ Instructions: |
   If you plan to continue with analysis, always call another function.
   For each function call return a valid json object (using doulbe quotes) with function name and arguments within <tool_call></tool_call> XML tags as follows:
   <tool_call>
-  {{"arguments": <args-dict>, "name": <function-name>}}
+  {"arguments": <args-dict>, "name": <function-name>}
   </tool_call>
 "#;

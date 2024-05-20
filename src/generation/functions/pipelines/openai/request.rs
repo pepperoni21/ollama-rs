@@ -94,7 +94,7 @@ impl RequestParserBase for OpenAIFunctionCall {
         ChatMessageResponse {
             model: "".to_string(),
             created_at: "".to_string(),
-            message: Some(ChatMessage::tool(error.to_string())),
+            message: Some(ChatMessage::assistant(error.to_string())),
             done: true,
             final_data: None,
         }
