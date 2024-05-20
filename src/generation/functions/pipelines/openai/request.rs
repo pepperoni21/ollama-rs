@@ -34,7 +34,7 @@ impl OpenAIFunctionCall {
         tool: Arc<dyn Tool>,
     ) -> Result<ChatMessageResponse, ChatMessageResponse> {
         let result = tool.run(tool_params).await;
-        return match result {
+        match result {
             Ok(result) => Ok(ChatMessageResponse {
                 model: model_name.clone(),
                 created_at: "".to_string(),
@@ -43,7 +43,7 @@ impl OpenAIFunctionCall {
                 final_data: None,
             }),
             Err(e) => Err(self.error_handler(OllamaError::from(e))),
-        };
+        }
     }
 }
 
@@ -83,7 +83,7 @@ impl RequestParserBase for OpenAIFunctionCall {
         // Corrected here to use a slice
         let tools_info: Vec<Value> = tools
             .iter()
-            .map(|tool| convert_to_ollama_tool(tool))
+            .map(convert_to_ollama_tool)
             .collect();
         let tools_json = serde_json::to_string(&tools_info).unwrap();
         let system_message_content = DEFAULT_SYSTEM_TEMPLATE.replace("{tools}", &tools_json);

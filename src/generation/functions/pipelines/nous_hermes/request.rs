@@ -33,6 +33,12 @@ pub struct NousFunctionCallSignature {
 
 pub struct NousFunctionCall {}
 
+impl Default for NousFunctionCall {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NousFunctionCall {
     pub fn new() -> Self {
         Self {}
@@ -67,7 +73,7 @@ impl NousFunctionCall {
             if let Some(matched) = captures.get(1) {
                 let result = matched
                     .as_str()
-                    .replace("\n", "")
+                    .replace('\n', "")
                     .replace("{{", "{")
                     .replace("}}", "}");
                 return Some(result);
@@ -144,7 +150,7 @@ impl RequestParserBase for NousFunctionCall {
     fn error_handler(&self, error: OllamaError) -> ChatMessageResponse {
         let error_message = format!(
             "<tool_response>\nThere was an error parsing function calls\n Here's the error stack trace: {}\nPlease call the function again with correct syntax</tool_response>",
-            error.to_string()
+            error
         );
 
         ChatMessageResponse {

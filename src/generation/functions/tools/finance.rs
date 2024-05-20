@@ -11,6 +11,12 @@ pub struct StockScraper {
     language: String,
 }
 
+impl Default for StockScraper {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StockScraper {
     pub fn new() -> Self {
         StockScraper {

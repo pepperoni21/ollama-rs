@@ -17,9 +17,9 @@ use std::sync::Arc;
 
 #[cfg(feature = "function-calling")]
 impl crate::Ollama {
-    fn has_system_prompt(&self, messages: &Vec<ChatMessage>, system_prompt: &str) -> bool {
+    fn has_system_prompt(&self, messages: &[ChatMessage], system_prompt: &str) -> bool {
         let system_message = messages.first().unwrap().clone();
-        return system_message.content == system_prompt;
+        system_message.content == system_prompt
     }
 
     fn has_system_prompt_history(&mut self) -> bool {
@@ -63,7 +63,7 @@ impl crate::Ollama {
             )
             .await;
 
-        return match result {
+        match result {
             Ok(r) => {
                 self.add_assistant_response(
                     "default".to_string(),
@@ -78,7 +78,7 @@ impl crate::Ollama {
                 );
                 Ok(e)
             }
-        };
+        }
     }
 
     pub async fn send_function_call(
@@ -102,9 +102,9 @@ impl crate::Ollama {
         let result = parser
             .parse(&response_content, model_name, request.tools)
             .await;
-        return match result {
+        match result {
             Ok(r) => Ok(r),
             Err(e) => Ok(e),
-        };
+        }
     }
 }

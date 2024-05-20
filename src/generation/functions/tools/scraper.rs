@@ -7,11 +7,18 @@ use std::error::Error;
 
 pub struct Scraper {}
 
+impl Default for Scraper {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Scraper {
     pub fn new() -> Self {
         Self {}
     }
 }
+
 
 #[async_trait]
 impl Tool for Scraper {

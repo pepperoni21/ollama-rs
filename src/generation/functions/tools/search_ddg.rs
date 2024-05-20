@@ -20,6 +20,12 @@ pub struct DDGSearcher {
     pub base_url: String,
 }
 
+impl Default for DDGSearcher {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DDGSearcher {
     pub fn new() -> Self {
         DDGSearcher {
