@@ -19,7 +19,6 @@ impl Scraper {
     }
 }
 
-
 #[async_trait]
 impl Tool for Scraper {
     fn name(&self) -> String {

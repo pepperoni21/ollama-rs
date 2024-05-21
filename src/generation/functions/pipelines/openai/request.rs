@@ -80,11 +80,7 @@ impl RequestParserBase for OpenAIFunctionCall {
     }
 
     async fn get_system_message(&self, tools: &[Arc<dyn Tool>]) -> ChatMessage {
-        // Corrected here to use a slice
-        let tools_info: Vec<Value> = tools
-            .iter()
-            .map(convert_to_ollama_tool)
-            .collect();
+        let tools_info: Vec<Value> = tools.iter().map(convert_to_ollama_tool).collect();
         let tools_json = serde_json::to_string(&tools_info).unwrap();
         let system_message_content = DEFAULT_SYSTEM_TEMPLATE.replace("{tools}", &tools_json);
         ChatMessage::system(system_message_content)
