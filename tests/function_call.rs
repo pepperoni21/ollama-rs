@@ -22,7 +22,7 @@ async fn test_send_function_call() {
     let ddg_search_tool = Arc::new(DDGSearcher::new());
     let parser = Arc::new(NousFunctionCall::new());
 
-    let ollama = Ollama::new_default_with_history(30);
+    let ollama = Ollama::default();
     let result = ollama
         .send_function_call(
             FunctionCallRequest::new(
@@ -61,6 +61,7 @@ async fn test_send_function_call_with_history() {
                 vec![user_message],
             ),
             parser,
+            "default".to_string(),
         )
         .await
         .unwrap();
@@ -81,7 +82,7 @@ async fn test_send_function_call_finance() {
     let stock_scraper = Arc::new(StockScraper::new());
     let parser = Arc::new(NousFunctionCall::new());
 
-    let ollama = Ollama::new_default_with_history(30);
+    let ollama = Ollama::default();
     let result = ollama
         .send_function_call(
             FunctionCallRequest::new(MODEL.to_string(), vec![stock_scraper], vec![user_message]),

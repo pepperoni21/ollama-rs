@@ -32,12 +32,13 @@ impl crate::Ollama {
         &mut self,
         request: FunctionCallRequest,
         parser: Arc<dyn RequestParserBase>,
+        id: String,
     ) -> Result<ChatMessageResponse, OllamaError> {
         let mut request = request;
 
         if !self.has_system_prompt_history() {
             let system_prompt = parser.get_system_message(&request.tools).await;
-            self.set_system_response("default".to_string(), system_prompt.content);
+            self.set_system_response(id.clone(), system_prompt.content);
 
             //format input
             let formatted_query = ChatMessage::user(
@@ -51,7 +52,7 @@ impl crate::Ollama {
         let tool_call_result = self
             .send_chat_messages_with_history(
                 ChatMessageRequest::new(request.chat.model_name.clone(), request.chat.messages),
-                "default".to_string(),
+                id.clone(),
             )
             .await?;
 
@@ -66,17 +67,11 @@ impl crate::Ollama {
 
         match result {
             Ok(r) => {
-                self.add_assistant_response(
-                    "default".to_string(),
-                    r.message.clone().unwrap().content,
-                );
+                self.add_assistant_response(id.clone(), r.message.clone().unwrap().content);
                 Ok(r)
             }
             Err(e) => {
-                self.add_assistant_response(
-                    "default".to_string(),
-                    e.message.clone().unwrap().content,
-                );
+                self.add_assistant_response(id.clone(), e.message.clone().unwrap().content);
                 Ok(e)
             }
         }
