@@ -7,6 +7,7 @@ pub use crate::generation::functions::pipelines::openai::request::OpenAIFunction
 pub use crate::generation::functions::request::FunctionCallRequest;
 pub use tools::DDGSearcher;
 pub use tools::Scraper;
+pub use tools::StockScraper;
 
 use crate::error::OllamaError;
 use crate::generation::chat::request::ChatMessageRequest;
