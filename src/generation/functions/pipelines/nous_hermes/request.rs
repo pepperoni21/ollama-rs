@@ -10,7 +10,7 @@ use serde_json::{json, Map, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-pub fn convert_to_openai_tool(tool: Arc<dyn Tool>) -> Value {
+pub fn convert_to_openai_tool(tool: &Arc<dyn Tool>) -> Value {
     let mut function = HashMap::new();
     function.insert("name".to_string(), Value::String(tool.name()));
     function.insert("description".to_string(), Value::String(tool.description()));
@@ -138,10 +138,7 @@ impl RequestParserBase for NousFunctionCall {
     }
 
     async fn get_system_message(&self, tools: &[Arc<dyn Tool>]) -> ChatMessage {
-        let tools_info: Vec<Value> = tools
-            .iter()
-            .map(|tool| convert_to_openai_tool(tool.clone()))
-            .collect();
+        let tools_info: Vec<Value> = tools.iter().map(convert_to_openai_tool).collect();
         let tools_json = serde_json::to_string(&tools_info).unwrap();
         let system_message_content = DEFAULT_SYSTEM_TEMPLATE.replace("{tools}", &tools_json);
         ChatMessage::system(system_message_content)
