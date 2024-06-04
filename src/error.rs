@@ -34,3 +34,19 @@ impl From<String> for OllamaError {
         Self { message }
     }
 }
+
+impl From<Box<dyn Error>> for OllamaError {
+    fn from(error: Box<dyn Error>) -> Self {
+        Self {
+            message: error.to_string(),
+        }
+    }
+}
+
+impl From<serde_json::Error> for OllamaError {
+    fn from(error: serde_json::Error) -> Self {
+        Self {
+            message: error.to_string(),
+        }
+    }
+}

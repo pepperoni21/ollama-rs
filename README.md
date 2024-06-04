@@ -147,3 +147,21 @@ let res = ollama.generate_embeddings("llama2:latest".to_string(), prompt, None).
 ```
 
 _Returns a `GenerateEmbeddingsResponse` struct containing the embeddings (a vector of floats)._
+
+### Make a function call
+
+```rust
+let tools = vec![Arc::new(Scraper::new())];
+let parser = Arc::new(NousFunctionCall::new());
+let message = ChatMessage::user("What is the current oil price?".to_string());
+let res = ollama.send_function_call(
+    FunctionCallRequest::new(
+        "adrienbrault/nous-hermes2pro:Q8_0".to_string(),
+        tools,
+        vec![message],
+    ),
+    parser,
+  ).await.unwrap();
+```
+
+_Uses the given tools (such as searching the web) to find an answer, returns a `ChatMessageResponse` with the answer to the question._

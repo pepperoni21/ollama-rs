@@ -1,12 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 use crate::Ollama;
-
 pub mod request;
-
-use request::ChatMessageRequest;
-
 use super::images::Image;
+use request::ChatMessageRequest;
 
 #[cfg(feature = "chat-history")]
 use crate::history::MessagesHistory;
