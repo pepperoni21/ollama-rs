@@ -683,7 +683,7 @@ dependencies = [
 
 [[package]]
 name = "ollama-rs"
-version = "0.1.9"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "base64",
