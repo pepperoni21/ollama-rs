@@ -72,7 +72,7 @@ impl crate::Ollama {
             }
             Err(e) => {
                 self.add_assistant_response(id.clone(), e.message.clone().unwrap().content);
-                Ok(e)
+                Err(OllamaError::from(e.message.unwrap().content))
             }
         }
     }
@@ -100,7 +100,7 @@ impl crate::Ollama {
             .await;
         match result {
             Ok(r) => Ok(r),
-            Err(e) => Ok(e),
+            Err(e) => Err(OllamaError::from(e.message.unwrap().content)),
         }
     }
 }

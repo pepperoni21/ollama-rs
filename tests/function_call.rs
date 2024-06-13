@@ -1,4 +1,4 @@
-// #![cfg(feature = "function-calling")]
+#![cfg(feature = "function-calling")]
 
 use ollama_rs::{
     generation::chat::ChatMessage,
