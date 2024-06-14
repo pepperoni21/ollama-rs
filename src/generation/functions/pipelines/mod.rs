@@ -8,7 +8,7 @@ pub mod nous_hermes;
 pub mod openai;
 
 #[async_trait]
-pub trait RequestParserBase {
+pub trait RequestParserBase: Send + Sync {
     async fn parse(
         &self,
         input: &str,
