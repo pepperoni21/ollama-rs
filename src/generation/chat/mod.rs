@@ -1,3 +1,5 @@
+#[cfg(all(feature = "chat-history", feature = "stream"))]
+use async_stream::stream;
 use serde::{Deserialize, Serialize};
 
 use crate::Ollama;
@@ -182,7 +184,8 @@ impl Ollama {
     ) -> crate::error::Result<ChatMessageResponseStream> {
         use tokio_stream::StreamExt;
 
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<Result<ChatMessageResponse, ()>>(); // create a channel for sending and receiving messages
+        let (tx, mut rx) =
+            tokio::sync::mpsc::unbounded_channel::<Result<ChatMessageResponse, ()>>(); // create a channel for sending and receiving messages
 
         let mut current_chat_messages = self.get_chat_messages_by_id_async(id.clone()).await;
 
@@ -194,27 +197,49 @@ impl Ollama {
 
         let mut stream = self.send_chat_messages_stream(request.clone()).await?;
 
+        let message_history_async = self.messages_history_async.clone();
+
         tokio::spawn(async move {
             let mut result = String::new();
-            while let Some(res) = stream.next().await {
+            while let Some(res) = rx.recv().await {
                 match res {
                     Ok(res) => {
-                        if let Some(assistant_message) = &res.message {
-                            let _ = tx.send(Ok(res.clone()));
-                            result.push_str(assistant_message.content.as_str());
+                        if let Some(message) = res.message.clone() {
+                            result += message.content.as_str();
                         }
                     }
                     Err(_) => {
-                        // cast the error as `_`, since it's always `()`
-                        let _ = tx.send(Err(()));
+                        break;
                     }
                 }
             }
+
+            if let Some(mut message_history_async) = message_history_async {
+                message_history_async
+                    .add_message(id.clone(), ChatMessage::assistant(result))
+                    .await;
+            } else {
+                eprintln!("not using chat-history and stream features"); // this should not happen if the features are enabled
+            }
         });
 
-        Ok(Box::pin(
-            tokio_stream::wrappers::UnboundedReceiverStream::new(rx),
-        ))
+        let s = stream! {
+            while let Some(res) = stream.next().await {
+                match res {
+                    Ok(res) => {
+                        if let Err(e) = tx.send(Ok(res.clone())) {
+                            eprintln!("Failed to send response: {}", e);
+                        };
+                        yield Ok(res);
+                    }
+                    Err(_) => {
+                        yield Err(());
+                    }
+                }
+            }
+        };
+
+        Ok(Box::pin(s))
     }
 }
 

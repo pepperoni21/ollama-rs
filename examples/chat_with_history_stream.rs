@@ -44,10 +44,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 response += assistant_message.content.as_str();
             }
         }
-
-        ollama
-            .store_chat_message_by_id_async(chat_id.clone(), ChatMessage::assistant(response))
-            .await;
     }
 
     // Display whole history of messages
