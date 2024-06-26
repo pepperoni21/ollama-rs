@@ -214,7 +214,7 @@ impl Ollama {
                 }
             }
 
-            if let Some(mut message_history_async) = message_history_async {
+            if let Some(message_history_async) = message_history_async {
                 message_history_async
                     .add_message(id.clone(), ChatMessage::assistant(result))
                     .await;

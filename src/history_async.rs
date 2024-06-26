@@ -20,7 +20,7 @@ impl MessagesHistoryAsync {
         }
     }
 
-    pub async fn add_message(&mut self, entry_id: String, message: ChatMessage) {
+    pub async fn add_message(&self, entry_id: String, message: ChatMessage) {
         let mut messages_lock = self.messages_by_id.lock().await;
         let messages = messages_lock.entry(entry_id).or_default();
 
@@ -47,7 +47,7 @@ impl MessagesHistoryAsync {
         messages_lock.get(entry_id).cloned()
     }
 
-    pub async fn clear_messages(&mut self, entry_id: &str) {
+    pub async fn clear_messages(&self, entry_id: &str) {
         let mut messages_lock = self.messages_by_id.lock().await;
         messages_lock.remove(entry_id);
     }
