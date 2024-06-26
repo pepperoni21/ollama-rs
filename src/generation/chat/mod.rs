@@ -192,8 +192,6 @@ impl Ollama {
 
         request.messages.clone_from(&current_chat_messages);
 
-        println!("Request: {:?}", request);
-
         let mut stream = self.send_chat_messages_stream(request.clone()).await?;
 
         tokio::spawn(async move {
