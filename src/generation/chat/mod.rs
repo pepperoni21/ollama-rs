@@ -151,6 +151,57 @@ impl Ollama {
     }
 }
 
+#[cfg(all(feature = "chat-history", feature = "stream"))]
+impl Ollama {
+    pub async fn store_chat_message_by_id_async(&mut self, id: String, message: ChatMessage) {
+        if let Some(messages_history_async) = self.messages_history_async.as_mut() {
+            messages_history_async.add_message(id, message).await;
+        }
+    }
+
+    pub async fn send_chat_messages_with_history_stream(
+        &mut self,
+        mut request: ChatMessageRequest,
+        id: String,
+    ) -> crate::error::Result<ChatMessageResponseStream> {
+        use tokio_stream::StreamExt;
+
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<Result<ChatMessageResponse, ()>>(); // create a channel for sending and receiving messages
+
+        let mut current_chat_messages = self.get_chat_messages_by_id(id.clone());
+
+        if let Some(messaeg) = request.messages.first() {
+            current_chat_messages.push(messaeg.clone());
+        }
+
+        request.messages.clone_from(&current_chat_messages);
+
+        let mut stream = self.send_chat_messages_stream(request.clone()).await?;
+
+        tokio::spawn(async move {
+            let mut result = String::new();
+            while let Some(res) = stream.next().await {
+                match res {
+                    Ok(res) => {
+                        if let Some(assistant_message) = &res.message {
+                            let _ = tx.send(Ok(res.clone()));
+                            result.push_str(assistant_message.content.as_str());
+                        }
+                    }
+                    Err(_) => {
+                        // cast the error as `_`, since it's always `()`
+                        let _ = tx.send(Err(()));
+                    }
+                }
+            }
+        });
+
+        Ok(Box::pin(
+            tokio_stream::wrappers::UnboundedReceiverStream::new(rx),
+        ))
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ChatMessageResponse {
     /// The name of the model used for the completion.
