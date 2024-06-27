@@ -24,7 +24,7 @@ impl crate::Ollama {
     }
 
     fn has_system_prompt_history(&mut self) -> bool {
-        return self.get_messages_history("default".to_string()).is_some();
+        return self.get_messages_history("default").is_some();
     }
 
     #[cfg(feature = "chat-history")]

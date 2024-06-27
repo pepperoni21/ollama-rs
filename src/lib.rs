@@ -5,8 +5,6 @@ pub mod history;
 #[cfg(all(feature = "chat-history", feature = "stream"))]
 pub mod history_async;
 pub mod models;
-#[cfg(feature = "function-calling")]
-pub mod functions;
 
 use url::Url;
 
@@ -72,9 +70,8 @@ pub struct Ollama {
     pub(crate) url: Url,
     pub(crate) reqwest_client: reqwest::Client,
     #[cfg(feature = "chat-history")]
-    pub(crate) messages_history: Option<history::MessagesHistory>,
-    #[cfg(all(feature = "chat-history", feature = "stream"))]
-    pub(crate) messages_history_async: Option<history_async::MessagesHistoryAsync>,
+    pub(crate) messages_history:
+        Option<std::sync::Arc<std::sync::RwLock<history::MessagesHistory>>>,
 }
 
 impl Ollama {

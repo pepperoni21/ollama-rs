@@ -1,5 +1,5 @@
 use ollama_rs::{
-    generation::chat::{request::ChatMessageRequest, ChatMessage},
+    generation::chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponseStream},
     Ollama,
 };
 use tokio::io::{stdout, AsyncWriteExt};
@@ -7,11 +7,9 @@ use tokio_stream::StreamExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut ollama = Ollama::new_default_with_history_async(30);
+    let mut ollama = Ollama::new_default_with_history(30);
 
     let mut stdout = stdout();
-
-    let chat_id = "default".to_string();
 
     loop {
         stdout.write_all(b"\n> ").await?;
@@ -25,12 +23,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             break;
         }
 
-        let user_message = ChatMessage::user(input.to_string());
-
-        let mut stream = ollama
+        let mut stream: ChatMessageResponseStream = ollama
             .send_chat_messages_with_history_stream(
-                ChatMessageRequest::new("llama2:latest".to_string(), vec![user_message]),
-                chat_id.clone(),
+                ChatMessageRequest::new(
+                    "llama2:latest".to_string(),
+                    vec![ChatMessage::user(input.to_string())],
+                ),
+                "user".to_string(),
             )
             .await?;
 
@@ -44,14 +43,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 response += assistant_message.content.as_str();
             }
         }
+        dbg!(&ollama.get_messages_history("user"));
     }
-
-    // Display whole history of messages
-    dbg!(
-        &ollama
-            .get_messages_history_async("default".to_string())
-            .await
-    );
 
     Ok(())
 }

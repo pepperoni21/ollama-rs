@@ -99,6 +99,60 @@ impl Ollama {
 
 #[cfg(feature = "chat-history")]
 impl Ollama {
+    #[cfg(feature = "stream")]
+    pub async fn send_chat_messages_with_history_stream(
+        &mut self,
+        mut request: ChatMessageRequest,
+        history_id: String,
+    ) -> crate::error::Result<ChatMessageResponseStream> {
+        use async_stream::stream;
+        use tokio_stream::StreamExt;
+
+        request.messages = self.get_prefill_messages(history_id.clone(), request.messages);
+
+        let mut resp_stream: ChatMessageResponseStream =
+            self.send_chat_messages_stream(request.clone()).await?;
+
+        let (tx, mut rx) = tokio::sync::mpsc::channel::<ChatMessageResponse>(10);
+
+        let id_copy = history_id.clone();
+        let messages_history = self.messages_history.clone();
+
+        tokio::spawn(async move {
+            let mut result = String::new();
+
+            while let Some(item) = rx.recv().await {
+                if item.done {
+                    if let Some(history) = messages_history.clone() {
+                        let mut inner = history.write().unwrap();
+                        inner.add_message(id_copy.clone(), ChatMessage::assistant(result));
+                    }
+                    result = String::new();
+                } else {
+                    result.push_str(&item.message.clone().unwrap().content);
+                }
+            }
+        });
+
+        let messages_history = self.messages_history.clone();
+
+        let s = stream! {
+            while let Some(item) = resp_stream.try_next().await.unwrap() {
+                if let Err(e) = tx.send(item.clone()).await {
+                    eprintln!("Failed to send stream response: {}", e);
+                    if let Some(history) = messages_history.clone() {
+                        let mut inner = history.write().unwrap();
+                        inner.pop_last_message_for_id(history_id.clone());
+                    }
+                };
+
+                yield Ok(item);
+            }
+        };
+
+        Ok(Box::pin(s))
+    }
+
     /// Chat message generation
     /// Returns a `ChatMessageResponse` object
     /// Manages the history of messages for the given `id`
@@ -130,7 +184,7 @@ impl Ollama {
     /// Helper function to store chat messages by id
     fn store_chat_message_by_id<S: Into<String>>(&mut self, id: S, message: ChatMessage) {
         if let Some(messages_history) = self.messages_history.as_mut() {
-            messages_history.add_message(id, message);
+            messages_history.write().unwrap().add_message(id, message);
         }
     }
 
@@ -142,28 +196,33 @@ impl Ollama {
         history_id: S,
         request_messages: Vec<ChatMessage>,
     ) -> Vec<ChatMessage> {
-        let mut backup = MessagesHistory::default();
-
+        let chat_history = match self.messages_history.as_mut() {
+            Some(history) => history,
+            None => &mut {
+                let new_history =
+                    std::sync::Arc::new(std::sync::RwLock::new(MessagesHistory::default()));
+                self.messages_history = Some(new_history);
+                self.messages_history.clone().unwrap()
+            },
+        };
         // Clone the current chat messages to avoid borrowing issues
         // And not to add message to the history if the request fails
-        let current_chat_messages = self
-            .messages_history
-            .as_mut()
-            .unwrap_or(&mut backup)
+        let mut history_instance = chat_history.write().unwrap();
+        let chat_history = history_instance
             .messages_by_id
             .entry(history_id.into())
             .or_default();
 
         if let Some(message) = request_messages.first() {
-            current_chat_messages.push(message.clone());
+            chat_history.push(message.clone());
         }
 
-        current_chat_messages.clone()
+        chat_history.clone()
     }
 
     fn remove_history_last_message<S: Into<String>>(&mut self, history_id: S) {
         if let Some(history) = self.messages_history.as_mut() {
-            history.pop_last_message_for_id(history_id);
+            history.write().unwrap().pop_last_message_for_id(history_id);
         }
     }
 }

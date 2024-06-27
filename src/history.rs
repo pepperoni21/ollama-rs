@@ -70,7 +70,9 @@ impl Ollama {
     /// Create default instance with chat history
     pub fn new_default_with_history(messages_number_limit: u16) -> Self {
         Self {
-            messages_history: Some(MessagesHistory::new(messages_number_limit)),
+            messages_history: Some(std::sync::Arc::new(std::sync::RwLock::new(
+                MessagesHistory::new(messages_number_limit),
+            ))),
             ..Default::default()
         }
     }
@@ -95,7 +97,9 @@ impl Ollama {
     pub fn new_with_history_from_url(url: url::Url, messages_number_limit: u16) -> Self {
         Self {
             url,
-            messages_history: Some(MessagesHistory::new(messages_number_limit)),
+            messages_history: Some(std::sync::Arc::new(std::sync::RwLock::new(
+                MessagesHistory::new(messages_number_limit),
+            ))),
             ..Default::default()
         }
     }
@@ -107,7 +111,9 @@ impl Ollama {
     ) -> Result<Self, url::ParseError> {
         Ok(Self {
             url: url.into_url()?,
-            messages_history: Some(MessagesHistory::new(messages_number_limit)),
+            messages_history: Some(std::sync::Arc::new(std::sync::RwLock::new(
+                MessagesHistory::new(messages_number_limit),
+            ))),
             ..Default::default()
         })
     }
@@ -130,15 +136,22 @@ impl Ollama {
     /// Helper for message add to history
     fn add_history_message<S: Into<String>>(&mut self, entry_id: S, message: ChatMessage) {
         if let Some(messages_history) = self.messages_history.as_mut() {
-            messages_history.add_message(entry_id, message);
+            messages_history
+                .write()
+                .unwrap()
+                .add_message(entry_id, message);
         }
     }
 
     /// For tests purpose
     /// Getting list of messages in a history
     pub fn get_messages_history(&mut self, entry_id: &str) -> Option<Vec<ChatMessage>> {
-        self.messages_history
-            .clone()
-            .map(|message_history| message_history.get_messages(entry_id).cloned())?
+        self.messages_history.clone().map(|message_history| {
+            message_history
+                .write()
+                .unwrap()
+                .get_messages(entry_id)
+                .cloned()
+        })?
     }
 }
