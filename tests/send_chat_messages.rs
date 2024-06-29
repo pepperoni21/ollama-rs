@@ -3,7 +3,7 @@ use tokio_stream::StreamExt;
 
 use ollama_rs::{
     generation::{
-        chat::{ChatMessage, request::ChatMessageRequest},
+        chat::{request::ChatMessageRequest, ChatMessage},
         images::Image,
     },
     Ollama,
