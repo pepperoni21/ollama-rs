@@ -1,3 +1,5 @@
+#[cfg(feature = "chat-history")]
+use crate::history::WrappedMessageHistory;
 use url::Url;
 
 pub mod error;
@@ -68,8 +70,7 @@ pub struct Ollama {
     pub(crate) url: Url,
     pub(crate) reqwest_client: reqwest::Client,
     #[cfg(feature = "chat-history")]
-    pub(crate) messages_history:
-        Option<std::sync::Arc<std::sync::RwLock<history::MessagesHistory>>>,
+    pub(crate) messages_history: Option<WrappedMessageHistory>,
 }
 
 impl Ollama {
