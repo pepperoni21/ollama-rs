@@ -1,12 +1,13 @@
 use base64::Engine;
+use tokio_stream::StreamExt;
+
 use ollama_rs::{
     generation::{
-        chat::{request::ChatMessageRequest, ChatMessage},
+        chat::{ChatMessage, request::ChatMessageRequest},
         images::Image,
     },
     Ollama,
 };
-use tokio_stream::StreamExt;
 
 #[allow(dead_code)]
 const PROMPT: &str = "Why is the sky blue?";
@@ -52,6 +53,38 @@ async fn test_send_chat_messages() {
     dbg!(&res);
 
     assert!(res.done);
+}
+
+#[tokio::test]
+async fn test_send_chat_messages_with_history_stream() {
+    let mut ollama = Ollama::new_default_with_history(30);
+    let id = "default".to_string();
+
+    let messages = vec![ChatMessage::user(PROMPT.to_string())];
+
+    let mut done = false;
+
+    let mut res = ollama
+        .send_chat_messages_with_history_stream(
+            ChatMessageRequest::new("llama2:latest".to_string(), messages),
+            id.clone(),
+        )
+        .await
+        .unwrap();
+
+    while let Some(res) = res.next().await {
+        let res = res.unwrap();
+
+        if res.done {
+            done = true;
+            break;
+        }
+    }
+
+    assert!(done);
+    // Should have user's message as well as AI's response
+    dbg!(&ollama.get_messages_history(&id).unwrap());
+    assert_eq!(ollama.get_messages_history(&id).unwrap().len(), 2);
 }
 
 #[tokio::test]

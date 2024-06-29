@@ -23,6 +23,10 @@ impl MessagesHistory {
 
     /// Add message for entry even no history exists for an entry
     pub fn add_message<S: Into<String>>(&mut self, entry_id: S, message: ChatMessage) {
+        if message.content.is_empty() && message.images.is_none() {
+            return;
+        }
+
         let messages = self.messages_by_id.entry(entry_id.into()).or_default();
 
         // Replacing the oldest message if the limit is reached
@@ -51,13 +55,6 @@ impl MessagesHistory {
     /// Clear history for an entry
     pub fn clear_messages_for_id(&mut self, entry_id: &str) {
         self.messages_by_id.remove(entry_id);
-    }
-
-    /// Remove last message added in history
-    pub fn pop_last_message_for_id<S: Into<String>>(&mut self, entry_id: S) {
-        if let Some(messages) = self.messages_by_id.get_mut(&entry_id.into()) {
-            messages.pop();
-        }
     }
 
     /// Remove a whole history

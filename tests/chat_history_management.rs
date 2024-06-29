@@ -19,3 +19,23 @@ fn test_chat_history_saved_as_should() {
     assert!(last.is_some());
     assert_eq!(last.unwrap().content, "Hi again".to_string());
 }
+
+#[test]
+fn chat_history_not_stored_if_no_content() {
+    let mut ollama = Ollama::new_default_with_history(30);
+    let chat_id = "default";
+
+    ollama.add_user_response(chat_id, "Hello");
+    ollama.add_assistant_response(chat_id, "");
+
+    ollama.add_user_response(chat_id, "");
+    ollama.add_assistant_response(chat_id, "Hi again");
+
+    let history = ollama.get_messages_history(chat_id).unwrap();
+
+    assert_eq!(history.len(), 2);
+
+    let last = history.last();
+    assert!(last.is_some());
+    assert_eq!(last.unwrap().content, "Hi again".to_string());
+}
