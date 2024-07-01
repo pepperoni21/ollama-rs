@@ -34,3 +34,4 @@ function-calling = ["scraper", "text-splitter", "regex", "chat-history"]
 tokio = { version = "1", features = ["full"] }
 ollama-rs = { path = ".", features = ["stream", "chat-history", "function-calling"] }
 base64 = "0.22.0"
+
