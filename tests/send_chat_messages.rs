@@ -58,7 +58,7 @@ async fn test_send_chat_messages() {
 #[tokio::test]
 async fn test_send_chat_messages_with_history_stream() {
     let mut ollama = Ollama::new_default_with_history(30);
-    let id = "default".to_string();
+    let id = "default";
 
     let messages = vec![ChatMessage::user(PROMPT.to_string())];
 
@@ -67,7 +67,7 @@ async fn test_send_chat_messages_with_history_stream() {
     let mut res = ollama
         .send_chat_messages_with_history_stream(
             ChatMessageRequest::new("llama2:latest".to_string(), messages),
-            id.clone(),
+            id,
         )
         .await
         .unwrap();
@@ -83,8 +83,8 @@ async fn test_send_chat_messages_with_history_stream() {
 
     assert!(done);
     // Should have user's message as well as AI's response
-    dbg!(&ollama.get_messages_history(&id).unwrap());
-    assert_eq!(ollama.get_messages_history(&id).unwrap().len(), 2);
+    dbg!(&ollama.get_messages_history(id).unwrap());
+    assert_eq!(ollama.get_messages_history(id).unwrap().len(), 2);
 }
 
 #[tokio::test]

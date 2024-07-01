@@ -98,14 +98,14 @@ impl Ollama {
 #[cfg(feature = "chat-history")]
 impl Ollama {
     #[cfg(feature = "stream")]
-    pub async fn send_chat_messages_with_history_stream<S: Into<String> + Clone>(
+    pub async fn send_chat_messages_with_history_stream(
         &mut self,
         mut request: ChatMessageRequest,
-        history_id: S,
+        history_id: impl ToString,
     ) -> crate::error::Result<ChatMessageResponseStream> {
         use async_stream::stream;
         use tokio_stream::StreamExt;
-        let id_copy = history_id.clone().into();
+        let id_copy = history_id.to_string().clone();
 
         let mut current_chat_messages = self.get_chat_messages_by_id(id_copy.clone());
 
@@ -153,13 +153,14 @@ impl Ollama {
     /// Chat message generation
     /// Returns a `ChatMessageResponse` object
     /// Manages the history of messages for the given `id`
-    pub async fn send_chat_messages_with_history<S: Into<String> + Clone>(
+    pub async fn send_chat_messages_with_history(
         &mut self,
         mut request: ChatMessageRequest,
-        history_id: S,
+        history_id: impl ToString,
     ) -> crate::error::Result<ChatMessageResponse> {
         // The request is modified to include the current chat messages
-        let mut current_chat_messages = self.get_chat_messages_by_id(history_id.clone());
+        let id_copy = history_id.to_string().clone();
+        let mut current_chat_messages = self.get_chat_messages_by_id(id_copy.clone());
 
         if let Some(message) = request.messages.first() {
             current_chat_messages.push(message.clone());
@@ -173,10 +174,10 @@ impl Ollama {
         if let Ok(result) = result {
             // Message we sent to AI
             if let Some(message) = request.messages.last() {
-                self.store_chat_message_by_id(history_id.clone(), message.clone());
+                self.store_chat_message_by_id(id_copy.clone(), message.clone());
             }
             // Store AI's response in the history
-            self.store_chat_message_by_id(history_id, result.message.clone().unwrap());
+            self.store_chat_message_by_id(id_copy, result.message.clone().unwrap());
 
             return Ok(result);
         }
@@ -185,7 +186,7 @@ impl Ollama {
     }
 
     /// Helper function to store chat messages by id
-    fn store_chat_message_by_id<S: Into<String>>(&mut self, id: S, message: ChatMessage) {
+    fn store_chat_message_by_id(&mut self, id: impl ToString, message: ChatMessage) {
         if let Some(messages_history) = self.messages_history.as_mut() {
             messages_history.write().unwrap().add_message(id, message);
         }
@@ -194,10 +195,7 @@ impl Ollama {
     /// Let get existing history with a new message in it
     /// Without impact for existing history
     /// Used to prepare history for request
-    fn get_chat_messages_by_id<S: Into<String> + Clone>(
-        &mut self,
-        history_id: S,
-    ) -> Vec<ChatMessage> {
+    fn get_chat_messages_by_id(&mut self, history_id: impl ToString) -> Vec<ChatMessage> {
         let chat_history = match self.messages_history.as_mut() {
             Some(history) => history,
             None => &mut {
@@ -212,7 +210,7 @@ impl Ollama {
         let mut history_instance = chat_history.write().unwrap();
         let chat_history = history_instance
             .messages_by_id
-            .entry(history_id.into())
+            .entry(history_id.to_string())
             .or_default();
 
         chat_history.clone()

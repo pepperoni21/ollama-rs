@@ -24,12 +24,12 @@ impl MessagesHistory {
     }
 
     /// Add message for entry even no history exists for an entry
-    pub fn add_message<S: Into<String>>(&mut self, entry_id: S, message: ChatMessage) {
+    pub fn add_message(&mut self, entry_id: impl ToString, message: ChatMessage) {
         if message.content.is_empty() && message.images.is_none() {
             return;
         }
 
-        let messages = self.messages_by_id.entry(entry_id.into()).or_default();
+        let messages = self.messages_by_id.entry(entry_id.to_string()).or_default();
 
         // Replacing the oldest message if the limit is reached
         // The oldest message is the first one, unless it's a system message
@@ -110,22 +110,22 @@ impl Ollama {
     }
 
     /// Add AI's message to a history
-    pub fn add_assistant_response<S: Into<String>>(&mut self, entry_id: S, message: S) {
-        self.add_history_message(entry_id, ChatMessage::assistant(message.into()));
+    pub fn add_assistant_response(&mut self, entry_id: impl ToString, message: impl ToString) {
+        self.add_history_message(entry_id, ChatMessage::assistant(message.to_string()));
     }
 
     /// Add user's message to a history
-    pub fn add_user_response<S: Into<String>>(&mut self, entry_id: S, message: S) {
-        self.add_history_message(entry_id, ChatMessage::user(message.into()));
+    pub fn add_user_response(&mut self, entry_id: impl ToString, message: impl ToString) {
+        self.add_history_message(entry_id, ChatMessage::user(message.to_string()));
     }
 
     /// Set system prompt for chat history
-    pub fn set_system_response<S: Into<String>>(&mut self, entry_id: S, message: S) {
-        self.add_history_message(entry_id, ChatMessage::system(message.into()));
+    pub fn set_system_response(&mut self, entry_id: impl ToString, message: impl ToString) {
+        self.add_history_message(entry_id, ChatMessage::system(message.to_string()));
     }
 
     /// Helper for message add to history
-    fn add_history_message<S: Into<String>>(&mut self, entry_id: S, message: ChatMessage) {
+    fn add_history_message(&mut self, entry_id: impl ToString, message: ChatMessage) {
         if let Some(messages_history) = self.messages_history.as_mut() {
             messages_history
                 .write()
