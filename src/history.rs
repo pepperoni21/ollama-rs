@@ -50,13 +50,13 @@ impl MessagesHistory {
     }
 
     /// Get Option with list of ChatMessage
-    pub fn get_messages(&self, entry_id: &str) -> Option<&Vec<ChatMessage>> {
-        self.messages_by_id.get(entry_id)
+    pub fn get_messages(&self, entry_id: impl ToString) -> Option<&Vec<ChatMessage>> {
+        self.messages_by_id.get(&entry_id.to_string())
     }
 
     /// Clear history for an entry
-    pub fn clear_messages_for_id(&mut self, entry_id: &str) {
-        self.messages_by_id.remove(entry_id);
+    pub fn clear_messages_for_id(&mut self, entry_id: impl ToString) {
+        self.messages_by_id.remove(&entry_id.to_string());
     }
 
     /// Remove a whole history
@@ -136,7 +136,7 @@ impl Ollama {
 
     /// For tests purpose
     /// Getting list of messages in a history
-    pub fn get_messages_history(&mut self, entry_id: &str) -> Option<Vec<ChatMessage>> {
+    pub fn get_messages_history(&mut self, entry_id: impl ToString) -> Option<Vec<ChatMessage>> {
         self.messages_history.clone().map(|message_history| {
             message_history
                 .write()
@@ -144,5 +144,19 @@ impl Ollama {
                 .get_messages(entry_id)
                 .cloned()
         })?
+    }
+
+    /// Clear history for an entry
+    pub fn clear_messages_for_id(&mut self, entry_id: impl ToString) {
+        if let Some(history) = self.messages_history.clone() {
+            history.write().unwrap().clear_messages_for_id(entry_id)
+        }
+    }
+
+    /// Remove a whole history
+    pub fn clear_all_messages(&mut self) {
+        if let Some(history) = self.messages_history.clone() {
+            history.write().unwrap().clear_all_messages()
+        }
     }
 }

@@ -39,3 +39,52 @@ fn chat_history_not_stored_if_no_content() {
     assert!(last.is_some());
     assert_eq!(last.unwrap().content, "Hi again".to_string());
 }
+
+#[test]
+fn clear_chat_history_for_one_id_only() {
+    let mut ollama = Ollama::new_default_with_history(30);
+    let first_chat_id = "default";
+
+    ollama.add_user_response(first_chat_id, "Hello");
+
+    let another_chat_id = "not_default";
+
+    ollama.add_user_response(another_chat_id, "Hello");
+
+    assert_eq!(ollama.get_messages_history(first_chat_id).unwrap().len(), 1);
+    assert_eq!(
+        ollama.get_messages_history(another_chat_id).unwrap().len(),
+        1
+    );
+
+    ollama.clear_messages_for_id(first_chat_id);
+
+    assert!(ollama.get_messages_history(first_chat_id).is_none());
+    assert_eq!(
+        ollama.get_messages_history(another_chat_id).unwrap().len(),
+        1
+    );
+}
+
+#[test]
+fn clear_chat_history_for_all() {
+    let mut ollama = Ollama::new_default_with_history(30);
+    let first_chat_id = "default";
+
+    ollama.add_user_response(first_chat_id, "Hello");
+
+    let another_chat_id = "not_default";
+
+    ollama.add_user_response(another_chat_id, "Hello");
+
+    assert_eq!(ollama.get_messages_history(first_chat_id).unwrap().len(), 1);
+    assert_eq!(
+        ollama.get_messages_history(another_chat_id).unwrap().len(),
+        1
+    );
+
+    ollama.clear_all_messages();
+
+    assert!(ollama.get_messages_history(first_chat_id).is_none());
+    assert!(ollama.get_messages_history(another_chat_id).is_none());
+}
