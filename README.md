@@ -88,6 +88,49 @@ if let Ok(res) = res {
 
 **OUTPUTS:** _1. Sun emits white sunlight: The sun consists primarily ..._
 
+### Chat mode
+Description: _Every message sent and received will be stored in library's history._
+_Each time you want to store history, you have to provide an ID for a chat._
+_It can be uniq for each user or the same every time, depending on your need_
+
+Example with history:
+```rust
+let model = "llama2:latest".to_string();
+let prompt = "Why is the sky blue?".to_string();
+let history_id = "USER_ID_OR_WHATEVER";
+
+let res = ollama
+                .send_chat_messages_with_history(
+                    ChatMessageRequest::new(
+                        model,
+                        vec![ChatMessage::user(prompt)], // <- You should provide only one message
+                    ),
+                    history_id // <- This entry save for us all the history
+                ).await;
+
+if let Ok(res) = res {
+println!("{}", res.response);
+}
+```
+
+Getting history for some ID:
+```rust
+let history_id = "USER_ID_OR_WHATEVER";
+let history = ollama.get_message_history(history_id); // <- Option<Vec<ChatMessage>>
+// Act
+```
+
+Clear history if we no more need it:
+```rust
+// Clear history for an ID
+let history_id = "USER_ID_OR_WHATEVER";
+ollama.clear_messages_for_id(history_id);
+// Clear history for all chats
+ollama.clear_all_messages(); 
+```
+
+_Check chat with history examples for [default](https://github.com/pepperoni21/ollama-rs/blob/master/examples/chat_with_history.rs) and [stream](https://github.com/pepperoni21/ollama-rs/blob/master/examples/chat_with_history_stream.rs)_
+
 ### List local models
 
 ```rust
