@@ -1,10 +1,12 @@
+#[cfg(feature = "chat-history")]
+use crate::history::WrappedMessageHistory;
+use url::Url;
+
 pub mod error;
 pub mod generation;
 #[cfg(feature = "chat-history")]
 pub mod history;
 pub mod models;
-
-use url::Url;
 
 /// A trait to try to convert some type into a [`Url`].
 ///
@@ -68,7 +70,7 @@ pub struct Ollama {
     pub(crate) url: Url,
     pub(crate) reqwest_client: reqwest::Client,
     #[cfg(feature = "chat-history")]
-    pub(crate) messages_history: Option<history::MessagesHistory>,
+    pub(crate) messages_history: Option<WrappedMessageHistory>,
 }
 
 impl Ollama {

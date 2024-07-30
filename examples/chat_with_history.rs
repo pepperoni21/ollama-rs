@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let result = ollama
             .send_chat_messages_with_history(
                 ChatMessageRequest::new("llama2:latest".to_string(), vec![user_message]),
-                "default".to_string(),
+                "default",
             )
             .await?;
 
@@ -37,7 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Display whole history of messages
-    dbg!(&ollama.get_messages_history("default".to_string()));
+    dbg!(&ollama.get_messages_history("default"));
 
     Ok(())
 }
