@@ -1,3 +1,4 @@
 /target
 .vscode/settings.json
 shell.nix
+.idea

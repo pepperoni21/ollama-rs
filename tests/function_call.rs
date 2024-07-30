@@ -3,7 +3,9 @@
 use ollama_rs::{
     generation::chat::ChatMessage,
     generation::functions::tools::{DDGSearcher, Scraper, StockScraper},
-    generation::functions::{FunctionCallRequest, NousFunctionCall},
+    generation::functions::{
+        FunctionCallRequest, LlamaFunctionCall, NousFunctionCall, OpenAIFunctionCall,
+    },
     Ollama,
 };
 use std::sync::Arc;
@@ -13,6 +15,7 @@ async fn test_send_function_call() {
     /// Model to be used, make sure it is tailored towards "function calling", such as:
     /// - OpenAIFunctionCall: not model specific, degraded performance
     /// - NousFunctionCall: adrienbrault/nous-hermes2pro:Q8_0
+    /// - LlamaFunctionCall: llama3.1:latest
     const MODEL: &str = "adrienbrault/nous-hermes2pro:Q8_0";
 
     const PROMPT: &str = "Aside from the Apple Remote, what other device can control the program Apple Remote was originally designed to interact with?";
@@ -43,6 +46,7 @@ async fn test_send_function_call_with_history() {
     /// Model to be used, make sure it is tailored towards "function calling", such as:
     /// - OpenAIFunctionCall: not model specific, degraded performance
     /// - NousFunctionCall: adrienbrault/nous-hermes2pro:Q8_0
+    /// - LlamaFunctionCall: llama3.1:latest
     const MODEL: &str = "adrienbrault/nous-hermes2pro:Q8_0";
 
     const PROMPT: &str = "Aside from the Apple Remote, what other device can control the program Apple Remote was originally designed to interact with?";
@@ -74,6 +78,7 @@ async fn test_send_function_call_finance() {
     /// Model to be used, make sure it is tailored towards "function calling", such as:
     /// - OpenAIFunctionCall: not model specific, degraded performance
     /// - NousFunctionCall: adrienbrault/nous-hermes2pro:Q8_0
+    /// - LlamaFunctionCall: llama3.1:latest
     const MODEL: &str = "adrienbrault/nous-hermes2pro:Q8_0";
 
     const PROMPT: &str = "What are the current risk factors to $APPL?";
@@ -86,6 +91,58 @@ async fn test_send_function_call_finance() {
     let result = ollama
         .send_function_call(
             FunctionCallRequest::new(MODEL.to_string(), vec![stock_scraper], vec![user_message]),
+            parser,
+        )
+        .await
+        .unwrap();
+
+    assert!(result.done);
+}
+
+#[tokio::test]
+async fn test_send_function_call_llama() {
+    /// Model to be used, make sure it is tailored towards "function calling", such as:
+    /// - OpenAIFunctionCall: not model specific, degraded performance
+    /// - NousFunctionCall: adrienbrault/nous-hermes2pro:Q8_0
+    /// - LlamaFunctionCall: llama3.1:latest
+    const MODEL: &str = "llama3.1:latest";
+
+    const PROMPT: &str = "What are the current risk factors to Apple Inc?";
+    let user_message = ChatMessage::user(PROMPT.to_string());
+
+    let search = Arc::new(DDGSearcher::new());
+    let parser = Arc::new(LlamaFunctionCall {});
+
+    let ollama = Ollama::default();
+    let result = ollama
+        .send_function_call(
+            FunctionCallRequest::new(MODEL.to_string(), vec![search], vec![user_message]),
+            parser,
+        )
+        .await
+        .unwrap();
+
+    assert!(result.done);
+}
+
+#[tokio::test]
+async fn test_send_function_call_phi3_medium() {
+    /// Model to be used, make sure it is tailored towards "function calling", such as:
+    /// - OpenAIFunctionCall: not model specific, degraded performance
+    /// - NousFunctionCall: adrienbrault/nous-hermes2pro:Q8_0
+    /// - LlamaFunctionCall: llama3.1:latest
+    const MODEL: &str = "phi3:14b-medium-4k-instruct-q4_1";
+
+    const PROMPT: &str = "What are the current risk factors to Apple Inc?";
+    let user_message = ChatMessage::user(PROMPT.to_string());
+
+    let search = Arc::new(DDGSearcher::new());
+    let parser = Arc::new(OpenAIFunctionCall {});
+
+    let ollama = Ollama::default();
+    let result = ollama
+        .send_function_call(
+            FunctionCallRequest::new(MODEL.to_string(), vec![search], vec![user_message]),
             parser,
         )
         .await

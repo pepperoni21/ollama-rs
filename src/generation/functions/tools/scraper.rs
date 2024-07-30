@@ -22,7 +22,7 @@ impl Scraper {
 #[async_trait]
 impl Tool for Scraper {
     fn name(&self) -> String {
-        "Website Scraper".to_string()
+        "website_scraper".to_string()
     }
 
     fn description(&self) -> String {

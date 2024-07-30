@@ -2,11 +2,14 @@ pub mod pipelines;
 pub mod request;
 pub mod tools;
 
+pub use crate::generation::functions::pipelines::meta_llama::request::LlamaFunctionCall;
 pub use crate::generation::functions::pipelines::nous_hermes::request::NousFunctionCall;
 pub use crate::generation::functions::pipelines::openai::request::OpenAIFunctionCall;
 pub use crate::generation::functions::request::FunctionCallRequest;
+pub use tools::Browserless;
 pub use tools::DDGSearcher;
 pub use tools::Scraper;
+pub use tools::SerperSearchTool;
 pub use tools::StockScraper;
 
 use crate::error::OllamaError;
