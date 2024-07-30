@@ -201,7 +201,7 @@ impl Ollama {
                 std::sync::Arc::new(std::sync::RwLock::new(MessagesHistory::default()));
             self.messages_history = Some(new_history);
             self.messages_history.clone().unwrap()
-            };
+        };
         let chat_history = match self.messages_history.as_mut() {
             Some(history) => history,
             None => &mut binding,
