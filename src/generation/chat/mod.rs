@@ -196,15 +196,13 @@ impl Ollama {
     /// Without impact for existing history
     /// Used to prepare history for request
     fn get_chat_messages_by_id(&mut self, history_id: impl ToString) -> Vec<ChatMessage> {
-        let chat_history = match self.messages_history.as_mut() {
-            Some(history) => history,
-            None => &mut {
-                let new_history =
-                    std::sync::Arc::new(std::sync::RwLock::new(MessagesHistory::default()));
-                self.messages_history = Some(new_history);
-                self.messages_history.clone().unwrap()
-            },
-        };
+        // Fix: Using get_or_insert_with to safely handle the creation and access
+        // of message history. This avoids issues with references to temporary
+        // values and ensures that self.messages_history always contains a valid
+        // value after this operation.
+        let chat_history = self.messages_history.get_or_insert_with(|| {
+            std::sync::Arc::new(std::sync::RwLock::new(MessagesHistory::default()))
+        });
         // Clone the current chat messages to avoid borrowing issues
         // And not to add message to the history if the request fails
         let mut history_instance = chat_history.write().unwrap();
