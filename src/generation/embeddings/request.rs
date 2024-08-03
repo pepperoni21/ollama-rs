@@ -32,6 +32,12 @@ impl From<Vec<String>> for EmbeddingsInput {
     }
 }
 
+impl From<Vec<&str>> for EmbeddingsInput {
+    fn from(v: Vec<&str>) -> Self {
+        Self::Multiple(v.iter().map(|s| s.to_string()).collect())
+    }
+}
+
 impl Serialize for EmbeddingsInput {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
