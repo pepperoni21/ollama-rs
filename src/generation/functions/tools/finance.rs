@@ -64,7 +64,7 @@ impl StockScraper {
 #[async_trait]
 impl Tool for StockScraper {
     fn name(&self) -> String {
-        "Stock Scraper".to_string()
+        "stock_scraper".to_string()
     }
 
     fn description(&self) -> String {

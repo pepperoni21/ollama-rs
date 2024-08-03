@@ -4,11 +4,12 @@ use crate::generation::functions::tools::Tool;
 use async_trait::async_trait;
 use std::sync::Arc;
 
+pub mod meta_llama;
 pub mod nous_hermes;
 pub mod openai;
 
 #[async_trait]
-pub trait RequestParserBase {
+pub trait RequestParserBase: Send + Sync {
     async fn parse(
         &self,
         input: &str,

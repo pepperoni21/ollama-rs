@@ -194,7 +194,7 @@ _Returns a `GenerateEmbeddingsResponse` struct containing the embeddings (a vect
 ### Make a function call
 
 ```rust
-let tools = vec![Arc::new(Scraper::new())];
+let tools = vec![Arc::new(Scraper::new()), Arc::new(DDGSearcher::new())];
 let parser = Arc::new(NousFunctionCall::new());
 let message = ChatMessage::user("What is the current oil price?".to_string());
 let res = ollama.send_function_call(

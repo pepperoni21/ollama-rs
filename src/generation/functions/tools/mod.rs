@@ -1,10 +1,14 @@
+pub mod browserless;
 pub mod finance;
 pub mod scraper;
 pub mod search_ddg;
+pub mod serper;
 
+pub use self::browserless::Browserless;
 pub use self::finance::StockScraper;
 pub use self::scraper::Scraper;
 pub use self::search_ddg::DDGSearcher;
+pub use self::serper::SerperSearchTool;
 
 use async_trait::async_trait;
 use serde_json::{json, Value};
