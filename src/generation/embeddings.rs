@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::Ollama;
 
-use super::options::GenerationOptions;
+use super::{options::GenerationOptions, parameters::KeepAlive};
 
 impl Ollama {
     /// Generate embeddings from a model
@@ -16,11 +16,12 @@ impl Ollama {
     ) -> crate::error::Result<GenerateEmbeddingsResponse> {
         let request = GenerateEmbeddingsRequest {
             model_name,
-            prompt,
+            input: prompt,
             options,
+            ..Default::default()
         };
 
-        let url = format!("{}api/embeddings", self.url_str());
+        let url = format!("{}api/embed", self.url_str());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
         let res = self
             .reqwest_client
@@ -43,18 +44,19 @@ impl Ollama {
 }
 
 /// An embeddings generation request to Ollama.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Default)]
 struct GenerateEmbeddingsRequest {
     #[serde(rename = "model")]
     model_name: String,
-    prompt: String,
+    input: String,
+    truncate: Option<bool>,
     options: Option<GenerationOptions>,
+    keep_alive: Option<KeepAlive>,
 }
 
 /// An embeddings generation response from Ollama.
 #[derive(Debug, Deserialize, Clone)]
 pub struct GenerateEmbeddingsResponse {
-    #[serde(rename = "embedding")]
     #[allow(dead_code)]
-    pub embeddings: Vec<f64>,
+    pub embeddings: Vec<Vec<f64>>,
 }
