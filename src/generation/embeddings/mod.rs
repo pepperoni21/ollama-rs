@@ -1,8 +1,10 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::Ollama;
 
-use super::{options::GenerationOptions, parameters::KeepAlive};
+use self::request::GenerateEmbeddingsRequest;
+
+pub mod request;
 
 impl Ollama {
     /// Generate embeddings from a model
@@ -10,17 +12,8 @@ impl Ollama {
     /// * `prompt` - Prompt to generate embeddings for
     pub async fn generate_embeddings(
         &self,
-        model_name: String,
-        prompt: String,
-        options: Option<GenerationOptions>,
+        request: GenerateEmbeddingsRequest,
     ) -> crate::error::Result<GenerateEmbeddingsResponse> {
-        let request = GenerateEmbeddingsRequest {
-            model_name,
-            input: prompt,
-            options,
-            ..Default::default()
-        };
-
         let url = format!("{}api/embed", self.url_str());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
         let res = self
@@ -41,17 +34,6 @@ impl Ollama {
 
         Ok(res)
     }
-}
-
-/// An embeddings generation request to Ollama.
-#[derive(Debug, Serialize, Default)]
-struct GenerateEmbeddingsRequest {
-    #[serde(rename = "model")]
-    model_name: String,
-    input: String,
-    truncate: Option<bool>,
-    options: Option<GenerationOptions>,
-    keep_alive: Option<KeepAlive>,
 }
 
 /// An embeddings generation response from Ollama.

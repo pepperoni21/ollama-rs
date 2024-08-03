@@ -1,13 +1,14 @@
-use ollama_rs::Ollama;
+use ollama_rs::{generation::embeddings::request::GenerateEmbeddingsRequest, Ollama};
 
 #[tokio::test]
 async fn test_embeddings_generation() {
     let ollama = Ollama::default();
 
-    let prompt = "Why is the sky blue?".to_string();
-
     let res = ollama
-        .generate_embeddings("llama2:latest".to_string(), prompt, None)
+        .generate_embeddings(GenerateEmbeddingsRequest::new(
+            "llama2:latest".to_string(),
+            "Why is the sky blue".into(),
+        ))
         .await
         .unwrap();
 
