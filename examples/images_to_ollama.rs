@@ -21,7 +21,7 @@ fn main() {
             Err(e) => {
                 eprintln!("Failed to download image: {}", e);
                 return;
-            },
+            }
         };
         let base64_image = base64::engine::general_purpose::STANDARD.encode(&bytes);
 
@@ -29,8 +29,8 @@ fn main() {
         let image = Image::from_base64(&base64_image);
 
         // Create a GenerationRequest with the model and prompt, adding the image
-        let request = GenerationRequest::new("llava:latest".to_string(), PROMPT.to_string())
-            .add_image(image);
+        let request =
+            GenerationRequest::new("llava:latest".to_string(), PROMPT.to_string()).add_image(image);
 
         // Send the request to the model and get the response
         let response = match send_request(request).await {
@@ -38,7 +38,7 @@ fn main() {
             Err(e) => {
                 eprintln!("Failed to get response: {}", e);
                 return;
-            },
+            }
         };
 
         // Print the response
@@ -54,7 +54,9 @@ async fn download_image(url: &str) -> Result<Vec<u8>, reqwest::Error> {
 }
 
 // Function to send the request to the model
-async fn send_request(request: GenerationRequest) -> Result<GenerationResponse, Box<dyn std::error::Error>> {
+async fn send_request(
+    request: GenerationRequest,
+) -> Result<GenerationResponse, Box<dyn std::error::Error>> {
     let ollama = Ollama::default();
     let response = ollama.generate(request).await?;
     Ok(response)
