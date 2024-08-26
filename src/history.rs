@@ -34,12 +34,13 @@ impl MessagesHistory {
         // Replacing the oldest message if the limit is reached
         // The oldest message is the first one, unless it's a system message
         if messages.len() >= self.messages_number_limit as usize {
-            let index_to_remove = messages
-                .first()
-                .map(|m| if m.role == MessageRole::System { 1 } else { 0 })
-                .unwrap_or(0);
-
-            messages.remove(index_to_remove);
+            if let Some(index_to_remove) =
+                messages
+                    .first()
+                    .map(|m| if m.role == MessageRole::System { 1 } else { 0 })
+            {
+                messages.remove(index_to_remove);
+            }
         }
 
         if message.role == MessageRole::System {
