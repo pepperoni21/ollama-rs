@@ -196,15 +196,14 @@ impl Ollama {
     /// Without impact for existing history
     /// Used to prepare history for request
     fn get_chat_messages_by_id(&mut self, history_id: impl ToString) -> Vec<ChatMessage> {
-        let mut binding = {
-            let new_history =
-                std::sync::Arc::new(std::sync::RwLock::new(MessagesHistory::default()));
-            self.messages_history = Some(new_history);
-            self.messages_history.clone().unwrap()
-        };
         let chat_history = match self.messages_history.as_mut() {
             Some(history) => history,
-            None => &mut binding,
+            None => {
+                let new_history =
+                    std::sync::Arc::new(std::sync::RwLock::new(MessagesHistory::default()));
+                self.messages_history = Some(new_history);
+                self.messages_history.as_mut().unwrap()
+            }
         };
         // Clone the current chat messages to avoid borrowing issues
         // And not to add message to the history if the request fails
