@@ -88,7 +88,7 @@ impl DDGSearcher {
 #[async_trait]
 impl Tool for DDGSearcher {
     fn name(&self) -> String {
-        "DDG Searcher".to_string()
+        "ddg_searcher".to_string()
     }
 
     fn description(&self) -> String {
