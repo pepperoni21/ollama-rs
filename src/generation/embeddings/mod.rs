@@ -40,5 +40,5 @@ impl Ollama {
 #[derive(Debug, Deserialize, Clone)]
 pub struct GenerateEmbeddingsResponse {
     #[allow(dead_code)]
-    pub embeddings: Vec<Vec<f64>>,
+    pub embeddings: Vec<Vec<f32>>,
 }
