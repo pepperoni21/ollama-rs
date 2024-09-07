@@ -185,8 +185,15 @@ let _ = ollama.delete_model("mario_copy".into()).await.unwrap();
 ### Generate embeddings
 
 ```rust
-let prompt = "Why is the sky blue?".to_string();
-let res = ollama.generate_embeddings("llama2:latest".to_string(), prompt, None).await.unwrap();
+let request = GenerateEmbeddingsRequest::new("llama2:latest".to_string(), "Why is the sky blue?".into());
+let res = ollama.generate_embeddings(request).await.unwrap();
+```
+
+### Generate embeddings (batch)
+
+```rust
+let request = GenerateEmbeddingsRequest::new("llama2:latest".to_string(), vec!["Why is the sky blue?", "Why is the sky red?"].into());
+let res = ollama.generate_embeddings(request).await.unwrap();
 ```
 
 _Returns a `GenerateEmbeddingsResponse` struct containing the embeddings (a vector of floats)._
