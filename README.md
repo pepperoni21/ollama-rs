@@ -10,7 +10,7 @@ It was made following the [Ollama API](https://github.com/jmorganca/ollama/blob/
 
 ```toml
 [dependencies]
-ollama-rs = "0.2.0"
+ollama-rs = "0.2.1"
 ```
 
 ### Initialize Ollama
@@ -25,8 +25,8 @@ let ollama = Ollama::new("http://localhost".to_string(), 11434);
 
 ## Usage
 
-Feel free to check the [Chatbot example](https://github.com/pepperoni21/ollama-rs/blob/0.2.0/examples/basic_chatbot.rs) that shows how to use the library to create a simple chatbot in less than 50 lines of code.
-You can also check some [other examples](https://github.com/pepperoni21/ollama-rs/tree/0.2.0/examples).
+Feel free to check the [Chatbot example](https://github.com/pepperoni21/ollama-rs/blob/0.2.1/examples/basic_chatbot.rs) that shows how to use the library to create a simple chatbot in less than 50 lines of code.
+You can also check some [other examples](https://github.com/pepperoni21/ollama-rs/tree/0.2.1/examples).
 
 _These examples use poor error handling for simplicity, but you should handle errors properly in your code._
 
@@ -89,11 +89,13 @@ if let Ok(res) = res {
 **OUTPUTS:** _1. Sun emits white sunlight: The sun consists primarily ..._
 
 ### Chat mode
+
 Description: _Every message sent and received will be stored in library's history._
 _Each time you want to store history, you have to provide an ID for a chat._
 _It can be uniq for each user or the same every time, depending on your need_
 
 Example with history:
+
 ```rust
 let model = "llama2:latest".to_string();
 let prompt = "Why is the sky blue?".to_string();
@@ -114,6 +116,7 @@ println!("{}", res.response);
 ```
 
 Getting history for some ID:
+
 ```rust
 let history_id = "USER_ID_OR_WHATEVER";
 let history = ollama.get_message_history(history_id); // <- Option<Vec<ChatMessage>>
@@ -121,12 +124,13 @@ let history = ollama.get_message_history(history_id); // <- Option<Vec<ChatMessa
 ```
 
 Clear history if we no more need it:
+
 ```rust
 // Clear history for an ID
 let history_id = "USER_ID_OR_WHATEVER";
 ollama.clear_messages_for_id(history_id);
 // Clear history for all chats
-ollama.clear_all_messages(); 
+ollama.clear_all_messages();
 ```
 
 _Check chat with history examples for [default](https://github.com/pepperoni21/ollama-rs/blob/master/examples/chat_with_history.rs) and [stream](https://github.com/pepperoni21/ollama-rs/blob/master/examples/chat_with_history_stream.rs)_
