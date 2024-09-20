@@ -1,6 +1,6 @@
 [package]
 name = "ollama-rs"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 license-file = "LICENSE.md"
 description = "A Rust library for interacting with the Ollama API"
@@ -32,6 +32,9 @@ function-calling = ["scraper", "text-splitter", "regex", "chat-history"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
-ollama-rs = { path = ".", features = ["stream", "chat-history", "function-calling"] }
+ollama-rs = { path = ".", features = [
+  "stream",
+  "chat-history",
+  "function-calling",
+] }
 base64 = "0.22.0"
-

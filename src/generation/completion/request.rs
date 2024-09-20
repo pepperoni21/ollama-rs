@@ -14,6 +14,7 @@ pub struct GenerationRequest {
     #[serde(rename = "model")]
     pub model_name: String,
     pub prompt: String,
+    pub suffix: Option<String>,
     pub images: Vec<Image>,
     pub options: Option<GenerationOptions>,
     pub system: Option<String>,
@@ -29,6 +30,7 @@ impl GenerationRequest {
         Self {
             model_name,
             prompt,
+            suffix: None,
             images: Vec::new(),
             options: None,
             system: None,
@@ -39,6 +41,18 @@ impl GenerationRequest {
             // Stream value will be overwritten by Ollama::generate_stream() and Ollama::generate() methods
             stream: false,
         }
+    }
+
+    /// Creates a new generation request with an suffix. Useful for code completion requests
+    pub fn new_with_suffix(model_name: String, prompt: String, suffix: String) -> Self {
+        let out = Self::new(model_name, prompt);
+        out.suffix(suffix)
+    }
+
+    /// Adds a text after the model response
+    pub fn suffix(mut self, suffix: String) -> Self {
+        self.suffix = Some(suffix);
+        self
     }
 
     /// A list of images to be used with the prompt

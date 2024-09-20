@@ -706,7 +706,7 @@ dependencies = [
 
 [[package]]
 name = "ollama-rs"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "async-stream",
  "async-trait",
