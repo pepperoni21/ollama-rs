@@ -7,12 +7,12 @@ use super::LocalModel;
 impl Ollama {
     pub async fn list_local_models(&self) -> crate::error::Result<Vec<LocalModel>> {
         let url = format!("{}api/tags", self.url_str());
-        let res = self
-            .reqwest_client
-            .get(url)
-            .send()
-            .await
-            .map_err(|e| e.to_string())?;
+        let builder = self.reqwest_client.get(url);
+
+        #[cfg(feature = "headers")]
+        let builder = builder.headers(self.request_headers.clone());
+
+        let res = builder.send().await.map_err(|e| e.to_string())?;
 
         if !res.status().is_success() {
             return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());

@@ -16,9 +16,12 @@ impl Ollama {
     ) -> crate::error::Result<GenerateEmbeddingsResponse> {
         let url = format!("{}api/embed", self.url_str());
         let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
-        let res = self
-            .reqwest_client
-            .post(url)
+        let builder = self.reqwest_client.post(url);
+
+        #[cfg(feature = "headers")]
+        let builder = builder.headers(self.request_headers.clone());
+
+        let res = builder
             .body(serialized)
             .send()
             .await

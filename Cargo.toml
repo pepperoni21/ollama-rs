@@ -28,12 +28,14 @@ default = ["reqwest/default-tls"]
 stream = ["tokio-stream", "reqwest/stream", "tokio"]
 rustls = ["reqwest/rustls-tls"]
 chat-history = []
+headers = []
 function-calling = ["scraper", "text-splitter", "regex", "chat-history"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
 ollama-rs = { path = ".", features = [
   "stream",
+  "headers",
   "chat-history",
   "function-calling",
 ] }
