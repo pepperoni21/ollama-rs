@@ -2,3 +2,4 @@
 .vscode/settings.json
 shell.nix
 .idea
+.DS_Store

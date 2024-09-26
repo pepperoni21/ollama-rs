@@ -62,26 +62,28 @@ impl LlamaFunctionCall {
             .replace("}}", "}")
     }
 
-    fn parse_tool_response(&self, response: &str) -> Option<LlamaFunctionCallSignature> {
+    fn parse_tool_response(&self, response: &str) -> Vec<LlamaFunctionCallSignature> {
         let function_regex = Regex::new(r"<function=(\w+)>(.*?)</function>").unwrap();
         println!("Response: {}", response);
-        if let Some(caps) = function_regex.captures(response) {
-            let function_name = caps.get(1).unwrap().as_str().to_string();
-            let args_string = caps.get(2).unwrap().as_str();
 
-            match serde_json::from_str(args_string) {
-                Ok(arguments) => Some(LlamaFunctionCallSignature {
-                    function: function_name,
-                    arguments,
-                }),
-                Err(error) => {
-                    println!("Error parsing function arguments: {}", error);
-                    None
+        function_regex
+            .captures_iter(response)
+            .filter_map(|caps| {
+                let function_name = caps.get(1)?.as_str().to_string();
+                let args_string = caps.get(2)?.as_str();
+
+                match serde_json::from_str(args_string) {
+                    Ok(arguments) => Some(LlamaFunctionCallSignature {
+                        function: function_name,
+                        arguments,
+                    }),
+                    Err(error) => {
+                        println!("Error parsing function arguments: {}", error);
+                        None
+                    }
                 }
-            }
-        } else {
-            None
-        }
+            })
+            .collect()
     }
 }
 
@@ -93,28 +95,47 @@ impl RequestParserBase for LlamaFunctionCall {
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
     ) -> Result<ChatMessageResponse, ChatMessageResponse> {
-        let response_value = self.parse_tool_response(&self.clean_tool_call(input));
-        match response_value {
-            Some(response) => {
-                if let Some(tool) = tools.iter().find(|t| t.name() == response.function) {
-                    let tool_params = response.arguments;
-                    let result = self
-                        .function_call_with_history(
-                            model_name.clone(),
-                            tool_params.clone(),
-                            tool.clone(),
-                        )
-                        .await?;
-                    return Ok(result);
-                } else {
-                    return Err(self.error_handler(OllamaError::from("Tool not found".to_string())));
+        let function_calls = self.parse_tool_response(&self.clean_tool_call(input));
+
+        if function_calls.is_empty() {
+            return Err(self.error_handler(OllamaError::from(
+                "No valid function calls found".to_string(),
+            )));
+        }
+
+        let mut results = Vec::new();
+
+        for call in function_calls {
+            if let Some(tool) = tools.iter().find(|t| t.name() == call.function) {
+                let tool_params = call.arguments;
+                match self
+                    .function_call_with_history(model_name.clone(), tool_params, tool.clone())
+                    .await
+                {
+                    Ok(result) => results.push(result),
+                    Err(e) => results.push(e),
                 }
-            }
-            None => {
-                return Err(self
-                    .error_handler(OllamaError::from("Error parsing function call".to_string())));
+            } else {
+                results.push(self.error_handler(OllamaError::from(format!(
+                    "Tool '{}' not found",
+                    call.function
+                ))));
             }
         }
+
+        let combined_message = results
+            .into_iter()
+            .map(|r| r.message.map_or_else(String::new, |m| m.content))
+            .collect::<Vec<_>>()
+            .join("\n\n");
+
+        Ok(ChatMessageResponse {
+            model: model_name,
+            created_at: "".to_string(),
+            message: Some(ChatMessage::assistant(combined_message)),
+            done: true,
+            final_data: None,
+        })
     }
 
     async fn get_system_message(&self, tools: &[Arc<dyn Tool>]) -> ChatMessage {

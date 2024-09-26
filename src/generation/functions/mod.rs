@@ -59,6 +59,10 @@ impl crate::Ollama {
             )
             .await?;
 
+        if request.raw_mode {
+            return Ok(tool_call_result);
+        }
+
         let tool_call_content: String = tool_call_result.message.clone().unwrap().content;
         let result = parser
             .parse(
@@ -96,8 +100,12 @@ impl crate::Ollama {
             request.chat.messages.insert(0, system_prompt);
         }
         let result = self.send_chat_messages(request.chat).await?;
-        let response_content: String = result.message.clone().unwrap().content;
 
+        if request.raw_mode {
+            return Ok(result);
+        }
+
+        let response_content: String = result.message.clone().unwrap().content;
         let result = parser
             .parse(&response_content, model_name, request.tools)
             .await;

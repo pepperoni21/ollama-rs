@@ -8,12 +8,17 @@ use std::sync::Arc;
 pub struct FunctionCallRequest {
     pub chat: ChatMessageRequest,
     pub tools: Vec<Arc<dyn Tool>>,
+    pub raw_mode: bool,
 }
 
 impl FunctionCallRequest {
     pub fn new(model_name: String, tools: Vec<Arc<dyn Tool>>, messages: Vec<ChatMessage>) -> Self {
         let chat = ChatMessageRequest::new(model_name, messages);
-        Self { chat, tools }
+        Self {
+            chat,
+            tools,
+            raw_mode: false,
+        }
     }
 
     /// Additional model parameters listed in the documentation for the Modelfile
@@ -31,6 +36,11 @@ impl FunctionCallRequest {
     // The format to return a response in. Currently the only accepted value is `json`
     pub fn format(mut self, format: FormatType) -> Self {
         self.chat.format = Some(format);
+        self
+    }
+
+    pub fn raw_mode(mut self) -> Self {
+        self.raw_mode = true;
         self
     }
 }
