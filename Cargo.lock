@@ -711,6 +711,7 @@ dependencies = [
  "async-stream",
  "async-trait",
  "base64",
+ "http",
  "log",
  "ollama-rs",
  "regex",

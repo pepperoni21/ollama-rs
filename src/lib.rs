@@ -4,6 +4,8 @@ use url::Url;
 
 pub mod error;
 pub mod generation;
+#[cfg(feature = "headers")]
+pub mod headers;
 #[cfg(feature = "chat-history")]
 pub mod history;
 pub mod models;
@@ -69,6 +71,8 @@ impl IntoUrlSealed for String {
 pub struct Ollama {
     pub(crate) url: Url,
     pub(crate) reqwest_client: reqwest::Client,
+    #[cfg(feature = "headers")]
+    pub(crate) request_headers: reqwest::header::HeaderMap,
     #[cfg(feature = "chat-history")]
     pub(crate) messages_history: Option<WrappedMessageHistory>,
 }
@@ -145,6 +149,8 @@ impl Default for Ollama {
         Self {
             url: Url::parse("http://127.0.0.1:11434").unwrap(),
             reqwest_client: reqwest::Client::new(),
+            #[cfg(feature = "headers")]
+            request_headers: reqwest::header::HeaderMap::new(),
             #[cfg(feature = "chat-history")]
             messages_history: None,
         }
