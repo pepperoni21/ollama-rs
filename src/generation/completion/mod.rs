@@ -6,6 +6,7 @@ use request::GenerationRequest;
 
 pub mod request;
 
+#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
 /// A stream of `GenerationResponse` objects
 pub type GenerationResponseStream = std::pin::Pin<
@@ -16,6 +17,7 @@ pub type GenerationResponseStream = std::pin::Pin<
 pub type GenerationResponseStreamChunk = Vec<GenerationResponse>;
 
 impl Ollama {
+    #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
     #[cfg(feature = "stream")]
     /// Completion generation with streaming.
     /// Returns a stream of `GenerationResponse` objects
