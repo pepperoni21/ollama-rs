@@ -7,15 +7,18 @@ pub mod request;
 use super::images::Image;
 use request::ChatMessageRequest;
 
+#[cfg_attr(docsrs, doc(cfg(feature = "chat-history")))]
 #[cfg(feature = "chat-history")]
 use crate::history::MessagesHistory;
 
+#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
 /// A stream of `ChatMessageResponse` objects
 pub type ChatMessageResponseStream =
     std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<ChatMessageResponse, ()>> + Send>>;
 
 impl Ollama {
+    #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
     #[cfg(feature = "stream")]
     /// Chat message generation with streaming.
     /// Returns a stream of `ChatMessageResponse` objects
@@ -101,8 +104,10 @@ impl Ollama {
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "chat-history")))]
 #[cfg(feature = "chat-history")]
 impl Ollama {
+    #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
     #[cfg(feature = "stream")]
     pub async fn send_chat_messages_with_history_stream(
         &mut self,

@@ -1,11 +1,16 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
+#[cfg_attr(docsrs, doc(cfg(feature = "chat-history")))]
 #[cfg(feature = "chat-history")]
 use crate::history::WrappedMessageHistory;
 use url::Url;
 
 pub mod error;
 pub mod generation;
+#[cfg_attr(docsrs, doc(cfg(feature = "headers")))]
 #[cfg(feature = "headers")]
 pub mod headers;
+#[cfg_attr(docsrs, doc(cfg(feature = "chat-history")))]
 #[cfg(feature = "chat-history")]
 pub mod history;
 pub mod models;

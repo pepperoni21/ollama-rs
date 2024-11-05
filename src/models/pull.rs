@@ -3,12 +3,14 @@ use serde::{Deserialize, Serialize};
 use crate::Ollama;
 
 /// A stream of `PullModelStatus` objects.
+#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
 pub type PullModelStatusStream = std::pin::Pin<
     Box<dyn tokio_stream::Stream<Item = crate::error::Result<PullModelStatus>> + Send>,
 >;
 
 impl Ollama {
+    #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
     #[cfg(feature = "stream")]
     /// Pull a model with streaming, meaning that each new status will be streamed.
     /// - `model_name` - The name of the model to pull.
