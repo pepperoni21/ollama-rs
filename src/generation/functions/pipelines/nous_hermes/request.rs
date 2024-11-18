@@ -1,7 +1,7 @@
 use crate::error::OllamaError;
 use crate::generation::chat::{ChatMessage, ChatMessageResponse};
 use crate::generation::functions::pipelines::nous_hermes::DEFAULT_SYSTEM_TEMPLATE;
-use crate::generation::functions::pipelines::RequestParserBase;
+use crate::generation::functions::pipelines::{FunctionParseError, RequestParserBase};
 use crate::generation::functions::tools::Tool;
 use async_trait::async_trait;
 use regex::Regex;
@@ -90,7 +90,7 @@ impl RequestParserBase for NousFunctionCall {
         input: &str,
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse> {
+    ) -> Result<ChatMessageResponse, FunctionParseError> {
         //Extract between <tool_call> and </tool_call>
         let tool_response = self.extract_tool_call(input);
         match tool_response {
@@ -107,21 +107,24 @@ impl RequestParserBase for NousFunctionCall {
                                     tool_params.clone(),
                                     tool.clone(),
                                 )
-                                .await?; //Error is also returned as String for LLM feedback
-                            return Ok(result);
+                                .await;
+                            //Error is also returned as String for LLM feedback
+                            match result {
+                                Ok(result) => Ok(result),
+                                Err(e) => Ok(e)
+                            }
                         } else {
-                            return Err(self.error_handler(OllamaError::from(
-                                "Tool name not found".to_string(),
-                            )));
+                            Ok(self.error_handler(OllamaError::from(format!(
+                                "Tool '{}' not found",
+                                response.name
+                            ))))
                         }
                     }
-                    Err(e) => return Err(self.error_handler(OllamaError::from(e))),
+                    Err(_) => Err(FunctionParseError::NoFunctionCalled),
                 }
             }
             None => {
-                return Err(self.error_handler(OllamaError::from(
-                    "Error while extracting <tool_call> tags.".to_string(),
-                )))
+                Err(FunctionParseError::NoFunctionCalled)
             }
         }
     }
