@@ -1,7 +1,7 @@
 use crate::error::OllamaError;
 use crate::generation::chat::{ChatMessage, ChatMessageResponse};
 use crate::generation::functions::pipelines::openai::DEFAULT_SYSTEM_TEMPLATE;
-use crate::generation::functions::pipelines::RequestParserBase;
+use crate::generation::functions::pipelines::{FunctionParseError, RequestParserBase};
 use crate::generation::functions::tools::Tool;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -69,7 +69,7 @@ impl RequestParserBase for OpenAIFunctionCall {
         input: &str,
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse> {
+    ) -> Result<ChatMessageResponse, FunctionParseError> {
         let response_value: Result<OpenAIFunctionCallSignature, serde_json::Error> =
             serde_json::from_str(&self.clean_tool_call(input));
         match response_value {
@@ -82,15 +82,20 @@ impl RequestParserBase for OpenAIFunctionCall {
                             tool_params.clone(),
                             tool.clone(),
                         )
-                        .await?;
-                    return Ok(result);
+                        .await;
+                    //Error is also returned as String for LLM feedback
+                    match result {
+                        Ok(result) => Ok(result),
+                        Err(e) => Ok(e)
+                    }
                 } else {
-                    return Err(self.error_handler(OllamaError::from("Tool not found".to_string())));
+                    Ok(self.error_handler(OllamaError::from(format!(
+                        "Tool '{}' not found",
+                        response.name
+                    ))))
                 }
             }
-            Err(e) => {
-                return Err(self.error_handler(OllamaError::from(e)));
-            }
+            Err(_) => Err(FunctionParseError::NoFunctionCalled)
         }
     }
 

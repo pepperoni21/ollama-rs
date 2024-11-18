@@ -15,7 +15,7 @@ pub use tools::StockScraper;
 use crate::error::OllamaError;
 use crate::generation::chat::request::ChatMessageRequest;
 use crate::generation::chat::{ChatMessage, ChatMessageResponse};
-use crate::generation::functions::pipelines::RequestParserBase;
+use crate::generation::functions::pipelines::{FunctionParseError, RequestParserBase};
 use crate::generation::functions::tools::Tool;
 use std::sync::Arc;
 
@@ -23,7 +23,7 @@ use std::sync::Arc;
 #[cfg(feature = "function-calling")]
 impl crate::Ollama {
     fn has_system_prompt(&self, messages: &[ChatMessage], system_prompt: &str) -> bool {
-        let system_message = messages.first().unwrap().clone();
+        let system_message = messages.first().unwrap();
         system_message.content == system_prompt
     }
 
@@ -56,7 +56,7 @@ impl crate::Ollama {
 
         let tool_call_result = self
             .send_chat_messages_with_history(
-                ChatMessageRequest::new(request.chat.model_name.clone(), request.chat.messages),
+                ChatMessageRequest::new(request.chat.model_name.clone(), request.chat.messages.clone()),
                 id.clone(),
             )
             .await?;
@@ -76,12 +76,17 @@ impl crate::Ollama {
 
         match result {
             Ok(r) => {
-                self.add_assistant_response(id.clone(), r.message.clone().unwrap().content);
-                Ok(r)
-            }
+                // We got a response from a function call, let's send that back to the LLM
+                request.chat.messages.push(ChatMessage::system(r.message.unwrap().content));
+                self.send_chat_messages(request.chat).await
+            },
             Err(e) => {
-                self.add_assistant_response(id.clone(), e.message.clone().unwrap().content);
-                Err(OllamaError::from(e.message.unwrap().content))
+                match e {
+                    FunctionParseError::NoFunctionCalled => {
+                        // The LLM didn't call any functions, so give users back the original assistant response
+                        Ok(tool_call_result)
+                    }
+                }
             }
         }
     }
@@ -101,19 +106,30 @@ impl crate::Ollama {
         if !self.has_system_prompt(&request.chat.messages, &system_prompt.content) {
             request.chat.messages.insert(0, system_prompt);
         }
-        let result = self.send_chat_messages(request.chat).await?;
+        let maybe_function_result = self.send_chat_messages(request.chat.clone()).await?;
 
         if request.raw_mode {
-            return Ok(result);
+            return Ok(maybe_function_result);
         }
 
-        let response_content: String = result.message.clone().unwrap().content;
+        let response_content: String = maybe_function_result.message.clone().unwrap().content;
         let result = parser
             .parse(&response_content, model_name, request.tools)
             .await;
         match result {
-            Ok(r) => Ok(r),
-            Err(e) => Err(OllamaError::from(e.message.unwrap().content)),
+            Ok(r) => {
+                // We got a response from a function call, let's send that back to the LLM
+                request.chat.messages.push(ChatMessage::system(r.message.unwrap().content));
+                self.send_chat_messages(request.chat).await
+            },
+            Err(e) => {
+                match e {
+                    FunctionParseError::NoFunctionCalled => {
+                        // The LLM didn't call any functions, so give users back the original assistant response
+                        Ok(maybe_function_result)
+                    }
+                }
+            }
         }
     }
 }

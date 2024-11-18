@@ -1,7 +1,7 @@
 use crate::error::OllamaError;
 use crate::generation::chat::{ChatMessage, ChatMessageResponse};
 use crate::generation::functions::pipelines::meta_llama::DEFAULT_SYSTEM_TEMPLATE;
-use crate::generation::functions::pipelines::RequestParserBase;
+use crate::generation::functions::pipelines::{FunctionParseError, RequestParserBase};
 use crate::generation::functions::tools::Tool;
 use async_trait::async_trait;
 use regex::Regex;
@@ -94,13 +94,11 @@ impl RequestParserBase for LlamaFunctionCall {
         input: &str,
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse> {
+    ) -> Result<ChatMessageResponse, FunctionParseError> {
         let function_calls = self.parse_tool_response(&self.clean_tool_call(input));
 
         if function_calls.is_empty() {
-            return Err(self.error_handler(OllamaError::from(
-                "No valid function calls found".to_string(),
-            )));
+            return Err(FunctionParseError::NoFunctionCalled);
         }
 
         let mut results = Vec::new();
@@ -132,7 +130,7 @@ impl RequestParserBase for LlamaFunctionCall {
         Ok(ChatMessageResponse {
             model: model_name,
             created_at: "".to_string(),
-            message: Some(ChatMessage::assistant(combined_message)),
+            message: Some(ChatMessage::system(combined_message)),
             done: true,
             final_data: None,
         })
@@ -149,7 +147,7 @@ impl RequestParserBase for LlamaFunctionCall {
         ChatMessageResponse {
             model: "".to_string(),
             created_at: "".to_string(),
-            message: Some(ChatMessage::assistant(error.to_string())),
+            message: Some(ChatMessage::system(error.to_string())),
             done: true,
             final_data: None,
         }

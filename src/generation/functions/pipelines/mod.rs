@@ -8,6 +8,11 @@ pub mod meta_llama;
 pub mod nous_hermes;
 pub mod openai;
 
+#[derive(Debug)]
+pub enum FunctionParseError {
+    NoFunctionCalled
+}
+
 #[async_trait]
 pub trait RequestParserBase: Send + Sync {
     async fn parse(
@@ -15,7 +20,7 @@ pub trait RequestParserBase: Send + Sync {
         input: &str,
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse>;
+    ) -> Result<ChatMessageResponse, FunctionParseError>;
     fn format_query(&self, input: &str) -> String {
         input.to_string()
     }
