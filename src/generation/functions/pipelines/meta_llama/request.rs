@@ -60,6 +60,7 @@ impl LlamaFunctionCall {
             .to_string()
             .replace("{{", "{")
             .replace("}}", "}")
+            .replace("\\\"", "\"")
     }
 
     fn parse_tool_response(&self, response: &str) -> Vec<LlamaFunctionCallSignature> {
