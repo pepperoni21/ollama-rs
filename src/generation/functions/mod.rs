@@ -38,7 +38,7 @@ impl crate::Ollama {
         request: FunctionCallRequest,
         parser: Arc<dyn RequestParserBase>,
         id: String,
-    ) -> Result<ChatMessageResponse, OllamaError> {
+    ) -> Result<Vec<ChatMessageResponse>, OllamaError> {
         let mut request = request;
 
         if !self.has_system_prompt_history() {
@@ -62,7 +62,7 @@ impl crate::Ollama {
             .await?;
 
         if request.raw_mode {
-            return Ok(tool_call_result);
+            return Ok(vec![tool_call_result]);
         }
 
         let tool_call_content: String = tool_call_result.message.clone().unwrap().content;
@@ -75,16 +75,15 @@ impl crate::Ollama {
             .await;
 
         match result {
-            Ok(r) => {
-                // We got a response from a function call, let's send that back to the LLM
-                request.chat.messages.push(ChatMessage::new(MessageRole::Tool, r.message.unwrap().content));
-                self.send_chat_messages(request.chat).await
+            Ok(mut r) => {
+                r.insert(0, tool_call_result);
+                Ok(r)
             },
             Err(e) => {
                 match e {
                     FunctionParseError::NoFunctionCalled => {
                         // The LLM didn't call any functions, so give users back the original assistant response
-                        Ok(tool_call_result)
+                        Ok(vec![tool_call_result])
                     }
                 }
             }
@@ -95,7 +94,7 @@ impl crate::Ollama {
         &self,
         request: FunctionCallRequest,
         parser: Arc<dyn RequestParserBase>,
-    ) -> Result<ChatMessageResponse, OllamaError> {
+    ) -> Result<Vec<ChatMessageResponse>, OllamaError> {
         let mut request = request;
 
         request.chat.stream = false;
@@ -109,24 +108,24 @@ impl crate::Ollama {
         let maybe_function_result = self.send_chat_messages(request.chat.clone()).await?;
 
         if request.raw_mode {
-            return Ok(maybe_function_result);
+            return Ok(vec![maybe_function_result]);
         }
 
         let response_content: String = maybe_function_result.message.clone().unwrap().content;
         let result = parser
             .parse(&response_content, model_name, request.tools)
             .await;
+
         match result {
-            Ok(r) => {
-                // We got a response from a function call, let's send that back to the LLM
-                request.chat.messages.push(ChatMessage::new(MessageRole::Tool, r.message.unwrap().content));
-                self.send_chat_messages(request.chat).await
+            Ok(mut r) => {
+                r.insert(0, maybe_function_result);
+                Ok(r)
             },
             Err(e) => {
                 match e {
                     FunctionParseError::NoFunctionCalled => {
                         // The LLM didn't call any functions, so give users back the original assistant response
-                        Ok(maybe_function_result)
+                        Ok(vec![maybe_function_result])
                     }
                 }
             }

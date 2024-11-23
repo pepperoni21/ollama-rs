@@ -69,7 +69,7 @@ impl RequestParserBase for OpenAIFunctionCall {
         input: &str,
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
-    ) -> Result<ChatMessageResponse, FunctionParseError> {
+    ) -> Result<Vec<ChatMessageResponse>, FunctionParseError> {
         let response_value: Result<OpenAIFunctionCallSignature, serde_json::Error> =
             serde_json::from_str(&self.clean_tool_call(input));
         match response_value {
@@ -85,14 +85,14 @@ impl RequestParserBase for OpenAIFunctionCall {
                         .await;
                     //Error is also returned as String for LLM feedback
                     match result {
-                        Ok(result) => Ok(result),
-                        Err(e) => Ok(e)
+                        Ok(result) => Ok(vec![result]),
+                        Err(e) => Ok(vec![e])
                     }
                 } else {
-                    Ok(self.error_handler(OllamaError::from(format!(
+                    Ok(vec![self.error_handler(OllamaError::from(format!(
                         "Tool '{}' not found",
                         response.name
-                    ))))
+                    )))])
                 }
             }
             Err(_) => Err(FunctionParseError::NoFunctionCalled)
