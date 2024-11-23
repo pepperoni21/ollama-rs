@@ -1,5 +1,5 @@
 use crate::error::OllamaError;
-use crate::generation::chat::{ChatMessage, ChatMessageResponse};
+use crate::generation::chat::{ChatMessage, ChatMessageResponse, MessageRole};
 use crate::generation::functions::pipelines::nous_hermes::DEFAULT_SYSTEM_TEMPLATE;
 use crate::generation::functions::pipelines::{FunctionParseError, RequestParserBase};
 use crate::generation::functions::tools::Tool;
@@ -55,7 +55,7 @@ impl NousFunctionCall {
             Ok(result) => Ok(ChatMessageResponse {
                 model: model_name.clone(),
                 created_at: "".to_string(),
-                message: Some(ChatMessage::assistant(self.format_tool_response(&result))),
+                message: Some(ChatMessage::new(MessageRole::Tool, result.to_string())),
                 done: true,
                 final_data: None,
             }),
