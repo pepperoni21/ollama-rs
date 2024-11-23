@@ -14,7 +14,7 @@ pub use tools::StockScraper;
 
 use crate::error::OllamaError;
 use crate::generation::chat::request::ChatMessageRequest;
-use crate::generation::chat::{ChatMessage, ChatMessageResponse};
+use crate::generation::chat::{ChatMessage, ChatMessageResponse, MessageRole};
 use crate::generation::functions::pipelines::{FunctionParseError, RequestParserBase};
 use crate::generation::functions::tools::Tool;
 use std::sync::Arc;
@@ -77,7 +77,7 @@ impl crate::Ollama {
         match result {
             Ok(r) => {
                 // We got a response from a function call, let's send that back to the LLM
-                request.chat.messages.push(ChatMessage::system(r.message.unwrap().content));
+                request.chat.messages.push(ChatMessage::new(MessageRole::Tool, r.message.unwrap().content));
                 self.send_chat_messages(request.chat).await
             },
             Err(e) => {
@@ -119,7 +119,7 @@ impl crate::Ollama {
         match result {
             Ok(r) => {
                 // We got a response from a function call, let's send that back to the LLM
-                request.chat.messages.push(ChatMessage::system(r.message.unwrap().content));
+                request.chat.messages.push(ChatMessage::new(MessageRole::Tool, r.message.unwrap().content));
                 self.send_chat_messages(request.chat).await
             },
             Err(e) => {
