@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Image(String);
+pub struct Image(pub String);
 
 impl Image {
     pub fn from_base64(base64: &str) -> Self {
