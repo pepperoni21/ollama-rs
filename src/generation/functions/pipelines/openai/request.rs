@@ -1,5 +1,5 @@
 use crate::error::OllamaError;
-use crate::generation::chat::{ChatMessage, ChatMessageResponse};
+use crate::generation::chat::{ChatMessage, ChatMessageResponse, MessageRole};
 use crate::generation::functions::pipelines::openai::DEFAULT_SYSTEM_TEMPLATE;
 use crate::generation::functions::pipelines::{FunctionParseError, RequestParserBase};
 use crate::generation::functions::tools::Tool;
@@ -44,7 +44,7 @@ impl OpenAIFunctionCall {
             Ok(result) => Ok(ChatMessageResponse {
                 model: model_name.clone(),
                 created_at: "".to_string(),
-                message: Some(ChatMessage::assistant(result.to_string())),
+                message: Some(ChatMessage::new(MessageRole::Tool, result.to_string())),
                 done: true,
                 final_data: None,
             }),
