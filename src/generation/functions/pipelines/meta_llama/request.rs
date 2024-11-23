@@ -94,7 +94,7 @@ impl RequestParserBase for LlamaFunctionCall {
         input: &str,
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
-    ) -> Result<ChatMessageResponse, FunctionParseError> {
+    ) -> Result<Vec<ChatMessageResponse>, FunctionParseError> {
         let function_calls = self.parse_tool_response(&self.clean_tool_call(input));
 
         if function_calls.is_empty() {
@@ -121,19 +121,7 @@ impl RequestParserBase for LlamaFunctionCall {
             }
         }
 
-        let combined_message = results
-            .into_iter()
-            .map(|r| r.message.map_or_else(String::new, |m| m.content))
-            .collect::<Vec<_>>()
-            .join("\n\n");
-
-        Ok(ChatMessageResponse {
-            model: model_name,
-            created_at: "".to_string(),
-            message: Some(ChatMessage::system(combined_message)),
-            done: true,
-            final_data: None,
-        })
+        Ok(results)
     }
 
     async fn get_system_message(&self, tools: &[Arc<dyn Tool>]) -> ChatMessage {

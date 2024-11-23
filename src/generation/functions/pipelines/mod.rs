@@ -20,7 +20,7 @@ pub trait RequestParserBase: Send + Sync {
         input: &str,
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
-    ) -> Result<ChatMessageResponse, FunctionParseError>;
+    ) -> Result<Vec<ChatMessageResponse>, FunctionParseError>;
     fn format_query(&self, input: &str) -> String {
         input.to_string()
     }

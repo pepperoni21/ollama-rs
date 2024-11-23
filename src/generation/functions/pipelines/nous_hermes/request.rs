@@ -90,7 +90,7 @@ impl RequestParserBase for NousFunctionCall {
         input: &str,
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
-    ) -> Result<ChatMessageResponse, FunctionParseError> {
+    ) -> Result<Vec<ChatMessageResponse>, FunctionParseError> {
         //Extract between <tool_call> and </tool_call>
         let tool_response = self.extract_tool_call(input);
         match tool_response {
@@ -110,14 +110,14 @@ impl RequestParserBase for NousFunctionCall {
                                 .await;
                             //Error is also returned as String for LLM feedback
                             match result {
-                                Ok(result) => Ok(result),
-                                Err(e) => Ok(e)
+                                Ok(result) => Ok(vec![result]),
+                                Err(e) => Ok(vec![e])
                             }
                         } else {
-                            Ok(self.error_handler(OllamaError::from(format!(
+                            Ok(vec![self.error_handler(OllamaError::from(format!(
                                 "Tool '{}' not found",
                                 response.name
-                            ))))
+                            )))])
                         }
                     }
                     Err(_) => Err(FunctionParseError::NoFunctionCalled),
