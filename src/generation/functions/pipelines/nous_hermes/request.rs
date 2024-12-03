@@ -49,7 +49,7 @@ impl NousFunctionCall {
         model_name: String,
         tool_params: Value,
         tool: Arc<dyn Tool>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse> {
+    ) -> Result<ChatMessageResponse, OllamaError> {
         let result = tool.run(tool_params).await;
         match result {
             Ok(result) => Ok(ChatMessageResponse {
@@ -59,7 +59,7 @@ impl NousFunctionCall {
                 done: true,
                 final_data: None,
             }),
-            Err(e) => Err(self.error_handler(OllamaError::from(e))),
+            Err(e) => Err(OllamaError::from(e)),
         }
     }
 
@@ -90,7 +90,7 @@ impl RequestParserBase for NousFunctionCall {
         input: &str,
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse> {
+    ) -> Result<ChatMessageResponse, OllamaError> {
         //Extract between <tool_call> and </tool_call>
         let tool_response = self.extract_tool_call(input);
         match tool_response {
@@ -110,18 +110,16 @@ impl RequestParserBase for NousFunctionCall {
                                 .await?; //Error is also returned as String for LLM feedback
                             return Ok(result);
                         } else {
-                            return Err(self.error_handler(OllamaError::from(
-                                "Tool name not found".to_string(),
-                            )));
+                            return Err(OllamaError::from("Tool name not found".to_string()));
                         }
                     }
-                    Err(e) => return Err(self.error_handler(OllamaError::from(e))),
+                    Err(e) => return Err(OllamaError::from(e)),
                 }
             }
             None => {
-                return Err(self.error_handler(OllamaError::from(
+                return Err(OllamaError::from(
                     "Error while extracting <tool_call> tags.".to_string(),
-                )))
+                ))
             }
         }
     }
@@ -142,20 +140,5 @@ impl RequestParserBase for NousFunctionCall {
         let tools_json = serde_json::to_string(&tools_info).unwrap();
         let system_message_content = DEFAULT_SYSTEM_TEMPLATE.replace("{tools}", &tools_json);
         ChatMessage::system(system_message_content)
-    }
-
-    fn error_handler(&self, error: OllamaError) -> ChatMessageResponse {
-        let error_message = format!(
-            "<tool_response>\nThere was an error parsing function calls\n Here's the error stack trace: {}\nPlease call the function again with correct syntax</tool_response>",
-            error
-        );
-
-        ChatMessageResponse {
-            model: "".to_string(),
-            created_at: "".to_string(),
-            message: Some(ChatMessage::assistant(error_message)),
-            done: true,
-            final_data: None,
-        }
     }
 }

@@ -38,7 +38,7 @@ impl OpenAIFunctionCall {
         model_name: String,
         tool_params: Value,
         tool: Arc<dyn Tool>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse> {
+    ) -> Result<ChatMessageResponse, OllamaError> {
         let result = tool.run(tool_params).await;
         match result {
             Ok(result) => Ok(ChatMessageResponse {
@@ -48,7 +48,7 @@ impl OpenAIFunctionCall {
                 done: true,
                 final_data: None,
             }),
-            Err(e) => Err(self.error_handler(OllamaError::from(e))),
+            Err(e) => Err(OllamaError::from(e)),
         }
     }
 
@@ -69,7 +69,7 @@ impl RequestParserBase for OpenAIFunctionCall {
         input: &str,
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse> {
+    ) -> Result<ChatMessageResponse, OllamaError> {
         let response_value: Result<OpenAIFunctionCallSignature, serde_json::Error> =
             serde_json::from_str(&self.clean_tool_call(input));
         match response_value {
@@ -85,11 +85,11 @@ impl RequestParserBase for OpenAIFunctionCall {
                         .await?;
                     return Ok(result);
                 } else {
-                    return Err(self.error_handler(OllamaError::from("Tool not found".to_string())));
+                    return Err(OllamaError::from("Tool not found".to_string()));
                 }
             }
             Err(e) => {
-                return Err(self.error_handler(OllamaError::from(e)));
+                return Err(OllamaError::from(e));
             }
         }
     }
@@ -99,15 +99,5 @@ impl RequestParserBase for OpenAIFunctionCall {
         let tools_json = serde_json::to_string(&tools_info).unwrap();
         let system_message_content = DEFAULT_SYSTEM_TEMPLATE.replace("{tools}", &tools_json);
         ChatMessage::system(system_message_content)
-    }
-
-    fn error_handler(&self, error: OllamaError) -> ChatMessageResponse {
-        ChatMessageResponse {
-            model: "".to_string(),
-            created_at: "".to_string(),
-            message: Some(ChatMessage::assistant(error.to_string())),
-            done: true,
-            final_data: None,
-        }
     }
 }

@@ -37,7 +37,7 @@ impl LlamaFunctionCall {
         model_name: String,
         tool_params: Value,
         tool: Arc<dyn Tool>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse> {
+    ) -> Result<ChatMessageResponse, OllamaError> {
         let result = tool.run(tool_params).await;
         match result {
             Ok(result) => Ok(ChatMessageResponse {
@@ -47,7 +47,7 @@ impl LlamaFunctionCall {
                 done: true,
                 final_data: None,
             }),
-            Err(e) => Err(self.error_handler(OllamaError::from(e))),
+            Err(e) => Err(OllamaError::from(e)),
         }
     }
 
@@ -95,13 +95,13 @@ impl RequestParserBase for LlamaFunctionCall {
         input: &str,
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse> {
+    ) -> Result<ChatMessageResponse, OllamaError> {
         let function_calls = self.parse_tool_response(&self.clean_tool_call(input));
 
         if function_calls.is_empty() {
-            return Err(self.error_handler(OllamaError::from(
+            return Err(OllamaError::from(
                 "No valid function calls found".to_string(),
-            )));
+            ));
         }
 
         let mut results = Vec::new();
@@ -109,18 +109,15 @@ impl RequestParserBase for LlamaFunctionCall {
         for call in function_calls {
             if let Some(tool) = tools.iter().find(|t| t.name() == call.function) {
                 let tool_params = call.arguments;
-                match self
+                let result = self
                     .function_call_with_history(model_name.clone(), tool_params, tool.clone())
-                    .await
-                {
-                    Ok(result) => results.push(result),
-                    Err(e) => results.push(e),
-                }
+                    .await?;
+                results.push(result);
             } else {
-                results.push(self.error_handler(OllamaError::from(format!(
+                return Err(OllamaError::from(format!(
                     "Tool '{}' not found",
                     call.function
-                ))));
+                )));
             }
         }
 
@@ -144,15 +141,5 @@ impl RequestParserBase for LlamaFunctionCall {
         let tools_json = serde_json::to_string(&tools_info).unwrap();
         let system_message_content = DEFAULT_SYSTEM_TEMPLATE.replace("{tools}", &tools_json);
         ChatMessage::system(system_message_content)
-    }
-
-    fn error_handler(&self, error: OllamaError) -> ChatMessageResponse {
-        ChatMessageResponse {
-            model: "".to_string(),
-            created_at: "".to_string(),
-            message: Some(ChatMessage::assistant(error.to_string())),
-            done: true,
-            final_data: None,
-        }
     }
 }

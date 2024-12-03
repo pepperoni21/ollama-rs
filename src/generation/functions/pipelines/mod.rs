@@ -15,7 +15,7 @@ pub trait RequestParserBase: Send + Sync {
         input: &str,
         model_name: String,
         tools: Vec<Arc<dyn Tool>>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse>;
+    ) -> Result<ChatMessageResponse, OllamaError>;
     fn format_query(&self, input: &str) -> String {
         input.to_string()
     }
@@ -23,5 +23,4 @@ pub trait RequestParserBase: Send + Sync {
         response.to_string()
     }
     async fn get_system_message(&self, tools: &[Arc<dyn Tool>]) -> ChatMessage;
-    fn error_handler(&self, error: OllamaError) -> ChatMessageResponse;
 }
