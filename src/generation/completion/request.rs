@@ -20,6 +20,7 @@ pub struct GenerationRequest {
     pub system: Option<String>,
     pub template: Option<String>,
     pub context: Option<GenerationContext>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<FormatType>,
     pub keep_alive: Option<KeepAlive>,
     pub(crate) stream: bool,
