@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 /// The format to return a response in. Currently the only accepted value is `json`
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum FormatType {
-    Json,
+    Json(Value),
 }
 
 /// Used to control how long a model stays loaded in memory, by default models are unloaded after 5 minutes of inactivity
