@@ -1,11 +1,11 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::generation::{options::GenerationOptions, parameters::FormatType};
 
 use super::ChatMessage;
 
 /// A chat message request to Ollama.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ChatMessageRequest {
     #[serde(rename = "model")]
     pub model_name: String,
@@ -41,7 +41,7 @@ impl ChatMessageRequest {
         self
     }
 
-    // The format to return a response in. Currently the only accepted value is `json`
+    /// The format to return a response in.
     pub fn format(mut self, format: FormatType) -> Self {
         self.format = Some(format);
         self
