@@ -65,7 +65,7 @@ impl crate::Ollama {
             return Ok(tool_call_result);
         }
 
-        let tool_call_content: String = tool_call_result.message.clone().unwrap().content;
+        let tool_call_content: String = tool_call_result.message.unwrap().content;
         let result = parser
             .parse(
                 &tool_call_content,
@@ -80,8 +80,8 @@ impl crate::Ollama {
                 Ok(r)
             }
             Err(e) => {
-                self.add_assistant_response(id.clone(), e.message.clone().unwrap().content);
-                Err(OllamaError::from(e.message.unwrap().content))
+                self.add_assistant_response(id.clone(), e.message.clone());
+                Err(e)
             }
         }
     }
@@ -108,12 +108,8 @@ impl crate::Ollama {
         }
 
         let response_content: String = result.message.clone().unwrap().content;
-        let result = parser
+        return parser
             .parse(&response_content, model_name, request.tools)
             .await;
-        match result {
-            Ok(r) => Ok(r),
-            Err(e) => Err(OllamaError::from(e.message.unwrap().content)),
-        }
     }
 }
