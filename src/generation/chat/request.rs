@@ -12,6 +12,7 @@ pub struct ChatMessageRequest {
     pub messages: Vec<ChatMessage>,
     pub options: Option<GenerationOptions>,
     pub template: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<FormatType>,
     pub(crate) stream: bool,
 }
