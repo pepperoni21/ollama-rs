@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
+use crate::generation::functions::pipelines::FunctionParseError::FailedToProcessToolResponse;
 
 pub fn convert_to_openai_tool(tool: &Arc<dyn Tool>) -> Value {
     let mut function = HashMap::new();
@@ -38,7 +39,7 @@ impl OpenAIFunctionCall {
         model_name: String,
         tool_params: Value,
         tool: Arc<dyn Tool>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse> {
+    ) -> Result<ChatMessageResponse, OllamaError> {
         let result = tool.run(tool_params).await;
         match result {
             Ok(result) => Ok(ChatMessageResponse {
@@ -48,7 +49,7 @@ impl OpenAIFunctionCall {
                 done: true,
                 final_data: None,
             }),
-            Err(e) => Err(self.error_handler(OllamaError::from(e))),
+            Err(e) => Err(OllamaError::from(e)),
         }
     }
 
@@ -86,13 +87,10 @@ impl RequestParserBase for OpenAIFunctionCall {
                     //Error is also returned as String for LLM feedback
                     match result {
                         Ok(result) => Ok(vec![result]),
-                        Err(e) => Ok(vec![e])
+                        Err(e) => Err(FailedToProcessToolResponse(e))
                     }
                 } else {
-                    Ok(vec![self.error_handler(OllamaError::from(format!(
-                        "Tool '{}' not found",
-                        response.name
-                    )))])
+                    Err(FunctionParseError::CalledToolNotFound(response.name))
                 }
             }
             Err(_) => Err(FunctionParseError::NoFunctionCalled)
@@ -104,15 +102,5 @@ impl RequestParserBase for OpenAIFunctionCall {
         let tools_json = serde_json::to_string(&tools_info).unwrap();
         let system_message_content = DEFAULT_SYSTEM_TEMPLATE.replace("{tools}", &tools_json);
         ChatMessage::system(system_message_content)
-    }
-
-    fn error_handler(&self, error: OllamaError) -> ChatMessageResponse {
-        ChatMessageResponse {
-            model: "".to_string(),
-            created_at: "".to_string(),
-            message: Some(ChatMessage::assistant(error.to_string())),
-            done: true,
-            final_data: None,
-        }
     }
 }

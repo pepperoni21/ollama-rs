@@ -49,7 +49,7 @@ impl NousFunctionCall {
         model_name: String,
         tool_params: Value,
         tool: Arc<dyn Tool>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse> {
+    ) -> Result<ChatMessageResponse, OllamaError> {
         let result = tool.run(tool_params).await;
         match result {
             Ok(result) => Ok(ChatMessageResponse {
@@ -59,7 +59,7 @@ impl NousFunctionCall {
                 done: true,
                 final_data: None,
             }),
-            Err(e) => Err(self.error_handler(OllamaError::from(e))),
+            Err(e) => Err(OllamaError::from(e)),
         }
     }
 
@@ -111,13 +111,10 @@ impl RequestParserBase for NousFunctionCall {
                             //Error is also returned as String for LLM feedback
                             match result {
                                 Ok(result) => Ok(vec![result]),
-                                Err(e) => Ok(vec![e])
+                                Err(e) => Err(FunctionParseError::FailedToProcessToolResponse(e))
                             }
                         } else {
-                            Ok(vec![self.error_handler(OllamaError::from(format!(
-                                "Tool '{}' not found",
-                                response.name
-                            )))])
+                            Err(FunctionParseError::CalledToolNotFound(response.name))
                         }
                     }
                     Err(_) => Err(FunctionParseError::NoFunctionCalled),
@@ -145,20 +142,5 @@ impl RequestParserBase for NousFunctionCall {
         let tools_json = serde_json::to_string(&tools_info).unwrap();
         let system_message_content = DEFAULT_SYSTEM_TEMPLATE.replace("{tools}", &tools_json);
         ChatMessage::system(system_message_content)
-    }
-
-    fn error_handler(&self, error: OllamaError) -> ChatMessageResponse {
-        let error_message = format!(
-            "<tool_response>\nThere was an error parsing function calls\n Here's the error stack trace: {}\nPlease call the function again with correct syntax</tool_response>",
-            error
-        );
-
-        ChatMessageResponse {
-            model: "".to_string(),
-            created_at: "".to_string(),
-            message: Some(ChatMessage::assistant(error_message)),
-            done: true,
-            final_data: None,
-        }
     }
 }

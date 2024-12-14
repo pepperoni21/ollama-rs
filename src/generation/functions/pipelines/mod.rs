@@ -1,8 +1,8 @@
-use crate::error::OllamaError;
 use crate::generation::chat::{ChatMessage, ChatMessageResponse};
 use crate::generation::functions::tools::Tool;
 use async_trait::async_trait;
 use std::sync::Arc;
+use crate::error::OllamaError;
 
 pub mod meta_llama;
 pub mod nous_hermes;
@@ -10,7 +10,9 @@ pub mod openai;
 
 #[derive(Debug)]
 pub enum FunctionParseError {
-    NoFunctionCalled
+    NoFunctionCalled,
+    CalledToolNotFound(String),
+    FailedToProcessToolResponse(OllamaError)
 }
 
 #[async_trait]
@@ -28,5 +30,4 @@ pub trait RequestParserBase: Send + Sync {
         response.to_string()
     }
     async fn get_system_message(&self, tools: &[Arc<dyn Tool>]) -> ChatMessage;
-    fn error_handler(&self, error: OllamaError) -> ChatMessageResponse;
 }

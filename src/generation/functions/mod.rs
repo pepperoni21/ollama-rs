@@ -14,7 +14,7 @@ pub use tools::StockScraper;
 
 use crate::error::OllamaError;
 use crate::generation::chat::request::ChatMessageRequest;
-use crate::generation::chat::{ChatMessage, ChatMessageResponse, MessageRole};
+use crate::generation::chat::{ChatMessage, ChatMessageResponse};
 use crate::generation::functions::pipelines::{FunctionParseError, RequestParserBase};
 use crate::generation::functions::tools::Tool;
 use std::sync::Arc;
@@ -85,6 +85,14 @@ impl crate::Ollama {
                         // The LLM didn't call any functions, so give users back the original assistant response
                         Ok(vec![tool_call_result])
                     }
+                    FunctionParseError::CalledToolNotFound(tool) => {
+                        // The LLM tried to call a nonexistent function
+                        Err(OllamaError::from(format!("Tool {} not found", tool)))
+                    }
+                    FunctionParseError::FailedToProcessToolResponse(e) => {
+                        // The LLM failed to process the tool result
+                        Err(e)
+                    }
                 }
             }
         }
@@ -126,6 +134,14 @@ impl crate::Ollama {
                     FunctionParseError::NoFunctionCalled => {
                         // The LLM didn't call any functions, so give users back the original assistant response
                         Ok(vec![maybe_function_result])
+                    }
+                    FunctionParseError::CalledToolNotFound(tool) => {
+                        // The LLM tried to call a nonexistent function
+                        Err(OllamaError::from(format!("Tool {} not found", tool)))
+                    }
+                    FunctionParseError::FailedToProcessToolResponse(e) => {
+                        // The LLM failed to process the tool result
+                        Err(e)
                     }
                 }
             }

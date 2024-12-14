@@ -37,7 +37,7 @@ impl LlamaFunctionCall {
         model_name: String,
         tool_params: Value,
         tool: Arc<dyn Tool>,
-    ) -> Result<ChatMessageResponse, ChatMessageResponse> {
+    ) -> Result<ChatMessageResponse, OllamaError> {
         let result = tool.run(tool_params).await;
         match result {
             Ok(result) => Ok(ChatMessageResponse {
@@ -47,7 +47,7 @@ impl LlamaFunctionCall {
                 done: true,
                 final_data: None,
             }),
-            Err(e) => Err(self.error_handler(OllamaError::from(e))),
+            Err(e) => Err(OllamaError::from(e)),
         }
     }
 
@@ -107,18 +107,15 @@ impl RequestParserBase for LlamaFunctionCall {
         for call in function_calls {
             if let Some(tool) = tools.iter().find(|t| t.name() == call.function) {
                 let tool_params = call.arguments;
-                match self
+                let result = match self
                     .function_call_with_history(model_name.clone(), tool_params, tool.clone())
-                    .await
-                {
-                    Ok(result) => results.push(result),
-                    Err(e) => results.push(e),
-                }
+                    .await {
+                    Ok(result) => result,
+                    Err(e) => return Err(FunctionParseError::FailedToProcessToolResponse(e))
+                };
+                results.push(result);
             } else {
-                results.push(self.error_handler(OllamaError::from(format!(
-                    "Tool '{}' not found",
-                    call.function
-                ))));
+                return Err(FunctionParseError::CalledToolNotFound(call.function));
             }
         }
 
@@ -130,15 +127,5 @@ impl RequestParserBase for LlamaFunctionCall {
         let tools_json = serde_json::to_string(&tools_info).unwrap();
         let system_message_content = DEFAULT_SYSTEM_TEMPLATE.replace("{tools}", &tools_json);
         ChatMessage::system(system_message_content)
-    }
-
-    fn error_handler(&self, error: OllamaError) -> ChatMessageResponse {
-        ChatMessageResponse {
-            model: "".to_string(),
-            created_at: "".to_string(),
-            message: Some(ChatMessage::system(error.to_string())),
-            done: true,
-            final_data: None,
-        }
     }
 }
