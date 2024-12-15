@@ -1,4 +1,7 @@
-use ollama_rs::Ollama;
+use ollama_rs::{
+    generation::chat::{request::ChatMessageRequest, ChatMessage, MessageRole},
+    Ollama,
+};
 
 #[test]
 fn test_chat_history_saved_as_should() {
@@ -110,4 +113,40 @@ fn test_chat_history_freed_if_limit_exceeded() {
     let last = history.last();
     assert!(last.is_some());
     assert_eq!(last.unwrap().content, "Hi again".to_string());
+}
+
+#[tokio::test]
+async fn test_chat_history_accumulated() {
+    let mut ollama = Ollama::new_default_with_history(30);
+    let chat_id = "default";
+
+    assert!(ollama
+        .send_chat_messages_with_history(
+            ChatMessageRequest::new(
+                "granite-code:3b".into(),
+                vec![ChatMessage::new(
+                    MessageRole::User,
+                    "Why is the sky blue?".into(),
+                )],
+            ),
+            chat_id,
+        )
+        .await
+        .is_ok());
+
+    assert!(ollama
+        .send_chat_messages_with_history(
+            ChatMessageRequest::new(
+                "granite-code:3b".into(),
+                vec![ChatMessage::new(
+                    MessageRole::User,
+                    "But, why is the sky blue?".into()
+                )]
+            ),
+            chat_id
+        )
+        .await
+        .is_ok());
+
+    assert_eq!(ollama.get_messages_history(chat_id).unwrap().len(), 4)
 }
