@@ -23,6 +23,7 @@ text-splitter = { version = "0.13.1", optional = true }
 regex = { version = "1.9.3", optional = true }
 async-stream = "0.3.5"
 http = { version = "1.1.0", optional = true }
+schemars = { version = "0.8.21", features = ["preserve_order"] }
 
 [features]
 default = ["reqwest/default-tls"]
@@ -41,7 +42,6 @@ ollama-rs = { path = ".", features = [
     "function-calling",
 ] }
 base64 = "0.22.0"
-schemars = "0.8.21"
 
 [package.metadata.docs.rs]
 all-features = true
