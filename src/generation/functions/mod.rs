@@ -108,8 +108,8 @@ impl crate::Ollama {
         }
 
         let response_content: String = result.message.clone().unwrap().content;
-        return parser
+        parser
             .parse(&response_content, model_name, request.tools)
-            .await;
+            .await
     }
 }
