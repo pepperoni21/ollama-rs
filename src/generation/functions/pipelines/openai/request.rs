@@ -44,7 +44,7 @@ impl OpenAIFunctionCall {
             Ok(result) => Ok(ChatMessageResponse {
                 model: model_name.clone(),
                 created_at: "".to_string(),
-                message: Some(ChatMessage::assistant(result.to_string())),
+                message: ChatMessage::assistant(result.to_string()),
                 done: true,
                 final_data: None,
             }),

@@ -43,7 +43,7 @@ impl LlamaFunctionCall {
             Ok(result) => Ok(ChatMessageResponse {
                 model: model_name.clone(),
                 created_at: "".to_string(),
-                message: Some(ChatMessage::assistant(result.to_string())),
+                message: ChatMessage::assistant(result.to_string()),
                 done: true,
                 final_data: None,
             }),
@@ -123,14 +123,14 @@ impl RequestParserBase for LlamaFunctionCall {
 
         let combined_message = results
             .into_iter()
-            .map(|r| r.message.map_or_else(String::new, |m| m.content))
+            .map(|r| r.message.content)
             .collect::<Vec<_>>()
             .join("\n\n");
 
         Ok(ChatMessageResponse {
             model: model_name,
             created_at: "".to_string(),
-            message: Some(ChatMessage::assistant(combined_message)),
+            message: ChatMessage::assistant(combined_message),
             done: true,
             final_data: None,
         })

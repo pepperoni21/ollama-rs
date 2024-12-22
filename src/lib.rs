@@ -1,8 +1,5 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-#[cfg_attr(docsrs, doc(cfg(feature = "chat-history")))]
-#[cfg(feature = "chat-history")]
-use crate::history::WrappedMessageHistory;
 use url::Url;
 
 pub mod error;
@@ -10,8 +7,6 @@ pub mod generation;
 #[cfg_attr(docsrs, doc(cfg(feature = "headers")))]
 #[cfg(feature = "headers")]
 pub mod headers;
-#[cfg_attr(docsrs, doc(cfg(feature = "chat-history")))]
-#[cfg(feature = "chat-history")]
 pub mod history;
 pub mod models;
 
@@ -78,8 +73,6 @@ pub struct Ollama {
     pub(crate) reqwest_client: reqwest::Client,
     #[cfg(feature = "headers")]
     pub(crate) request_headers: reqwest::header::HeaderMap,
-    #[cfg(feature = "chat-history")]
-    pub(crate) messages_history: Option<WrappedMessageHistory>,
 }
 
 impl Ollama {
@@ -156,8 +149,6 @@ impl Default for Ollama {
             reqwest_client: reqwest::Client::new(),
             #[cfg(feature = "headers")]
             request_headers: reqwest::header::HeaderMap::new(),
-            #[cfg(feature = "chat-history")]
-            messages_history: None,
         }
     }
 }

@@ -3,9 +3,7 @@
 use ollama_rs::{
     generation::chat::ChatMessage,
     generation::functions::tools::{DDGSearcher, Scraper, StockScraper},
-    generation::functions::{
-        FunctionCallRequest, LlamaFunctionCall, NousFunctionCall, OpenAIFunctionCall,
-    },
+    generation::functions::{FunctionCallRequest, LlamaFunctionCall, NousFunctionCall},
     Ollama,
 };
 use std::sync::Arc;
@@ -34,38 +32,6 @@ async fn test_send_function_call() {
                 vec![user_message],
             ),
             parser,
-        )
-        .await
-        .unwrap();
-
-    assert!(result.done);
-}
-
-#[tokio::test]
-async fn test_send_function_call_with_history() {
-    /// Model to be used, make sure it is tailored towards "function calling", such as:
-    /// - OpenAIFunctionCall: not model specific, degraded performance
-    /// - NousFunctionCall: adrienbrault/nous-hermes2pro:Q8_0
-    /// - LlamaFunctionCall: llama3.1:latest
-    const MODEL: &str = "phi3:14b-medium-4k-instruct-q4_1";
-
-    const PROMPT: &str = "Aside from the Apple Remote, what other device can control the program Apple Remote was originally designed to interact with?";
-    let user_message = ChatMessage::user(PROMPT.to_string());
-
-    let scraper_tool = Arc::new(Scraper::new());
-    let ddg_search_tool = Arc::new(DDGSearcher::new());
-    let parser = Arc::new(OpenAIFunctionCall {});
-
-    let mut ollama = Ollama::new_default_with_history(30);
-    let result = ollama
-        .send_function_call_with_history(
-            FunctionCallRequest::new(
-                MODEL.to_string(),
-                vec![scraper_tool, ddg_search_tool],
-                vec![user_message],
-            ),
-            parser,
-            "default".to_string(),
         )
         .await
         .unwrap();

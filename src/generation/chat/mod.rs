@@ -1,15 +1,12 @@
-#[cfg(all(feature = "chat-history", feature = "stream"))]
 use async_stream::stream;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
-use crate::Ollama;
+use crate::{history::ChatHistory, Ollama};
 pub mod request;
 use super::images::Image;
 use request::ChatMessageRequest;
-
-#[cfg_attr(docsrs, doc(cfg(feature = "chat-history")))]
-#[cfg(feature = "chat-history")]
-use crate::history::MessagesHistory;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
@@ -104,52 +101,39 @@ impl Ollama {
     }
 }
 
-#[cfg_attr(docsrs, doc(cfg(feature = "chat-history")))]
-#[cfg(feature = "chat-history")]
 impl Ollama {
     #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
     #[cfg(feature = "stream")]
-    pub async fn send_chat_messages_with_history_stream(
+    pub async fn send_chat_messages_with_history_stream<C: ChatHistory + Send + 'static>(
         &mut self,
+        history: Arc<Mutex<C>>,
         mut request: ChatMessageRequest,
-        history_id: impl ToString,
     ) -> crate::error::Result<ChatMessageResponseStream> {
         use async_stream::stream;
         use tokio_stream::StreamExt;
-        let id_copy = history_id.to_string().clone();
-
-        let mut current_chat_messages = self.get_chat_messages_by_id(id_copy.clone());
-
-        if let Some(message) = request.messages.first() {
-            current_chat_messages.push(message.clone());
-        }
 
         // The request is modified to include the current chat messages
-        request.messages.clone_from(&current_chat_messages);
+        {
+            let mut hist = history.lock().await;
+            for m in request.messages {
+                hist.push(m);
+            }
+        }
+
+        request.messages = history.lock().await.messages().to_vec();
         request.stream = true;
 
         let mut resp_stream: ChatMessageResponseStream =
             self.send_chat_messages_stream(request.clone()).await?;
 
-        let messages_history = self.messages_history.clone();
-
         let s = stream! {
             let mut result = String::new();
 
             while let Some(item) = resp_stream.try_next().await.unwrap() {
-                let msg_part = item.clone().message.unwrap().content;
+                let msg_part = item.clone().message.content;
 
                 if item.done {
-                    if let Some(history) = messages_history.clone() {
-                        let mut inner = history.write().unwrap();
-                        // Message we sent to AI
-                        if let Some(message) = request.messages.last() {
-                            inner.add_message(id_copy.clone(), message.clone());
-                        }
-
-                        // AI's response
-                        inner.add_message(id_copy.clone(), ChatMessage::assistant(result.clone()));
-                    }
+        history.lock().await.push(ChatMessage::assistant(result.clone()));
                 } else {
                     result.push_str(&msg_part);
                 }
@@ -163,68 +147,27 @@ impl Ollama {
 
     /// Chat message generation
     /// Returns a `ChatMessageResponse` object
-    /// Manages the history of messages for the given `id`
-    pub async fn send_chat_messages_with_history(
+    pub async fn send_chat_messages_with_history<C: ChatHistory>(
         &mut self,
+        history: &mut C,
         mut request: ChatMessageRequest,
-        history_id: impl ToString,
     ) -> crate::error::Result<ChatMessageResponse> {
         // The request is modified to include the current chat messages
-        let id_copy = history_id.to_string().clone();
-        let mut current_chat_messages = self.get_chat_messages_by_id(id_copy.clone());
-
-        if let Some(message) = request.messages.first() {
-            current_chat_messages.push(message.clone());
+        for m in request.messages {
+            history.push(m);
         }
 
-        // The request is modified to include the current chat messages
-        request.messages.clone_from(&current_chat_messages);
+        request.messages = history.messages().to_vec();
 
         let result = self.send_chat_messages(request.clone()).await;
 
         if let Ok(result) = result {
-            // Message we sent to AI
-            if let Some(message) = request.messages.last() {
-                self.store_chat_message_by_id(id_copy.clone(), message.clone());
-            }
-            // Store AI's response in the history
-            self.store_chat_message_by_id(id_copy, result.message.clone().unwrap());
+            history.push(result.message.clone());
 
             return Ok(result);
         }
 
         result
-    }
-
-    /// Helper function to store chat messages by id
-    fn store_chat_message_by_id(&mut self, id: impl ToString, message: ChatMessage) {
-        if let Some(messages_history) = self.messages_history.as_mut() {
-            messages_history.write().unwrap().add_message(id, message);
-        }
-    }
-
-    /// Let get existing history with a new message in it
-    /// Without impact for existing history
-    /// Used to prepare history for request
-    fn get_chat_messages_by_id(&mut self, history_id: impl ToString) -> Vec<ChatMessage> {
-        let chat_history = match self.messages_history.as_mut() {
-            Some(history) => history,
-            None => {
-                let new_history =
-                    std::sync::Arc::new(std::sync::RwLock::new(MessagesHistory::default()));
-                self.messages_history = Some(new_history);
-                &mut self.messages_history.clone().unwrap()
-            }
-        };
-        // Clone the current chat messages to avoid borrowing issues
-        // And not to add message to the history if the request fails
-        let mut history_instance = chat_history.write().unwrap();
-        let chat_history = history_instance
-            .messages_by_id
-            .entry(history_id.to_string())
-            .or_default();
-
-        chat_history.clone()
     }
 }
 
@@ -235,7 +178,7 @@ pub struct ChatMessageResponse {
     /// The creation time of the completion, in such format: `2023-08-04T08:52:19.385406455-07:00`.
     pub created_at: String,
     /// The generated chat message.
-    pub message: Option<ChatMessage>,
+    pub message: ChatMessage,
     pub done: bool,
     #[serde(flatten)]
     /// The final data of the completion. This is only present if the completion is done.

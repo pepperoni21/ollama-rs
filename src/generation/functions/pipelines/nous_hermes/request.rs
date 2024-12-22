@@ -55,7 +55,7 @@ impl NousFunctionCall {
             Ok(result) => Ok(ChatMessageResponse {
                 model: model_name.clone(),
                 created_at: "".to_string(),
-                message: Some(ChatMessage::assistant(self.format_tool_response(&result))),
+                message: ChatMessage::assistant(self.format_tool_response(&result)),
                 done: true,
                 final_data: None,
             }),

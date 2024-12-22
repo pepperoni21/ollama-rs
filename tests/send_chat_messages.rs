@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use base64::Engine;
+use tokio::sync::Mutex;
 use tokio_stream::StreamExt;
 
 use ollama_rs::{
@@ -57,8 +60,8 @@ async fn test_send_chat_messages() {
 
 #[tokio::test]
 async fn test_send_chat_messages_with_history_stream() {
-    let mut ollama = Ollama::new_default_with_history(30);
-    let id = "default";
+    let mut ollama = Ollama::default();
+    let history = Arc::new(Mutex::new(vec![]));
 
     let messages = vec![ChatMessage::user(PROMPT.to_string())];
 
@@ -66,8 +69,8 @@ async fn test_send_chat_messages_with_history_stream() {
 
     let mut res = ollama
         .send_chat_messages_with_history_stream(
+            history.clone(),
             ChatMessageRequest::new("llama2:latest".to_string(), messages),
-            id,
         )
         .await
         .unwrap();
@@ -83,21 +86,21 @@ async fn test_send_chat_messages_with_history_stream() {
 
     assert!(done);
     // Should have user's message as well as AI's response
-    dbg!(&ollama.get_messages_history(id).unwrap());
-    assert_eq!(ollama.get_messages_history(id).unwrap().len(), 2);
+    dbg!(&history.lock().await);
+    assert_eq!(history.lock().await.len(), 2);
 }
 
 #[tokio::test]
 async fn test_send_chat_messages_with_history() {
-    let mut ollama = Ollama::new_default_with_history(30);
-    let id = "default".to_string();
+    let mut ollama = Ollama::default();
+    let mut history = vec![];
     let second_message = vec![ChatMessage::user("Second message".to_string())];
 
     let messages = vec![ChatMessage::user(PROMPT.to_string())];
     let res = ollama
         .send_chat_messages_with_history(
+            &mut history,
             ChatMessageRequest::new("llama2:latest".to_string(), messages.clone()),
-            &id,
         )
         .await
         .unwrap();
@@ -105,12 +108,12 @@ async fn test_send_chat_messages_with_history() {
     dbg!(&res);
     assert!(res.done);
     // Should have user's message as well as AI's response
-    assert_eq!(ollama.get_messages_history(&id).unwrap().len(), 2);
+    assert_eq!(history.len(), 2);
 
     let res = ollama
         .send_chat_messages_with_history(
+            &mut history,
             ChatMessageRequest::new("llama2:latest".to_string(), second_message.clone()),
-            &id,
         )
         .await
         .unwrap();
@@ -118,7 +121,6 @@ async fn test_send_chat_messages_with_history() {
     dbg!(&res);
     assert!(res.done);
 
-    let history = ollama.get_messages_history(&id).unwrap();
     // Should now have 2 user messages as well as AI's responses
     assert_eq!(history.len(), 4);
 
@@ -129,63 +131,6 @@ async fn test_send_chat_messages_with_history() {
         second_user_message_in_history.unwrap().content,
         "Second message".to_string()
     );
-}
-
-#[tokio::test]
-async fn test_send_chat_messages_remove_old_history_with_limit_less_than_min() {
-    // Setting history length to 1 but the minimum is 2
-    let mut ollama = Ollama::new_default_with_history(1);
-    let id = "default".to_string();
-
-    let messages = vec![ChatMessage::user(PROMPT.to_string())];
-    let res = ollama
-        .send_chat_messages_with_history(
-            ChatMessageRequest::new("llama2:latest".to_string(), messages.clone()),
-            &id,
-        )
-        .await
-        .unwrap();
-
-    dbg!(&res);
-    assert!(res.done);
-    // Minimal history length is 2
-    assert_eq!(ollama.get_messages_history(&id).unwrap().len(), 2);
-}
-
-#[tokio::test]
-async fn test_send_chat_messages_remove_old_history() {
-    let mut ollama = Ollama::new_default_with_history(3);
-    let id = "default".to_string();
-
-    let messages = vec![ChatMessage::user(PROMPT.to_string())];
-    let res = ollama
-        .send_chat_messages_with_history(
-            ChatMessageRequest::new("llama2:latest".to_string(), messages.clone()),
-            &id,
-        )
-        .await
-        .unwrap();
-
-    dbg!(&res);
-
-    assert!(res.done);
-
-    assert_eq!(ollama.get_messages_history(&id).unwrap().len(), 2);
-
-    // Duplicate to check that we have 3 messages stored
-    let res = ollama
-        .send_chat_messages_with_history(
-            ChatMessageRequest::new("llama2:latest".to_string(), messages),
-            &id,
-        )
-        .await
-        .unwrap();
-
-    dbg!(&res);
-
-    assert!(res.done);
-
-    assert_eq!(ollama.get_messages_history(&id).unwrap().len(), 3);
 }
 
 const IMAGE_URL: &str = "https://images.pexels.com/photos/1054655/pexels-photo-1054655.jpeg";

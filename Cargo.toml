@@ -38,7 +38,6 @@ tokio = { version = "1", features = ["full"] }
 ollama-rs = { path = ".", features = [
     "stream",
     "headers",
-    "chat-history",
     "function-calling",
 ] }
 base64 = "0.22.0"
