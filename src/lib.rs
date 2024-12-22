@@ -2,6 +2,7 @@
 
 use url::Url;
 
+pub mod coordinator;
 pub mod error;
 pub mod generation;
 #[cfg_attr(docsrs, doc(cfg(feature = "headers")))]
