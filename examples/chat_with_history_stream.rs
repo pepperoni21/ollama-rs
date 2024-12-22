@@ -1,13 +1,9 @@
-use std::sync::Arc;
-
 use ollama_rs::{
     generation::chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponseStream},
     Ollama,
 };
-use tokio::{
-    io::{stdout, AsyncWriteExt},
-    sync::Mutex,
-};
+use std::sync::{Arc, Mutex};
+use tokio::io::{stdout, AsyncWriteExt};
 use tokio_stream::StreamExt;
 
 #[tokio::main]
@@ -46,7 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    dbg!(&history.lock().await);
+    dbg!(&history.lock().unwrap());
 
     Ok(())
 }

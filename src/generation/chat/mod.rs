@@ -1,12 +1,16 @@
-use async_stream::stream;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
 use crate::{history::ChatHistory, Ollama};
 pub mod request;
 use super::images::Image;
 use request::ChatMessageRequest;
+
+#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
+#[cfg(feature = "stream")]
+use async_stream::stream;
+#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
+#[cfg(feature = "stream")]
+use std::sync::{Arc, Mutex};
 
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
@@ -114,13 +118,13 @@ impl Ollama {
 
         // The request is modified to include the current chat messages
         {
-            let mut hist = history.lock().await;
+            let mut hist = history.lock().unwrap();
             for m in request.messages {
                 hist.push(m);
             }
         }
 
-        request.messages = history.lock().await.messages().to_vec();
+        request.messages = history.lock().unwrap().messages().to_vec();
         request.stream = true;
 
         let mut resp_stream: ChatMessageResponseStream =
@@ -133,7 +137,7 @@ impl Ollama {
                 let msg_part = item.clone().message.content;
 
                 if item.done {
-        history.lock().await.push(ChatMessage::assistant(result.clone()));
+        history.lock().unwrap().push(ChatMessage::assistant(result.clone()));
                 } else {
                     result.push_str(&msg_part);
                 }

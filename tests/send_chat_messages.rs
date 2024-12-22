@@ -1,7 +1,5 @@
-use std::sync::Arc;
-
 use base64::Engine;
-use tokio::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use tokio_stream::StreamExt;
 
 use ollama_rs::{
@@ -86,8 +84,8 @@ async fn test_send_chat_messages_with_history_stream() {
 
     assert!(done);
     // Should have user's message as well as AI's response
-    dbg!(&history.lock().await);
-    assert_eq!(history.lock().await.len(), 2);
+    dbg!(&history.lock().unwrap());
+    assert_eq!(history.lock().unwrap().len(), 2);
 }
 
 #[tokio::test]
