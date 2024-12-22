@@ -92,7 +92,7 @@ impl GenerationRequest {
         self
     }
 
-    // The format to return a response in. Currently the only accepted value is `json`
+    /// The format to return a response in.
     pub fn format(mut self, format: FormatType) -> Self {
         self.format = Some(format);
         self
