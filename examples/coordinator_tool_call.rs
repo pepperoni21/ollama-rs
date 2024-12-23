@@ -1,44 +1,20 @@
-use std::{
-    error::Error,
-    io::{stdin, stdout, Write},
-};
+use std::io::{stdin, stdout, Write};
 
 use ollama_rs::{
     coordinator::Coordinator,
-    generation::{chat::ChatMessage, tools::Tool},
+    generation::{
+        chat::ChatMessage,
+        tools::implementations::{DDGSearcher, Scraper},
+    },
     Ollama,
 };
-use schemars::JsonSchema;
-use serde::Deserialize;
-
-struct SearchTool {}
-
-#[derive(Deserialize, JsonSchema)]
-struct SearchToolParameters {
-    query: String,
-}
-
-impl Tool for SearchTool {
-    type Params = SearchToolParameters;
-
-    fn name() -> &'static str {
-        "search_engine_tool"
-    }
-
-    fn description() -> &'static str {
-        "Searches a search engine on the Internet for the given query"
-    }
-
-    async fn call(&mut self, _parameters: Self::Params) -> Result<String, Box<dyn Error>> {
-        Ok("Intel stock price is $523.52".to_string())
-    }
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut ollama = Ollama::default();
     let mut history = vec![];
-    let tools = SearchTool {};
+    let tools = (DDGSearcher::new(), Scraper {});
+
     let mut coordinator =
         Coordinator::new_with_tools(&mut ollama, "qwen2.5:32b".to_string(), &mut history, tools);
 

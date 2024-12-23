@@ -29,9 +29,8 @@ thiserror = "2.0.9"
 default = ["reqwest/default-tls"]
 stream = ["tokio-stream", "reqwest/stream", "tokio"]
 rustls = ["reqwest/rustls-tls"]
-chat-history = []
 headers = ["http"]
-tool-implementations = ["scraper", "text-splitter", "regex", "chat-history"]
+tool-implementations = ["scraper", "text-splitter", "regex"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

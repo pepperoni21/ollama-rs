@@ -1,6 +1,6 @@
-#[cfg_attr(docsrs, doc(cfg(feature = "all_tools")))]
+#[cfg_attr(docsrs, doc(cfg(feature = "tool-implementations")))]
 #[cfg(feature = "tool-implementations")]
-mod implementations;
+pub mod implementations;
 
 use std::{error::Error, future::Future};
 
@@ -11,6 +11,7 @@ use serde_json::Value;
 use crate::error::ToolCallError;
 
 /// It's highly recommended that the JsonSchema has descriptions for all attributes
+/// Descriptions can be defined with `#[schemars(descripion = "Hi I am an attribute")]` above each attribute`
 // TODO enforce at compile-time
 pub trait Tool {
     type Params: Parameters;
