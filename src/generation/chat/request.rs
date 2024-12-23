@@ -57,7 +57,9 @@ impl ChatMessageRequest {
 
     /// Tools that are available to the LLM.
     pub fn tools<T: ToolGroup>(mut self) -> Self {
-        self.tools = T::tool_info();
+        self.tools.clear();
+        T::tool_info(&mut self.tools);
+
         self
     }
 }

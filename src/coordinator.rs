@@ -1,6 +1,6 @@
 use crate::{
     generation::{
-        chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse, MessageRole},
+        chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse},
         functions::ToolGroup,
         options::GenerationOptions,
     },
@@ -9,7 +9,7 @@ use crate::{
 };
 
 pub struct Coordinator<'a, 'b, C: ChatHistory, T: ToolGroup> {
-    model: String, // TODO this should not require ownership
+    model: String,
     ollama: &'a mut Ollama,
     options: GenerationOptions,
     history: &'b mut C,
@@ -62,11 +62,10 @@ impl<'a, 'b, C: ChatHistory, T: ToolGroup> Coordinator<'a, 'b, C, T> {
         messages: Vec<ChatMessage>,
     ) -> crate::error::Result<ChatMessageResponse> {
         if self.debug {
-            // TODO
-            /*eprintln!(
-                "Hit {} with {:?}: '{}'",
-                self.model, message.role, message.content
-            );*/
+            for m in &messages {
+                eprintln!("Hit {} with:", self.model);
+                eprintln!("\t{:?}: '{}'", m.role, m.content);
+            }
         }
 
         let resp = self
@@ -93,9 +92,9 @@ impl<'a, 'b, C: ChatHistory, T: ToolGroup> Coordinator<'a, 'b, C, T> {
 
         let resp = resp?;
 
-        if resp.message.tool_calls.len() > 0 {
+        if !resp.message.tool_calls.is_empty() {
             for call in resp.message.tool_calls {
-                let resp = self.tools.call(call.function)?;
+                let resp = self.tools.call(&call.function)?;
                 self.history.push(ChatMessage::tool(resp))
             }
 

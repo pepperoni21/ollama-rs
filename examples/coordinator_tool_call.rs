@@ -1,4 +1,7 @@
-use std::io::{stdin, stdout, Write};
+use std::{
+    error::Error,
+    io::{stdin, stdout, Write},
+};
 
 use ollama_rs::{
     coordinator::Coordinator,
@@ -6,7 +9,7 @@ use ollama_rs::{
     Ollama,
 };
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 struct SearchTool {}
 
@@ -26,8 +29,8 @@ impl Tool for SearchTool {
         "Searches a search engine on the Internet for the given query"
     }
 
-    fn call(&mut self, parameters: Self::P) -> String {
-        "Intel stock price is $523.52".to_string()
+    fn call(&mut self, _parameters: Self::P) -> Result<String, Box<dyn Error>> {
+        Ok("Intel stock price is $523.52".to_string())
     }
 }
 

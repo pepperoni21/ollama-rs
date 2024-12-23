@@ -22,13 +22,17 @@ pub enum OllamaError {
 #[derive(Deserialize, Debug)]
 pub struct InternalOllamaError {
     #[serde(rename = "error")]
-    pub(crate) message: String,
+    pub message: String,
 }
 
 #[derive(Error, Debug)]
 pub enum ToolCallError {
     #[error("Ollama attempted to call a tool with a name we do not recognize")]
     UnknownToolName,
-    #[error("Could not convert tool arguments from Ollamainto what the tool expected")]
+    #[error(
+        "Could not convert tool arguments from Ollama into what the tool expected, or vice versa"
+    )]
     InvalidToolArguments(#[from] serde_json::Error),
+    #[error("Tool errored internally when it was called")]
+    InternalToolError(#[from] Box<dyn std::error::Error>),
 }
