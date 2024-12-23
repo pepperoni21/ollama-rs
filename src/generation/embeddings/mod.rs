@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::Ollama;
+use crate::{error::OllamaError, Ollama};
 
 use self::request::GenerateEmbeddingsRequest;
 
@@ -15,25 +15,22 @@ impl Ollama {
         request: GenerateEmbeddingsRequest,
     ) -> crate::error::Result<GenerateEmbeddingsResponse> {
         let url = format!("{}api/embed", self.url_str());
-        let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
+        let serialized = serde_json::to_string(&request)?;
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder
-            .body(serialized)
-            .send()
-            .await
-            .map_err(|e| e.to_string())?;
+        let res = builder.body(serialized).send().await?;
 
         if !res.status().is_success() {
-            return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
+            return Err(OllamaError::Other(
+                res.text().await.unwrap_or_else(|e| e.to_string()),
+            ));
         }
 
-        let res = res.bytes().await.map_err(|e| e.to_string())?;
-        let res = serde_json::from_slice::<GenerateEmbeddingsResponse>(&res)
-            .map_err(|e| e.to_string())?;
+        let res = res.bytes().await?;
+        let res = serde_json::from_slice::<GenerateEmbeddingsResponse>(&res)?;
 
         Ok(res)
     }

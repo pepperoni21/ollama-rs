@@ -1,27 +1,48 @@
 use crate::{
     generation::{
-        chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse},
+        chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse, MessageRole},
+        functions::ToolGroup,
         options::GenerationOptions,
     },
     history::ChatHistory,
     Ollama,
 };
 
-pub struct Coordinator<'a, 'b, C: ChatHistory> {
+pub struct Coordinator<'a, 'b, C: ChatHistory, T: ToolGroup> {
     model: String, // TODO this should not require ownership
     ollama: &'a mut Ollama,
     options: GenerationOptions,
     history: &'b mut C,
+    tools: T,
     debug: bool,
 }
 
-impl<'a, 'b, C: ChatHistory> Coordinator<'a, 'b, C> {
-    pub fn new(ollama: &'a mut Ollama, history: &'b mut C, model: String) -> Self {
+impl<'a, 'b, C: ChatHistory> Coordinator<'a, 'b, C, ()> {
+    pub fn new(ollama: &'a mut Ollama, model: String, history: &'b mut C) -> Self {
         Self {
             model,
             ollama,
             options: GenerationOptions::default(),
             history,
+            tools: (),
+            debug: false,
+        }
+    }
+}
+
+impl<'a, 'b, C: ChatHistory, T: ToolGroup> Coordinator<'a, 'b, C, T> {
+    pub fn new_with_tools(
+        ollama: &'a mut Ollama,
+        model: String,
+        history: &'b mut C,
+        tools: T,
+    ) -> Self {
+        Self {
+            model,
+            ollama,
+            options: GenerationOptions::default(),
+            history,
+            tools,
             debug: false,
         }
     }
@@ -38,21 +59,23 @@ impl<'a, 'b, C: ChatHistory> Coordinator<'a, 'b, C> {
 
     pub async fn chat(
         &mut self,
-        message: ChatMessage,
+        messages: Vec<ChatMessage>,
     ) -> crate::error::Result<ChatMessageResponse> {
         if self.debug {
-            eprintln!(
+            // TODO
+            /*eprintln!(
                 "Hit {} with {:?}: '{}'",
                 self.model, message.role, message.content
-            );
+            );*/
         }
 
         let resp = self
             .ollama
             .send_chat_messages_with_history(
                 self.history,
-                ChatMessageRequest::new(self.model.clone(), vec![message])
-                    .options(self.options.clone()),
+                ChatMessageRequest::new(self.model.clone(), messages)
+                    .options(self.options.clone())
+                    .tools::<T>(),
             )
             .await;
 
@@ -68,6 +91,18 @@ impl<'a, 'b, C: ChatHistory> Coordinator<'a, 'b, C> {
             }
         }
 
-        resp
+        let resp = resp?;
+
+        if resp.message.tool_calls.len() > 0 {
+            for call in resp.message.tool_calls {
+                let resp = self.tools.call(call.function)?;
+                self.history.push(ChatMessage::tool(resp))
+            }
+
+            // recurse
+            Box::pin(self.chat(vec![])).await
+        } else {
+            Ok(resp)
+        }
     }
 }

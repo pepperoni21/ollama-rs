@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{history::ChatHistory, Ollama};
+use crate::{error::OllamaError, history::ChatHistory, Ollama};
 pub mod request;
-use super::images::Image;
+use super::{functions::ToolCall, images::Image};
 use request::ChatMessageRequest;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
@@ -41,14 +41,12 @@ impl Ollama {
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder
-            .body(serialized)
-            .send()
-            .await
-            .map_err(|e| e.to_string())?;
+        let res = builder.body(serialized).send().await?;
 
         if !res.status().is_success() {
-            return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
+            return Err(OllamaError::Other(
+                res.text().await.unwrap_or_else(|e| e.to_string()),
+            ));
         }
 
         let stream = Box::new(res.bytes_stream().map(|res| match res {
@@ -81,25 +79,22 @@ impl Ollama {
         request.stream = false;
 
         let url = format!("{}api/chat", self.url_str());
-        let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
+        let serialized = serde_json::to_string(&request)?;
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder
-            .body(serialized)
-            .send()
-            .await
-            .map_err(|e| e.to_string())?;
+        let res = builder.body(serialized).send().await?;
 
         if !res.status().is_success() {
-            return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
+            return Err(OllamaError::Other(
+                res.text().await.unwrap_or_else(|e| e.to_string()),
+            ));
         }
 
-        let bytes = res.bytes().await.map_err(|e| e.to_string())?;
-        let res =
-            serde_json::from_slice::<ChatMessageResponse>(&bytes).map_err(|e| e.to_string())?;
+        let bytes = res.bytes().await?;
+        let res = serde_json::from_slice::<ChatMessageResponse>(&bytes)?;
 
         Ok(res)
     }
@@ -175,7 +170,7 @@ impl Ollama {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatMessageResponse {
     /// The name of the model used for the completion.
     pub model: String,
@@ -189,7 +184,7 @@ pub struct ChatMessageResponse {
     pub final_data: Option<ChatMessageFinalResponseData>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatMessageFinalResponseData {
     /// Time spent generating the response
     pub total_duration: u64,
@@ -207,6 +202,8 @@ pub struct ChatMessageFinalResponseData {
 pub struct ChatMessage {
     pub role: MessageRole,
     pub content: String,
+    #[serde(default)]
+    pub tool_calls: Vec<ToolCall>,
     pub images: Option<Vec<Image>>,
 }
 
@@ -215,6 +212,7 @@ impl ChatMessage {
         Self {
             role,
             content,
+            tool_calls: vec![],
             images: None,
         }
     }
@@ -229,6 +227,10 @@ impl ChatMessage {
 
     pub fn system(content: String) -> Self {
         Self::new(MessageRole::System, content)
+    }
+
+    pub fn tool(content: String) -> Self {
+        Self::new(MessageRole::Tool, content)
     }
 
     pub fn with_images(mut self, images: Vec<Image>) -> Self {
