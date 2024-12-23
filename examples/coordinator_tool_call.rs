@@ -12,13 +12,22 @@ use ollama_rs::{
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<_> = std::env::args().collect();
+    if args.len() > 2 || (args.get(1).is_some() && args[1] != "-d") {
+        eprintln!("Usage: {} [-d] (to enable debugging)", args[0],);
+        return Ok(());
+    }
+
+    let debug = args.get(1).is_some();
+
     let mut ollama = Ollama::default();
     let mut history = vec![];
     let tools = (DDGSearcher::new(), (Scraper {}, Calculator {}));
 
     let mut coordinator =
         Coordinator::new_with_tools(&mut ollama, "qwen2.5:32b".to_string(), &mut history, tools)
-            .options(GenerationOptions::default().num_ctx(16384));
+            .options(GenerationOptions::default().num_ctx(16384))
+            .debug(debug);
 
     let stdin = stdin();
     let mut stdout = stdout();

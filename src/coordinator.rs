@@ -76,31 +76,33 @@ impl<'a, 'b, C: ChatHistory, T: ToolGroup> Coordinator<'a, 'b, C, T> {
                     .options(self.options.clone())
                     .tools::<T>(),
             )
-            .await;
-
-        if self.debug {
-            match &resp {
-                Ok(x) => eprintln!(
-                    "Response from {} of type {:?}: '{}'",
-                    x.model, x.message.role, x.message.content
-                ),
-                Err(e) => {
-                    eprintln!("Error from {}: {}", self.model, e);
-                }
-            }
-        }
-
-        let resp = resp?;
+            .await?;
 
         if !resp.message.tool_calls.is_empty() {
             for call in resp.message.tool_calls {
+                if self.debug {
+                    eprintln!("Tool call: {:?}", call.function);
+                }
+
                 let resp = self.tools.call(&call.function).await?;
+
+                if self.debug {
+                    eprintln!("Tool response: {}", &resp);
+                }
+
                 self.history.push(ChatMessage::tool(resp))
             }
 
             // recurse
             Box::pin(self.chat(vec![])).await
         } else {
+            if self.debug {
+                eprintln!(
+                    "Response from {} of type {:?}: '{}'",
+                    resp.model, resp.message.role, resp.message.content
+                );
+            }
+
             Ok(resp)
         }
     }
