@@ -10,8 +10,8 @@ use serde_json::Value;
 
 use crate::error::ToolCallError;
 
-/// It's highly recommended that the JsonSchema has descriptions for all attributes
-/// Descriptions can be defined with `#[schemars(descripion = "Hi I am an attribute")]` above each attribute`
+/// It's highly recommended that the `JsonSchema` has descriptions for all attributes.
+/// Descriptions can be defined with `#[schemars(descripion = "Hi I am an attribute")]` above each attribute
 // TODO enforce at compile-time
 pub trait Tool {
     type Params: Parameters;
@@ -20,7 +20,7 @@ pub trait Tool {
     fn description() -> &'static str;
 
     /// Call the tool.
-    /// Note that returning an Err will bubble up. If you want the LLM to handle the error,
+    /// Note that returning an Err will cause it to be bubbled up. If you want the LLM to handle the error,
     /// return that error as a string.
     fn call(
         &mut self,
