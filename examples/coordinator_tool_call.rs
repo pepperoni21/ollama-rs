@@ -5,7 +5,7 @@ use std::{
 
 use ollama_rs::{
     coordinator::Coordinator,
-    generation::{chat::ChatMessage, functions::Tool},
+    generation::{chat::ChatMessage, tools::Tool},
     Ollama,
 };
 use schemars::JsonSchema;
@@ -19,7 +19,7 @@ struct SearchToolParameters {
 }
 
 impl Tool for SearchTool {
-    type P = SearchToolParameters;
+    type Params = SearchToolParameters;
 
     fn name() -> &'static str {
         "search_engine_tool"
@@ -29,7 +29,7 @@ impl Tool for SearchTool {
         "Searches a search engine on the Internet for the given query"
     }
 
-    fn call(&mut self, _parameters: Self::P) -> Result<String, Box<dyn Error>> {
+    async fn call(&mut self, _parameters: Self::Params) -> Result<String, Box<dyn Error>> {
         Ok("Intel stock price is $523.52".to_string())
     }
 }

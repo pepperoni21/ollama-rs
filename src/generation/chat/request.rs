@@ -1,9 +1,9 @@
 use serde::Serialize;
 
 use crate::generation::{
-    functions::{ToolGroup, ToolInfo},
     options::GenerationOptions,
     parameters::FormatType,
+    tools::{ToolGroup, ToolInfo},
 };
 
 use super::ChatMessage;
@@ -20,6 +20,7 @@ pub struct ChatMessageRequest {
     pub template: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<FormatType>,
+    /// Must be false if tools are provided
     pub(crate) stream: bool,
 }
 

@@ -1,8 +1,8 @@
 use crate::{
     generation::{
         chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse},
-        functions::ToolGroup,
         options::GenerationOptions,
+        tools::ToolGroup,
     },
     history::ChatHistory,
     Ollama,
@@ -94,7 +94,7 @@ impl<'a, 'b, C: ChatHistory, T: ToolGroup> Coordinator<'a, 'b, C, T> {
 
         if !resp.message.tool_calls.is_empty() {
             for call in resp.message.tool_calls {
-                let resp = self.tools.call(&call.function)?;
+                let resp = self.tools.call(&call.function).await?;
                 self.history.push(ChatMessage::tool(resp))
             }
 

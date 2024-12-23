@@ -1,4 +1,8 @@
-use std::error::Error;
+#[cfg_attr(docsrs, doc(cfg(feature = "all_tools")))]
+#[cfg(feature = "tool-implementations")]
+mod implementations;
+
+use std::{error::Error, future::Future};
 
 use schemars::{gen::SchemaSettings, schema::RootSchema, JsonSchema};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -9,7 +13,7 @@ use crate::error::ToolCallError;
 /// It's highly recommended that the JsonSchema has descriptions for all attributes
 // TODO enforce at compile-time
 pub trait Tool {
-    type P: Parameter;
+    type Params: Parameters;
 
     fn name() -> &'static str;
     fn description() -> &'static str;
@@ -17,23 +21,29 @@ pub trait Tool {
     /// Call the tool.
     /// Note that returning an Err will bubble up. If you want the LLM to handle the error,
     /// return that error as a string.
-    fn call(&mut self, parameters: Self::P) -> Result<String, Box<dyn Error>>;
+    fn call(
+        &mut self,
+        parameters: Self::Params,
+    ) -> impl Future<Output = Result<String, Box<dyn Error>>>;
 }
 
-pub trait Parameter: DeserializeOwned + JsonSchema {}
+pub trait Parameters: DeserializeOwned + JsonSchema {}
 
-impl<P: DeserializeOwned + JsonSchema> Parameter for P {}
+impl<P: DeserializeOwned + JsonSchema> Parameters for P {}
 
 pub trait ToolGroup {
     fn tool_info(out: &mut Vec<ToolInfo>);
 
-    fn call(&mut self, tool_call: &ToolCallFunction) -> Result<String, ToolCallError>;
+    fn call(
+        &mut self,
+        tool_call: &ToolCallFunction,
+    ) -> impl Future<Output = Result<String, ToolCallError>>;
 }
 
 impl ToolGroup for () {
     fn tool_info(_: &mut Vec<ToolInfo>) {}
 
-    fn call(&mut self, _tool_call: &ToolCallFunction) -> Result<String, ToolCallError> {
+    async fn call(&mut self, _tool_call: &ToolCallFunction) -> Result<String, ToolCallError> {
         Err(ToolCallError::UnknownToolName)
     }
 }
@@ -43,10 +53,10 @@ impl<T: Tool> ToolGroup for T {
         out.push(ToolInfo::new::<_, T>())
     }
 
-    fn call(&mut self, tool_call: &ToolCallFunction) -> Result<String, ToolCallError> {
+    async fn call(&mut self, tool_call: &ToolCallFunction) -> Result<String, ToolCallError> {
         if tool_call.name == T::name() {
             let p = serde_json::from_value(tool_call.arguments.clone())?;
-            return Ok(serde_json::to_string(&self.call(p)?)?);
+            return Ok(serde_json::to_string(&self.call(p).await?)?);
         }
 
         Err(ToolCallError::UnknownToolName)
@@ -59,10 +69,10 @@ impl<A: ToolGroup, B: ToolGroup> ToolGroup for (A, B) {
         B::tool_info(out);
     }
 
-    fn call(&mut self, arguments: &ToolCallFunction) -> Result<String, ToolCallError> {
-        match self.0.call(arguments) {
+    async fn call(&mut self, arguments: &ToolCallFunction) -> Result<String, ToolCallError> {
+        match self.0.call(arguments).await {
             Ok(x) => Ok(x),
-            Err(ToolCallError::UnknownToolName) => self.1.call(arguments),
+            Err(ToolCallError::UnknownToolName) => self.1.call(arguments).await,
             Err(e) => Err(e),
         }
     }
@@ -76,7 +86,7 @@ pub struct ToolInfo {
 }
 
 impl ToolInfo {
-    fn new<P: Parameter, T: Tool<P = P>>() -> Self {
+    fn new<P: Parameters, T: Tool<Params = P>>() -> Self {
         let mut settings = SchemaSettings::draft07();
         settings.inline_subschemas = true;
         let generator = settings.into_generator();

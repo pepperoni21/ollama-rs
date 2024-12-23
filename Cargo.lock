@@ -62,17 +62,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-trait"
-version = "0.1.80"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6fa2087f2753a7da8cc1c0dbfcf89579dd57458e36769de5ac750b4671737ca"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.91",
-]
-
-[[package]]
 name = "auto_enums"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -732,7 +721,6 @@ name = "ollama-rs"
 version = "0.2.2"
 dependencies = [
  "async-stream",
- "async-trait",
  "base64",
  "http",
  "log",

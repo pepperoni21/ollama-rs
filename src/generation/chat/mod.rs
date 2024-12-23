@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error::OllamaError, history::ChatHistory, Ollama};
 pub mod request;
-use super::{functions::ToolCall, images::Image};
+use super::{images::Image, tools::ToolCall};
 use request::ChatMessageRequest;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
