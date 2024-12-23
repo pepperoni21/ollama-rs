@@ -1,10 +1,19 @@
-use crate::generation::functions::tools::Tool;
-use async_trait::async_trait;
 use reqwest::Client;
+use schemars::JsonSchema;
 use scraper::{Html, Selector};
-use serde_json::{json, Value};
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::error::Error;
+
+use crate::generation::tools::Tool;
+
+#[derive(Deserialize, JsonSchema)]
+pub struct Params {
+    #[schemars(description = "The stock exchange market identifier code (MIC)")]
+    exchange: String,
+    #[schemars(description = "The ticker symbol of the stock")]
+    ticker: String,
+}
 
 pub struct StockScraper {
     base_url: String,
@@ -61,38 +70,19 @@ impl StockScraper {
     }
 }
 
-#[async_trait]
 impl Tool for StockScraper {
-    fn name(&self) -> String {
-        "stock_scraper".to_string()
+    type Params = Params;
+
+    fn name() -> &'static str {
+        "stock_scraper"
     }
 
-    fn description(&self) -> String {
-        "Scrapes stock information from Google Finance.".to_string()
+    fn description() -> &'static str {
+        "Scrapes stock information from Google Finance."
     }
 
-    fn parameters(&self) -> Value {
-        json!({
-            "type": "object",
-            "properties": {
-                "exchange": {
-                    "type": "string",
-                    "description": "The stock exchange market identifier code (MIC)"
-                },
-                "ticker": {
-                    "type": "string",
-                    "description": "The ticker symbol of the stock"
-                }
-            },
-            "required": ["exchange", "ticker"]
-        })
-    }
-
-    async fn run(&self, input: Value) -> Result<String, Box<dyn Error>> {
-        let exchange = input["exchange"].as_str().ok_or("Exchange is required")?;
-        let ticker = input["ticker"].as_str().ok_or("Ticker is required")?;
-
-        let result = self.scrape(exchange, ticker).await?;
+    async fn call(&mut self, params: Params) -> Result<String, Box<dyn Error>> {
+        let result = self.scrape(&params.exchange, &params.ticker).await?;
         Ok(serde_json::to_string(&result)?)
     }
 }

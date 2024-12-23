@@ -1,40 +1,36 @@
 use reqwest::Client;
+use schemars::JsonSchema;
 use scraper::{Html, Selector};
+use serde::Deserialize;
 use std::env;
 use text_splitter::TextSplitter;
 
-use crate::generation::functions::tools::Tool;
-use async_trait::async_trait;
-use serde_json::{json, Value};
+use serde_json::json;
 use std::error::Error;
+
+use crate::generation::tools::Tool;
+
+#[derive(Deserialize, JsonSchema)]
+pub struct Params {
+    #[schemars(description = "The URL of the website to scrape")]
+    website: String,
+}
 
 pub struct Browserless {}
 //Add headless utilties
-#[async_trait]
 impl Tool for Browserless {
-    fn name(&self) -> String {
-        "browserless_web_scraper".to_string()
+    type Params = Params;
+
+    fn name() -> &'static str {
+        "browserless_web_scraper"
     }
 
-    fn description(&self) -> String {
-        "Scrapes text content from websites and splits it into manageable chunks.".to_string()
+    fn description() -> &'static str {
+        "Scrapes text content from websites and splits it into manageable chunks."
     }
 
-    fn parameters(&self) -> Value {
-        json!({
-            "type": "object",
-            "properties": {
-                "website": {
-                    "type": "string",
-                    "description": "The URL of the website to scrape"
-                }
-            },
-            "required": ["website"]
-        })
-    }
-
-    async fn run(&self, input: Value) -> Result<String, Box<dyn Error>> {
-        let website = input["website"].as_str().ok_or("Website URL is required")?;
+    async fn call(&mut self, params: Self::Params) -> Result<String, Box<dyn Error>> {
+        let website = params.website;
         let browserless_token =
             env::var("BROWSERLESS_TOKEN").expect("BROWSERLESS_TOKEN must be set");
         let url = format!("http://0.0.0.0:3000/content?token={}", browserless_token);

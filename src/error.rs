@@ -1,52 +1,38 @@
-use std::{
-    error::Error,
-    fmt::{Debug, Display},
-};
-
 use serde::Deserialize;
+use thiserror::Error;
 
 /// A result type for ollama-rs.
 pub type Result<T> = std::result::Result<T, OllamaError>;
 
 /// An error type for ollama-rs.
-#[derive(Deserialize)]
-pub struct OllamaError {
+#[derive(Error, Debug)]
+pub enum OllamaError {
+    #[error("Error calling tool")]
+    ToolCallError(#[from] ToolCallError),
+    #[error("Ollama JSON error")]
+    JsonError(#[from] serde_json::Error),
+    #[error("Reqwest error")]
+    ReqwestError(#[from] reqwest::Error),
+    #[error("Internal Ollama error")]
+    InternalError(InternalOllamaError),
+    #[error("Error in Ollama")]
+    Other(String),
+}
+
+#[derive(Deserialize, Debug)]
+pub struct InternalOllamaError {
     #[serde(rename = "error")]
-    pub(crate) message: String,
+    pub message: String,
 }
 
-impl Display for OllamaError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "An error occurred with ollama-rs: {}", self.message)
-    }
-}
-
-impl Debug for OllamaError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Ollama error: {}", self.message)
-    }
-}
-
-impl Error for OllamaError {}
-
-impl From<String> for OllamaError {
-    fn from(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl From<Box<dyn Error>> for OllamaError {
-    fn from(error: Box<dyn Error>) -> Self {
-        Self {
-            message: error.to_string(),
-        }
-    }
-}
-
-impl From<serde_json::Error> for OllamaError {
-    fn from(error: serde_json::Error) -> Self {
-        Self {
-            message: error.to_string(),
-        }
-    }
+#[derive(Error, Debug)]
+pub enum ToolCallError {
+    #[error("Ollama attempted to call a tool with a name we do not recognize")]
+    UnknownToolName,
+    #[error(
+        "Could not convert tool arguments from Ollama into what the tool expected, or vice versa"
+    )]
+    InvalidToolArguments(#[from] serde_json::Error),
+    #[error("Tool errored internally when it was called")]
+    InternalToolError(#[from] Box<dyn std::error::Error>),
 }

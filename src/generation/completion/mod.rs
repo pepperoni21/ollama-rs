@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::Ollama;
+use crate::{error::OllamaError, Ollama};
 
 use request::GenerationRequest;
 
@@ -33,32 +33,32 @@ impl Ollama {
         request.stream = true;
 
         let url = format!("{}api/generate", self.url_str());
-        let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
+        let serialized = serde_json::to_string(&request)?;
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder
-            .body(serialized)
-            .send()
-            .await
-            .map_err(|e| e.to_string())?;
+        let res = builder.body(serialized).send().await?;
 
         if !res.status().is_success() {
-            return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
+            return Err(OllamaError::Other(
+                res.text().await.unwrap_or_else(|e| e.to_string()),
+            ));
         }
 
         let stream = Box::new(res.bytes_stream().map(|res| match res {
             Ok(bytes) => {
                 let res = serde_json::Deserializer::from_slice(&bytes).into_iter();
                 let res = res
-                    .map(|res| res.map_err(|e| OllamaError::from(e.to_string())))
                     .filter_map(Result::ok) // Filter out the errors
                     .collect::<Vec<GenerationResponse>>();
                 Ok(res)
             }
-            Err(e) => Err(OllamaError::from(format!("Failed to read response: {}", e))),
+            Err(e) => Err(OllamaError::Other(format!(
+                "Failed to read response: {}",
+                e
+            ))),
         }));
 
         Ok(std::pin::Pin::from(stream))
@@ -74,24 +74,22 @@ impl Ollama {
         request.stream = false;
 
         let url = format!("{}api/generate", self.url_str());
-        let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
+        let serialized = serde_json::to_string(&request)?;
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder
-            .body(serialized)
-            .send()
-            .await
-            .map_err(|e| e.to_string())?;
+        let res = builder.body(serialized).send().await?;
 
         if !res.status().is_success() {
-            return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
+            return Err(OllamaError::Other(
+                res.text().await.unwrap_or_else(|e| e.to_string()),
+            ));
         }
 
-        let res = res.bytes().await.map_err(|e| e.to_string())?;
-        let res = serde_json::from_slice::<GenerationResponse>(&res).map_err(|e| e.to_string())?;
+        let res = res.bytes().await?;
+        let res = serde_json::from_slice::<GenerationResponse>(&res)?;
 
         Ok(res)
     }

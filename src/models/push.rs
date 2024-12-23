@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::Ollama;
+use crate::{error::OllamaError, Ollama};
 
 /// A stream of `PushModelStatus` objects.
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
@@ -31,20 +31,16 @@ impl Ollama {
         };
 
         let url = format!("{}api/push", self.url_str());
-        let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
+        let serialized = serde_json::to_string(&request)?;
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder
-            .body(serialized)
-            .send()
-            .await
-            .map_err(|e| e.to_string())?;
+        let res = builder.body(serialized).send().await?;
 
         if !res.status().is_success() {
-            return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
+            return Err(OllamaError::Other(res.text().await?));
         }
 
         let stream = Box::new(res.bytes_stream().map(|res| match res {
@@ -53,18 +49,19 @@ impl Ollama {
                 match res {
                     Ok(res) => Ok(res),
                     Err(e) => {
-                        let err = serde_json::from_slice::<crate::error::OllamaError>(&bytes);
+                        let err =
+                            serde_json::from_slice::<crate::error::InternalOllamaError>(&bytes);
                         match err {
-                            Ok(err) => Err(err),
-                            Err(_) => Err(OllamaError::from(format!(
-                                "Failed to deserialize response: {}",
-                                e
-                            ))),
+                            Ok(err) => Err(OllamaError::InternalError(err)),
+                            Err(_) => Err(e.into()),
                         }
                     }
                 }
             }
-            Err(e) => Err(OllamaError::from(format!("Failed to read response: {}", e))),
+            Err(e) => Err(OllamaError::Other(format!(
+                "Failed to read response: {}",
+                e
+            ))),
         }));
 
         Ok(std::pin::Pin::from(stream))
@@ -86,24 +83,20 @@ impl Ollama {
         };
 
         let url = format!("{}api/push", self.url_str());
-        let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
+        let serialized = serde_json::to_string(&request)?;
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder
-            .body(serialized)
-            .send()
-            .await
-            .map_err(|e| e.to_string())?;
+        let res = builder.body(serialized).send().await?;
 
         if !res.status().is_success() {
-            return Err(res.text().await.unwrap_or_else(|e| e.to_string()).into());
+            return Err(OllamaError::Other(res.text().await?));
         }
 
-        let res = res.bytes().await.map_err(|e| e.to_string())?;
-        let res = serde_json::from_slice::<PushModelStatus>(&res).map_err(|e| e.to_string())?;
+        let res = res.bytes().await?;
+        let res = serde_json::from_slice::<PushModelStatus>(&res)?;
 
         Ok(res)
     }

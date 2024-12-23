@@ -37,13 +37,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let mut response = String::new();
         while let Some(Ok(res)) = stream.next().await {
-            if let Some(assistant_message) = res.message {
-                stdout
-                    .write_all(assistant_message.content.as_bytes())
-                    .await?;
-                stdout.flush().await?;
-                response += assistant_message.content.as_str();
-            }
+            stdout.write_all(res.message.content.as_bytes()).await?;
+            stdout.flush().await?;
+            response += res.message.content.as_str();
         }
         messages.push(ChatMessage::assistant(response));
     }
