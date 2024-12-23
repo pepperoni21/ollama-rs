@@ -6,7 +6,7 @@ use ollama_rs::{coordinator::Coordinator, generation::chat::ChatMessage, Ollama}
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut ollama = Ollama::default();
     let mut history = vec![];
-    let mut coordinator = Coordinator::new(&mut ollama, &mut history, "llama3.2".to_string());
+    let mut coordinator = Coordinator::new(&mut ollama, "llama3.2".to_string(), &mut history);
 
     let stdin = stdin();
     let mut stdout = stdout();
@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         let resp = coordinator
-            .chat(ChatMessage::user(input.to_string()))
+            .chat(vec![ChatMessage::user(input.to_string())])
             .await?;
 
         println!("{}", resp.message.content);
