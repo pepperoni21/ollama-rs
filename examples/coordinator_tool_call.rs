@@ -4,7 +4,7 @@ use ollama_rs::{
     coordinator::Coordinator,
     generation::{
         chat::ChatMessage,
-        tools::implementations::{DDGSearcher, Scraper},
+        tools::implementations::{Calculator, DDGSearcher, Scraper},
     },
     Ollama,
 };
@@ -13,7 +13,7 @@ use ollama_rs::{
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut ollama = Ollama::default();
     let mut history = vec![];
-    let tools = (DDGSearcher::new(), Scraper {});
+    let tools = (DDGSearcher::new(), (Scraper {}, Calculator {}));
 
     let mut coordinator =
         Coordinator::new_with_tools(&mut ollama, "qwen2.5:32b".to_string(), &mut history, tools);

@@ -24,13 +24,14 @@ async-stream = "0.3.5"
 http = { version = "1.1.0", optional = true }
 schemars = { version = "0.8.21", features = ["preserve_order"] }
 thiserror = "2.0.9"
+calc = { version = "0.4.0", optional = true }
 
 [features]
 default = ["reqwest/default-tls"]
 stream = ["tokio-stream", "reqwest/stream", "tokio"]
 rustls = ["reqwest/rustls-tls"]
 headers = ["http"]
-tool-implementations = ["scraper", "text-splitter", "regex"]
+tool-implementations = ["scraper", "text-splitter", "regex", "calc"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
