@@ -4,6 +4,7 @@ use ollama_rs::{
     coordinator::Coordinator,
     generation::{
         chat::ChatMessage,
+        options::GenerationOptions,
         tools::implementations::{Calculator, DDGSearcher, Scraper},
     },
     Ollama,
@@ -16,7 +17,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tools = (DDGSearcher::new(), (Scraper {}, Calculator {}));
 
     let mut coordinator =
-        Coordinator::new_with_tools(&mut ollama, "qwen2.5:32b".to_string(), &mut history, tools);
+        Coordinator::new_with_tools(&mut ollama, "qwen2.5:32b".to_string(), &mut history, tools)
+            .options(GenerationOptions::default().num_ctx(16384));
 
     let stdin = stdin();
     let mut stdout = stdout();

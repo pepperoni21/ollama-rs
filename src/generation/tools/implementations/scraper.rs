@@ -1,6 +1,5 @@
 use reqwest::Client;
 use schemars::JsonSchema;
-use scraper::{Html, Selector};
 use serde::Deserialize;
 use std::error::Error;
 
@@ -41,17 +40,6 @@ impl Tool for Scraper {
         let client = Client::new();
         let response = client.get(params.website).send().await?.text().await?;
 
-        let document = Html::parse_document(&response);
-        let selector = Selector::parse("p, h1, h2, h3, h4, h5, h6").unwrap();
-        let elements: Vec<String> = document
-            .select(&selector)
-            .map(|el| el.text().collect::<Vec<_>>().join(" "))
-            .collect();
-        let body = elements.join(" ");
-
-        let sentences: Vec<String> = body.split(". ").map(|s| s.to_string()).collect();
-        let formatted_content = sentences.join("\n\n");
-
-        Ok(formatted_content)
+        Ok(html2md::parse_html(&response))
     }
 }
