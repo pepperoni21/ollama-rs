@@ -99,38 +99,22 @@ Example with history:
 ```rust
 let model = "llama2:latest".to_string();
 let prompt = "Why is the sky blue?".to_string();
-let history_id = "USER_ID_OR_WHATEVER";
+// `Vec<ChatMessage>` implements `ChatHistory`,
+// but you could also implement it yourself on a custom type
+let mut history = vec![];
 
 let res = ollama
                 .send_chat_messages_with_history(
+                    &mut history, // <- messages will be saved here
                     ChatMessageRequest::new(
                         model,
                         vec![ChatMessage::user(prompt)], // <- You should provide only one message
                     ),
-                    history_id // <- This entry save for us all the history
                 ).await;
 
 if let Ok(res) = res {
 println!("{}", res.response);
 }
-```
-
-Getting history for some ID:
-
-```rust
-let history_id = "USER_ID_OR_WHATEVER";
-let history = ollama.get_message_history(history_id); // <- Option<Vec<ChatMessage>>
-// Act
-```
-
-Clear history if we no more need it:
-
-```rust
-// Clear history for an ID
-let history_id = "USER_ID_OR_WHATEVER";
-ollama.clear_messages_for_id(history_id);
-// Clear history for all chats
-ollama.clear_all_messages();
 ```
 
 _Check chat with history examples for [default](https://github.com/pepperoni21/ollama-rs/blob/0.2.2/examples/chat_with_history.rs) and [stream](https://github.com/pepperoni21/ollama-rs/blob/0.2.2/examples/chat_with_history_stream.rs)_
@@ -205,17 +189,17 @@ _Returns a `GenerateEmbeddingsResponse` struct containing the embeddings (a vect
 ### Make a function call
 
 ```rust
-let tools = vec![Arc::new(Scraper::new()), Arc::new(DDGSearcher::new())];
-let parser = Arc::new(NousFunctionCall::new());
-let message = ChatMessage::user("What is the current oil price?".to_string());
-let res = ollama.send_function_call(
-    FunctionCallRequest::new(
-        "adrienbrault/nous-hermes2pro:Q8_0".to_string(),
-        tools,
-        vec![message],
-    ),
-    parser,
-  ).await.unwrap();
+let tools = (DDGSearcher::new(), (Scraper {}, Calculator {}));
+
+let mut coordinator =
+    Coordinator::new_with_tools(&mut ollama, "qwen2.5:32b".to_string(), &mut history, tools)
+        .options(GenerationOptions::default().num_ctx(16384));
+
+let resp = coordinator
+    .chat(vec![ChatMessage::user("What is the current oil price?")])
+    .await.unwrap();
+
+println!("{}", resp.message.content);
 ```
 
-_Uses the given tools (such as searching the web) to find an answer, returns a `ChatMessageResponse` with the answer to the question._
+_Uses the given tools (such as searching the web) to find an answer, feeds that answer back into the LLM, and returns a `ChatMessageResponse` with the answer to the question._
