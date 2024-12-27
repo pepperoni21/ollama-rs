@@ -6,8 +6,8 @@ use tokio::io::{stdout, AsyncWriteExt};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut ollama = Ollama::new_default_with_history(30);
-
+    let mut ollama = Ollama::default();
+    let mut history = vec![];
     let mut stdout = stdout();
 
     loop {
@@ -26,18 +26,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let result = ollama
             .send_chat_messages_with_history(
-                ChatMessageRequest::new("llama2:latest".to_string(), vec![user_message]),
-                "default",
+                &mut history,
+                ChatMessageRequest::new("llama3.2:latest".to_string(), vec![user_message]),
             )
             .await?;
 
-        let assistant_message = result.message.unwrap().content;
+        let assistant_message = result.message.content;
         stdout.write_all(assistant_message.as_bytes()).await?;
         stdout.flush().await?;
     }
 
     // Display whole history of messages
-    dbg!(&ollama.get_messages_history("default"));
+    dbg!(&history);
 
     Ok(())
 }

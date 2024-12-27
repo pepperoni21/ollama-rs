@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::Ollama;
+use crate::{error::OllamaError, Ollama};
 
 impl Ollama {
     /// Delete a model and its data.
@@ -8,22 +8,18 @@ impl Ollama {
         let request = DeleteModelRequest { model_name };
 
         let url = format!("{}api/delete", self.url_str());
-        let serialized = serde_json::to_string(&request).map_err(|e| e.to_string())?;
+        let serialized = serde_json::to_string(&request)?;
         let builder = self.reqwest_client.delete(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder
-            .body(serialized)
-            .send()
-            .await
-            .map_err(|e| e.to_string())?;
+        let res = builder.body(serialized).send().await?;
 
         if res.status().is_success() {
             Ok(())
         } else {
-            Err(res.text().await.unwrap_or_else(|e| e.to_string()).into())
+            Err(OllamaError::Other(res.text().await?))
         }
     }
 }
