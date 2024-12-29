@@ -31,12 +31,7 @@ impl<C: ChatHistory> Coordinator<C, ()> {
 }
 
 impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
-    pub fn new_with_tools(
-        ollama: Ollama,
-        model: String,
-        history: C,
-        tools: T,
-    ) -> Self {
+    pub fn new_with_tools(ollama: Ollama, model: String, history: C, tools: T) -> Self {
         Self {
             model,
             ollama,
