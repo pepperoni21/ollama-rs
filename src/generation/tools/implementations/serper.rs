@@ -1,10 +1,42 @@
-use crate::generation::functions::tools::Tool;
-use async_trait::async_trait;
 use reqwest::Client;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::env;
 use std::error::Error;
+
+use crate::generation::tools::Tool;
+
+#[derive(Deserialize, JsonSchema, PartialEq, Eq, Default)]
+enum SearchType {
+    #[default]
+    Search,
+    Scholar,
+    News,
+}
+
+impl SearchType {
+    fn name(&self) -> &'static str {
+        match self {
+            SearchType::Search => "search",
+            SearchType::Scholar => "scholar",
+            SearchType::News => "news",
+        }
+    }
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct Params {
+    #[schemars(description = "The search type")]
+    #[serde(default)]
+    search_type: SearchType,
+    #[schemars(description = "The search query")]
+    query: String,
+    #[schemars(description = "The language for the search")]
+    lang: Option<String>,
+    #[schemars(description = "The number of results to return")]
+    n_results: Option<i32>,
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SearchResult {
@@ -190,73 +222,38 @@ impl NewsResult {
 
 pub struct SerperSearchTool;
 
-#[async_trait]
 impl Tool for SerperSearchTool {
-    fn name(&self) -> String {
-        "google_search_tool".to_string()
+    type Params = Params;
+
+    fn name() -> &'static str {
+        "google_search_tool"
     }
 
-    fn description(&self) -> String {
-        "Conducts a web search using a specified search type and returns the results.".to_string()
+    fn description() -> &'static str {
+        "Conducts a web search using a specified search type and returns the results."
     }
 
-    fn parameters(&self) -> Value {
-        json!({
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "The search query"
-                },
-                "lang": {
-                    "type": "string",
-                    "description": "The language for the search"
-                },
-                "n_results": {
-                    "type": "integer",
-                    "description": "The number of results to return"
-                }
-            },
-            "required": ["query"]
-        })
-    }
-    /*
-                "search_type": {
-                    "type": "string",
-                    "description": "The search type (search, scholar, or news)"
-                }
-    */
-
-    async fn run(&self, input: Value) -> Result<String, Box<dyn Error>> {
-        let query = input["query"].as_str().ok_or("Query is required")?;
-        let stype = input["search_type"].as_str().unwrap_or("search");
-        let lang = input["lang"].as_str().unwrap_or("en");
-        let n_result = input["n_results"].as_u64().unwrap_or(5);
-
-        assert!(
-            ["search", "scholar", "news"].contains(&stype),
-            "Invalid search type"
-        );
-
-        let url = format!("https://google.serper.dev/{}", stype);
+    async fn call(&mut self, params: Params) -> Result<String, Box<dyn Error>> {
+        let lang = params.lang.as_deref().unwrap_or("en");
+        let url = format!("https://google.serper.dev/{}", params.search_type.name());
         let gl = if lang != "en" { lang } else { "us" };
-        let n_results = std::cmp::min(n_result, 10);
+        let n_results = params.n_results.unwrap_or(5).min(10);
         let mut payload = json!({
-            "q": query,
+            "q": params.query,
             "gl": gl,
             "hl": lang,
             "page": 1,
             "num": n_results
         });
 
-        if stype == "scholar" {
+        if params.search_type == SearchType::Scholar {
             payload.as_object_mut().unwrap().remove("num");
         }
 
         let client = Client::new();
         let api_key = env::var("SERPER_API_KEY").expect("SERPER_API_KEY must be set");
         let response = client
-            .post(&url)
+            .post(url)
             .header("X-API-KEY", api_key)
             .header("Content-Type", "application/json")
             .json(&payload)
@@ -268,28 +265,22 @@ impl Tool for SerperSearchTool {
         let results = response["organic"]
             .as_array()
             .ok_or("Invalid response format")?;
-        let formatted_results = match stype {
-            "search" => results
+        let formatted_results = match params.search_type {
+            SearchType::Search => results
                 .iter()
                 .take(n_results as usize)
                 .map(|r| SearchResult::from_result_data(r).to_formatted_string())
                 .collect::<Vec<String>>(),
-            "scholar" => results
+            SearchType::Scholar => results
                 .iter()
                 .take(n_results as usize)
                 .map(|r| ScholarResult::from_result_data(r).to_formatted_string())
                 .collect::<Vec<String>>(),
-            "news" => results
+            SearchType::News => results
                 .iter()
                 .take(n_results as usize)
                 .map(|r| NewsResult::from_result_data(r).to_formatted_string())
                 .collect::<Vec<String>>(),
-            _ => {
-                return Err(Box::new(std::io::Error::new(
-                    std::io::ErrorKind::InvalidInput,
-                    "Invalid search type",
-                )))
-            }
         };
 
         Ok(formatted_results.join("\n"))

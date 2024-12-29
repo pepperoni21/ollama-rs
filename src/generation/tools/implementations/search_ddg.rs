@@ -1,12 +1,18 @@
 use reqwest;
 
+use schemars::JsonSchema;
 use scraper::{Html, Selector};
 use std::error::Error;
 
-use crate::generation::functions::tools::Tool;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+
+use crate::generation::tools::Tool;
+
+#[derive(Deserialize, JsonSchema)]
+pub struct Params {
+    #[schemars(description = "The search query to send to DuckDuckGo")]
+    query: String,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchResult {
@@ -85,43 +91,20 @@ impl DDGSearcher {
     }
 }
 
-#[async_trait]
 impl Tool for DDGSearcher {
-    fn name(&self) -> String {
-        "ddg_searcher".to_string()
+    type Params = Params;
+
+    fn name() -> &'static str {
+        "ddg_searcher"
     }
 
-    fn description(&self) -> String {
-        "Searches the web using DuckDuckGo's HTML interface.".to_string()
+    fn description() -> &'static str {
+        "Searches the web using DuckDuckGo's HTML interface."
     }
 
-    fn parameters(&self) -> Value {
-        json!({
-            "description": "This tool lets you search the web using DuckDuckGo. The input should be a search query.",
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "The search query to send to DuckDuckGo"
-                }
-            },
-            "required": ["query"]
-        })
-    }
-
-    async fn call(&self, input: &str) -> Result<String, Box<dyn Error>> {
-        let input_value = self.parse_input(input).await;
-        self.run(input_value).await
-    }
-
-    async fn run(&self, input: Value) -> Result<String, Box<dyn Error>> {
-        let query = input["query"].as_str().unwrap();
-        let results = self.search(query).await?;
+    async fn call(&mut self, params: Params) -> Result<String, Box<dyn Error>> {
+        let results = self.search(&params.query).await?;
         let results_json = serde_json::to_string(&results)?;
         Ok(results_json)
-    }
-
-    async fn parse_input(&self, input: &str) -> Value {
-        Tool::parse_input(self, input).await
     }
 }
