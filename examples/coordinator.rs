@@ -4,9 +4,9 @@ use ollama_rs::{coordinator::Coordinator, generation::chat::ChatMessage, Ollama}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut ollama = Ollama::default();
-    let mut history = vec![];
-    let mut coordinator = Coordinator::new(&mut ollama, "llama3.2".to_string(), &mut history);
+    let ollama = Ollama::default();
+    let history = vec![];
+    let mut coordinator = Coordinator::new(ollama, "llama3.2".to_string(), history);
 
     let stdin = stdin();
     let mut stdout = stdout();
@@ -28,8 +28,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("{}", resp.message.content);
     }
-
-    dbg!(history);
 
     Ok(())
 }

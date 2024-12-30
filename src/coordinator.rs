@@ -8,17 +8,17 @@ use crate::{
     Ollama,
 };
 
-pub struct Coordinator<'a, 'b, C: ChatHistory, T: ToolGroup> {
+pub struct Coordinator<C: ChatHistory, T: ToolGroup> {
     model: String,
-    ollama: &'a mut Ollama,
+    ollama: Ollama,
     options: GenerationOptions,
-    history: &'b mut C,
+    history: C,
     tools: T,
     debug: bool,
 }
 
-impl<'a, 'b, C: ChatHistory> Coordinator<'a, 'b, C, ()> {
-    pub fn new(ollama: &'a mut Ollama, model: String, history: &'b mut C) -> Self {
+impl<C: ChatHistory> Coordinator<C, ()> {
+    pub fn new(ollama: Ollama, model: String, history: C) -> Self {
         Self {
             model,
             ollama,
@@ -30,13 +30,8 @@ impl<'a, 'b, C: ChatHistory> Coordinator<'a, 'b, C, ()> {
     }
 }
 
-impl<'a, 'b, C: ChatHistory, T: ToolGroup> Coordinator<'a, 'b, C, T> {
-    pub fn new_with_tools(
-        ollama: &'a mut Ollama,
-        model: String,
-        history: &'b mut C,
-        tools: T,
-    ) -> Self {
+impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
+    pub fn new_with_tools(ollama: Ollama, model: String, history: C, tools: T) -> Self {
         Self {
             model,
             ollama,
@@ -71,7 +66,7 @@ impl<'a, 'b, C: ChatHistory, T: ToolGroup> Coordinator<'a, 'b, C, T> {
         let resp = self
             .ollama
             .send_chat_messages_with_history(
-                self.history,
+                &mut self.history,
                 ChatMessageRequest::new(self.model.clone(), messages)
                     .options(self.options.clone())
                     .tools::<T>(),
