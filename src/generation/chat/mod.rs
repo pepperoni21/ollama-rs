@@ -104,7 +104,7 @@ impl Ollama {
     #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
     #[cfg(feature = "stream")]
     pub async fn send_chat_messages_with_history_stream<C: ChatHistory + Send + 'static>(
-        &mut self,
+        &self,
         history: Arc<Mutex<C>>,
         mut request: ChatMessageRequest,
     ) -> crate::error::Result<ChatMessageResponseStream> {
