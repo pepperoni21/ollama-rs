@@ -8,7 +8,7 @@ use tokio_stream::StreamExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut ollama = Ollama::default();
+    let ollama = Ollama::default();
     let history = Arc::new(Mutex::new(vec![]));
     let mut stdout = stdout();
 

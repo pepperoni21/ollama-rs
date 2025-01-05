@@ -58,7 +58,7 @@ async fn test_send_chat_messages() {
 
 #[tokio::test]
 async fn test_send_chat_messages_with_history_stream() {
-    let mut ollama = Ollama::default();
+    let ollama = Ollama::default();
     let history = Arc::new(Mutex::new(vec![]));
 
     let messages = vec![ChatMessage::user(PROMPT.to_string())];
