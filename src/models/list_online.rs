@@ -42,7 +42,6 @@ impl Ollama {
     let data = String::from_utf8(response.to_vec()).unwrap();
     let models = extract_models_from_html(data);
 
-    // let models: Vec<String> = vec!["abc".to_string(), "def".to_string(), "ghi".to_string()];
     Ok(models)
   }
 }
