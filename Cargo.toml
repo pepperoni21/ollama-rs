@@ -33,6 +33,7 @@ stream = ["tokio-stream", "reqwest/stream", "tokio"]
 rustls = ["reqwest/rustls-tls"]
 headers = ["http"]
 tool-implementations = ["scraper", "text-splitter", "regex", "calc", "html2md"]
+regex = ["dep:regex"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
