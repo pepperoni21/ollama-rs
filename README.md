@@ -14,6 +14,7 @@ This library was created following the [Ollama API](https://github.com/jmorganca
   - [Completion Generation (With Options)](#completion-generation-with-options)
   - [Chat Mode](#chat-mode)
   - [List Local Models](#list-local-models)
+  - [List Online Models](#list-online-models)
   - [Show Model Information](#show-model-information)
   - [Create a Model](#create-a-model)
   - [Create a Model (Streaming)](#create-a-model-streaming)
@@ -159,6 +160,16 @@ let res = ollama.list_local_models().await.unwrap();
 ```
 
 _Returns a vector of `LocalModel` structs._
+
+### List Online Models
+
+_Requires the `regex` crate._
+
+```rust
+let res = ollama.list_online_models(None).await.unwrap();
+```
+
+_Returns model name in a vector of `strings`._
 
 ### Show Model Information
 
