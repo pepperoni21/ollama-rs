@@ -1,48 +1,6 @@
-[package]
-name = "ollama-rs"
-version = "0.2.2"
-edition = "2021"
-license-file = "LICENSE.md"
-description = "A Rust library for interacting with the Ollama API"
-repository = "https://github.com/pepperoni21/ollama-rs"
-readme = "README.md"
+[workspace]
+resolver = "2"
+members = ["ollama-rs", "ollama-rs-macros"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-reqwest = { version = "0.12.5", default-features = false, features = ["json"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tokio = { version = "1", features = ["full"], optional = true }
-tokio-stream = { version = "0.1.15", optional = true }
-url = "2"
-log = "0.4"
-scraper = { version = "0.19.0", optional = true }
-text-splitter = { version = "0.13.1", optional = true }
-regex = { version = "1.9.3", optional = true }
-async-stream = "0.3.5"
-http = { version = "1.1.0", optional = true }
-schemars = { version = "0.8.21", features = ["preserve_order"] }
-thiserror = "2.0.9"
-calc = { version = "0.4.0", optional = true }
-html2md = { version = "0.2.14", optional = true }
-
-[features]
-default = ["reqwest/default-tls"]
-stream = ["tokio-stream", "reqwest/stream", "tokio"]
-rustls = ["reqwest/rustls-tls"]
-headers = ["http"]
-tool-implementations = ["scraper", "text-splitter", "regex", "calc", "html2md"]
-
-[dev-dependencies]
-tokio = { version = "1", features = ["full"] }
-ollama-rs = { path = ".", features = [
-    "stream",
-    "headers",
-    "tool-implementations",
-] }
-base64 = "0.22.0"
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+[workspace.dependencies]
+ollama-rs-macros = { path = "ollama-rs-macros" }

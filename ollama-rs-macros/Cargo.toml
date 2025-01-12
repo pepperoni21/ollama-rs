@@ -1,0 +1,17 @@
+[package]
+name = "ollama-rs-macros"
+version = "0.2.2"
+edition = "2021"
+license-file = "LICENSE.md"
+description = "Procedural macros for ollama-rs"
+repository = "https://github.com/pepperoni21/ollama-rs"
+readme = "README.md"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1"
+quote = "1"
+syn = "2"
+
