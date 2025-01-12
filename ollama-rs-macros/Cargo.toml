@@ -2,10 +2,10 @@
 name = "ollama-rs-macros"
 version = "0.2.3"
 edition = "2021"
-license-file = "LICENSE.md"
+license-file = "../LICENSE.md"
 description = "Procedural macros for ollama-rs"
 repository = "https://github.com/pepperoni21/ollama-rs"
-readme = "README.md"
+readme = "../README.md"
 
 [lib]
 proc-macro = true
