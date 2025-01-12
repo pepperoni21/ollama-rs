@@ -236,7 +236,7 @@ use ollama_rs::generation::chat::{ChatMessage, ChatMessageRequest};
 use ollama_rs::generation::tools::implementations::{DDGSearcher, Scraper, Calculator};
 use ollama_rs::generation::options::GenerationOptions;
 
-let tools = (DDGSearcher::new(), (Scraper {}, Calculator {}));
+let tools = tool_group![DDGSearcher::new(), Scraper {}, Calculator {}];
 let mut history = vec![];
 
 let mut coordinator = Coordinator::new_with_tools(ollama, "qwen2.5:32b".to_string(), history, tools)
