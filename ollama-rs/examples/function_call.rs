@@ -20,17 +20,29 @@ async fn get_available_space(path: PathBuf) -> Result<String, Box<dyn std::error
     ))
 }
 
+/// Get the weather for a given city.
+///
+/// * city - City to get the weather for.
+#[ollama_rs::function]
+async fn get_weather(city: String) -> Result<String, Box<dyn std::error::Error>> {
+    Ok(reqwest::get(format!("https://wttr.in/{city}?format=%C+%t"))
+        .await?
+        .text()
+        .await?)
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ollama = Ollama::default();
     let history = vec![];
-    let tools = (get_cpu_temperature, get_available_space);
+    let tools = ollama_rs::tool_group![get_cpu_temperature, get_available_space, get_weather];
     let mut coordinator =
         Coordinator::new_with_tools(ollama, "llama3.2".to_string(), history, tools);
 
     let user_messages = vec![
         "What's the CPU temperature?",
         "What's the available space in the root directory?",
+        "What's the weather in Berlin?",
     ];
 
     for user_message in user_messages {
