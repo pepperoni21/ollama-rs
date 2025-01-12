@@ -29,7 +29,7 @@ This library was created following the [Ollama API](https://github.com/jmorganca
 
 ```toml
 [dependencies]
-ollama-rs = "0.2.2"
+ollama-rs = "0.2.3"
 ```
 
 ## Initialization
@@ -48,7 +48,7 @@ let ollama = Ollama::new("http://localhost".to_string(), 11434);
 
 ## Usage
 
-Feel free to check the [Chatbot example](https://github.com/pepperoni21/ollama-rs/blob/0.2.2/examples/basic_chatbot.rs) that shows how to use the library to create a simple chatbot in less than 50 lines of code. You can also check some [other examples](https://github.com/pepperoni21/ollama-rs/tree/0.2.2/examples).
+Feel free to check the [Chatbot example](https://github.com/pepperoni21/ollama-rs/blob/0.2.3/ollama-rs/examples/basic_chatbot.rs) that shows how to use the library to create a simple chatbot in less than 50 lines of code. You can also check some [other examples](https://github.com/pepperoni21/ollama-rs/tree/0.2.3/ollama-rs/examples).
 
 _These examples use poor error handling for simplicity, but you should handle errors properly in your code._
 
@@ -150,7 +150,7 @@ if let Ok(res) = res {
 }
 ```
 
-_Check chat with history examples for [default](https://github.com/pepperoni21/ollama-rs/blob/0.2.2/examples/chat_with_history.rs) and [stream](https://github.com/pepperoni21/ollama-rs/blob/0.2.2/examples/chat_with_history_stream.rs)_
+_Check chat with history examples for [default](https://github.com/pepperoni21/ollama-rs/blob/0.2.3/ollama-rs/examples/chat_with_history.rs) and [stream](https://github.com/pepperoni21/ollama-rs/blob/0.2.3/ollama-rs/examples/chat_with_history_stream.rs)_
 
 ### List Local Models
 
