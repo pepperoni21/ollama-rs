@@ -36,7 +36,11 @@ impl Ollama {
         let serialized = serde_json::to_string(&request)
             .map_err(|e| e.to_string())
             .unwrap();
-        let builder = self.reqwest_client.post(url);
+        let mut builder = self.reqwest_client.post(url);
+
+        if let Some(timeout) = request.timeout {
+            builder = builder.timeout(timeout);
+        }
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
@@ -49,20 +53,27 @@ impl Ollama {
             ));
         }
 
-        let stream = Box::new(res.bytes_stream().map(|res| match res {
-            Ok(bytes) => {
-                let res = serde_json::from_slice::<ChatMessageResponse>(&bytes);
-                match res {
-                    Ok(res) => Ok(res),
-                    Err(e) => {
-                        eprintln!("Failed to deserialize response: {}", e);
-                        Err(())
-                    }
+        let stream = Box::new(res.bytes_stream().map(move |res| {
+            if let Some(abort_signal) = request.abort_signal.as_ref() {
+                if abort_signal.aborted() {
+                    return Err(());
                 }
             }
-            Err(e) => {
-                eprintln!("Failed to read response: {}", e);
-                Err(())
+            match res {
+                Ok(bytes) => {
+                    let res = serde_json::from_slice::<ChatMessageResponse>(&bytes);
+                    match res {
+                        Ok(res) => Ok(res),
+                        Err(e) => {
+                            eprintln!("Failed to deserialize response: {}", e);
+                            Err(())
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Failed to read response: {}", e);
+                    Err(())
+                }
             }
         }));
 
@@ -80,7 +91,11 @@ impl Ollama {
 
         let url = format!("{}api/chat", self.url_str());
         let serialized = serde_json::to_string(&request)?;
-        let builder = self.reqwest_client.post(url);
+        let mut builder = self.reqwest_client.post(url);
+
+        if let Some(timeout) = request.timeout {
+            builder = builder.timeout(timeout);
+        }
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());

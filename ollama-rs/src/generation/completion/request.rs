@@ -50,6 +50,8 @@ pub struct GenerationRequest {
     pub(crate) stream: bool,
     #[serde(skip)]
     pub abort_signal: Option<AbortSignal>,
+    #[serde(skip)]
+    pub(crate) timeout: Option<std::time::Duration>,
 }
 
 impl GenerationRequest {
@@ -68,6 +70,7 @@ impl GenerationRequest {
             // Stream value will be overwritten by Ollama::generate_stream() and Ollama::generate() methods
             stream: false,
             abort_signal: None,
+            timeout: None,
         }
     }
 
@@ -134,6 +137,12 @@ impl GenerationRequest {
     /// Sets the abort signal for the request
     pub fn abort_signal(mut self, abort_signal: AbortSignal) -> Self {
         self.abort_signal = Some(abort_signal);
+        self
+    }
+
+    /// Sets the timeout for the request
+    pub fn timeout(mut self, timeout: std::time::Duration) -> Self {
+        self.timeout = Some(timeout);
         self
     }
 }

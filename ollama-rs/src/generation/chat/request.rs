@@ -1,6 +1,7 @@
 use serde::Serialize;
 
 use crate::generation::{
+    completion::request::AbortSignal,
     options::GenerationOptions,
     parameters::FormatType,
     tools::{ToolGroup, ToolInfo},
@@ -22,6 +23,10 @@ pub struct ChatMessageRequest {
     pub format: Option<FormatType>,
     /// Must be false if tools are provided
     pub(crate) stream: bool,
+    #[serde(skip)]
+    pub abort_signal: Option<AbortSignal>,
+    #[serde(skip)]
+    pub(crate) timeout: Option<std::time::Duration>,
 }
 
 impl ChatMessageRequest {
@@ -35,6 +40,8 @@ impl ChatMessageRequest {
             // Stream value will be overwritten by Ollama::send_chat_messages_stream() and Ollama::send_chat_messages() methods
             stream: false,
             tools: vec![],
+            abort_signal: None,
+            timeout: None,
         }
     }
 
@@ -61,6 +68,18 @@ impl ChatMessageRequest {
         self.tools.clear();
         T::tool_info(&mut self.tools);
 
+        self
+    }
+
+    /// Sets the abort signal for the request
+    pub fn abort_signal(mut self, signal: AbortSignal) -> Self {
+        self.abort_signal = Some(signal);
+        self
+    }
+
+    /// Sets the timeout for the request
+    pub fn timeout(mut self, timeout: std::time::Duration) -> Self {
+        self.timeout = Some(timeout);
         self
     }
 }
