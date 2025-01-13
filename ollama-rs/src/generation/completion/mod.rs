@@ -47,18 +47,25 @@ impl Ollama {
             ));
         }
 
-        let stream = Box::new(res.bytes_stream().map(|res| match res {
-            Ok(bytes) => {
-                let res = serde_json::Deserializer::from_slice(&bytes).into_iter();
-                let res = res
-                    .filter_map(Result::ok) // Filter out the errors
-                    .collect::<Vec<GenerationResponse>>();
-                Ok(res)
+        let stream = Box::new(res.bytes_stream().map(move |res| {
+            if let Some(abort_signal) = request.abort_signal.as_ref() {
+                if abort_signal.aborted() {
+                    return Err(OllamaError::Abort);
+                }
             }
-            Err(e) => Err(OllamaError::Other(format!(
-                "Failed to read response: {}",
-                e
-            ))),
+            match res {
+                Ok(bytes) => {
+                    let res = serde_json::Deserializer::from_slice(&bytes).into_iter();
+                    let res = res
+                        .filter_map(Result::ok) // Filter out the errors
+                        .collect::<Vec<GenerationResponse>>();
+                    Ok(res)
+                }
+                Err(e) => Err(OllamaError::Other(format!(
+                    "Failed to read response: {}",
+                    e
+                ))),
+            }
         }));
 
         Ok(std::pin::Pin::from(stream))
