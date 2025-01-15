@@ -120,7 +120,7 @@ fn build_params_struct(input: &ItemFn, docs: &FunctionDocs) -> syn::Result<Param
         #[allow(non_camel_case_types, missing_docs)]
         #[derive(::serde::Deserialize, ::schemars::JsonSchema)]
         pub struct #name {
-            #(#fields),*
+            #(#fields)*
         }
     );
 
