@@ -1,3 +1,5 @@
+use std::sync::{atomic::AtomicBool, Arc};
+
 use serde::Serialize;
 
 use crate::generation::{
@@ -7,6 +9,28 @@ use crate::generation::{
 };
 
 use super::GenerationContext;
+
+#[derive(Debug, Clone)]
+pub struct AbortSignal {
+    pub(crate) abort_signal: Arc<AtomicBool>,
+}
+
+impl AbortSignal {
+    pub fn new() -> Self {
+        Self {
+            abort_signal: Arc::new(AtomicBool::new(false)),
+        }
+    }
+
+    pub fn abort(&self) {
+        self.abort_signal
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    pub fn aborted(&self) -> bool {
+        self.abort_signal.load(std::sync::atomic::Ordering::Relaxed)
+    }
+}
 
 /// A generation request to Ollama.
 #[derive(Debug, Clone, Serialize)]
@@ -24,6 +48,10 @@ pub struct GenerationRequest {
     pub format: Option<FormatType>,
     pub keep_alive: Option<KeepAlive>,
     pub(crate) stream: bool,
+    #[serde(skip)]
+    pub abort_signal: Option<AbortSignal>,
+    #[serde(skip)]
+    pub(crate) timeout: Option<std::time::Duration>,
 }
 
 impl GenerationRequest {
@@ -41,6 +69,8 @@ impl GenerationRequest {
             keep_alive: None,
             // Stream value will be overwritten by Ollama::generate_stream() and Ollama::generate() methods
             stream: false,
+            abort_signal: None,
+            timeout: None,
         }
     }
 
@@ -101,6 +131,18 @@ impl GenerationRequest {
     /// Used to control how long a model stays loaded in memory, by default models are unloaded after 5 minutes of inactivity
     pub fn keep_alive(mut self, keep_alive: KeepAlive) -> Self {
         self.keep_alive = Some(keep_alive);
+        self
+    }
+
+    /// Sets the abort signal for the request
+    pub fn abort_signal(mut self, abort_signal: AbortSignal) -> Self {
+        self.abort_signal = Some(abort_signal);
+        self
+    }
+
+    /// Sets the timeout for the request
+    pub fn timeout(mut self, timeout: std::time::Duration) -> Self {
+        self.timeout = Some(timeout);
         self
     }
 }

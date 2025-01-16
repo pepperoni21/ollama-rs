@@ -34,7 +34,11 @@ impl Ollama {
 
         let url = format!("{}api/generate", self.url_str());
         let serialized = serde_json::to_string(&request)?;
-        let builder = self.reqwest_client.post(url);
+        let mut builder = self.reqwest_client.post(url);
+
+        if let Some(timeout) = request.timeout {
+            builder = builder.timeout(timeout);
+        }
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
@@ -47,18 +51,25 @@ impl Ollama {
             ));
         }
 
-        let stream = Box::new(res.bytes_stream().map(|res| match res {
-            Ok(bytes) => {
-                let res = serde_json::Deserializer::from_slice(&bytes).into_iter();
-                let res = res
-                    .filter_map(Result::ok) // Filter out the errors
-                    .collect::<Vec<GenerationResponse>>();
-                Ok(res)
+        let stream = Box::new(res.bytes_stream().map(move |res| {
+            if let Some(abort_signal) = request.abort_signal.as_ref() {
+                if abort_signal.aborted() {
+                    return Err(OllamaError::Abort);
+                }
             }
-            Err(e) => Err(OllamaError::Other(format!(
-                "Failed to read response: {}",
-                e
-            ))),
+            match res {
+                Ok(bytes) => {
+                    let res = serde_json::Deserializer::from_slice(&bytes).into_iter();
+                    let res = res
+                        .filter_map(Result::ok) // Filter out the errors
+                        .collect::<Vec<GenerationResponse>>();
+                    Ok(res)
+                }
+                Err(e) => Err(OllamaError::Other(format!(
+                    "Failed to read response: {}",
+                    e
+                ))),
+            }
         }));
 
         Ok(std::pin::Pin::from(stream))
@@ -80,7 +91,11 @@ impl Ollama {
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder.body(serialized).send().await?;
+        let mut builder = builder.body(serialized);
+        if let Some(timeout) = request.timeout {
+            builder = builder.timeout(timeout);
+        }
+        let res = builder.send().await?;
 
         if !res.status().is_success() {
             return Err(OllamaError::Other(

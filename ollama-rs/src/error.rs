@@ -15,6 +15,8 @@ pub enum OllamaError {
     ReqwestError(#[from] reqwest::Error),
     #[error("Internal Ollama error")]
     InternalError(InternalOllamaError),
+    #[error("Ollama aborted the request")]
+    Abort,
     #[error("Error in Ollama")]
     Other(String),
 }
