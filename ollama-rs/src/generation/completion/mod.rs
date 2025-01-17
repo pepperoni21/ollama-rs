@@ -21,9 +21,9 @@ impl Ollama {
     #[cfg(feature = "stream")]
     /// Completion generation with streaming.
     /// Returns a stream of `GenerationResponse` objects
-    pub async fn generate_stream(
+    pub async fn generate_stream<'a>(
         &self,
-        request: GenerationRequest,
+        request: GenerationRequest<'a>,
     ) -> crate::error::Result<GenerationResponseStream> {
         use tokio_stream::StreamExt;
 
@@ -66,9 +66,9 @@ impl Ollama {
 
     /// Completion generation with a single response.
     /// Returns a single `GenerationResponse` object
-    pub async fn generate(
+    pub async fn generate<'a>(
         &self,
-        request: GenerationRequest,
+        request: GenerationRequest<'a>,
     ) -> crate::error::Result<GenerationResponse> {
         let mut request = request;
         request.stream = false;

@@ -18,10 +18,7 @@ async fn test_generation_stream() {
     let ollama = Ollama::default();
 
     let mut res: GenerationResponseStream = ollama
-        .generate_stream(GenerationRequest::new(
-            "llama2:latest".to_string(),
-            PROMPT.into(),
-        ))
+        .generate_stream(GenerationRequest::new("llama2:latest".to_string(), PROMPT))
         .await
         .unwrap();
 
@@ -45,10 +42,7 @@ async fn test_generation() {
     let ollama = Ollama::default();
 
     let res = ollama
-        .generate(GenerationRequest::new(
-            "llama2:latest".to_string(),
-            PROMPT.into(),
-        ))
+        .generate(GenerationRequest::new("llama2:latest".to_string(), PROMPT))
         .await
         .unwrap();
     dbg!(res);
