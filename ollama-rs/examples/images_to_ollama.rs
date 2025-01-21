@@ -55,7 +55,7 @@ async fn download_image(url: &str) -> Result<Vec<u8>, reqwest::Error> {
 
 // Function to send the request to the model
 async fn send_request(
-    request: GenerationRequest,
+    request: GenerationRequest<'_>,
 ) -> Result<GenerationResponse, Box<dyn std::error::Error>> {
     let ollama = Ollama::default();
     let response = ollama.generate(request).await?;

@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use serde::Serialize;
 
 use crate::generation::{
@@ -10,15 +12,15 @@ use super::GenerationContext;
 
 /// A generation request to Ollama.
 #[derive(Debug, Clone, Serialize)]
-pub struct GenerationRequest {
+pub struct GenerationRequest<'a> {
     #[serde(rename = "model")]
     pub model_name: String,
-    pub prompt: String,
-    pub suffix: Option<String>,
+    pub prompt: Cow<'a, str>,
+    pub suffix: Option<Cow<'a, str>>,
     pub images: Vec<Image>,
     pub options: Option<GenerationOptions>,
-    pub system: Option<String>,
-    pub template: Option<String>,
+    pub system: Option<Cow<'a, str>>,
+    pub template: Option<Cow<'a, str>>,
     pub context: Option<GenerationContext>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<FormatType>,
@@ -26,11 +28,11 @@ pub struct GenerationRequest {
     pub(crate) stream: bool,
 }
 
-impl GenerationRequest {
-    pub fn new(model_name: String, prompt: String) -> Self {
+impl<'a> GenerationRequest<'a> {
+    pub fn new(model_name: String, prompt: impl Into<Cow<'a, str>>) -> Self {
         Self {
             model_name,
-            prompt,
+            prompt: prompt.into(),
             suffix: None,
             images: Vec::new(),
             options: None,
@@ -51,8 +53,8 @@ impl GenerationRequest {
     }
 
     /// Adds a text after the model response
-    pub fn suffix(mut self, suffix: String) -> Self {
-        self.suffix = Some(suffix);
+    pub fn suffix(mut self, suffix: impl Into<Cow<'a, str>>) -> Self {
+        self.suffix = Some(suffix.into());
         self
     }
 
@@ -75,14 +77,14 @@ impl GenerationRequest {
     }
 
     /// System prompt to (overrides what is defined in the Modelfile)
-    pub fn system(mut self, system: String) -> Self {
-        self.system = Some(system);
+    pub fn system(mut self, system: impl Into<Cow<'a, str>>) -> Self {
+        self.system = Some(system.into());
         self
     }
 
     /// The full prompt or prompt template (overrides what is defined in the Modelfile)
-    pub fn template(mut self, template: String) -> Self {
-        self.template = Some(template);
+    pub fn template(mut self, template: impl Into<Cow<'a, str>>) -> Self {
+        self.template = Some(template.into());
         self
     }
 

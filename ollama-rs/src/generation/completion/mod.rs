@@ -23,7 +23,7 @@ impl Ollama {
     /// Returns a stream of `GenerationResponse` objects
     pub async fn generate_stream(
         &self,
-        request: GenerationRequest,
+        request: GenerationRequest<'_>,
     ) -> crate::error::Result<GenerationResponseStream> {
         use tokio_stream::StreamExt;
 
@@ -68,7 +68,7 @@ impl Ollama {
     /// Returns a single `GenerationResponse` object
     pub async fn generate(
         &self,
-        request: GenerationRequest,
+        request: GenerationRequest<'_>,
     ) -> crate::error::Result<GenerationResponse> {
         let mut request = request;
         request.stream = false;
