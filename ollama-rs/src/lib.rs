@@ -14,10 +14,23 @@ pub mod headers;
 pub mod history;
 pub mod models;
 
+/// The main module for the ollama-rs crate.
+///
+/// This module provides the core functionality and traits for the crate.
+
 /// A trait to try to convert some type into a [`Url`].
 ///
 /// This trait is "sealed", such that only types within ollama-rs can
 /// implement it.
+///
+/// # Examples
+///
+/// ```
+/// use url::Url;
+/// use ollama_rs::IntoUrl;
+///
+/// let url: Url = "http://example.com".into_url().unwrap();
+/// ```
 pub trait IntoUrl: IntoUrlSealed {}
 
 impl IntoUrl for Url {}
@@ -79,7 +92,27 @@ pub struct Ollama {
     pub(crate) request_headers: reqwest::header::HeaderMap,
 }
 
+/// The main struct representing an Ollama client.
+///
+/// This struct is used to interact with the Ollama service.
+///
+/// # Fields
+///
+/// * `url` - The base URL of the Ollama service.
+/// * `reqwest_client` - The HTTP client used for requests.
+/// * `request_headers` - Optional headers for requests (enabled with the `headers` feature).
 impl Ollama {
+    /// Creates a new `Ollama` instance with the specified host and port.
+    ///
+    /// # Arguments
+    ///
+    /// * `host` - The host of the Ollama service.
+    /// * `port` - The port of the Ollama service.
+    ///
+    /// # Returns
+    ///
+    /// A new `Ollama` instance.
+    ///
     /// # Panics
     ///
     /// Panics if the host is not a valid URL or if the URL cannot have a port.
@@ -90,7 +123,15 @@ impl Ollama {
         Self::from_url(url)
     }
 
-    /// Tries to create new instance by converting `url` into [`Url`].
+    /// Attempts to create a new `Ollama` instance from a URL.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The URL of the Ollama service.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the new `Ollama` instance or a `url::ParseError`.
     #[inline]
     pub fn try_new(url: impl IntoUrl) -> Result<Self, url::ParseError> {
         Ok(Self::from_url(url.into_url()?))
@@ -105,7 +146,7 @@ impl Ollama {
         }
     }
 
-    /// Returns the http URI of the Ollama instance
+    /// Returns the URI of the Ollama service as a `String`.
     ///
     /// # Panics
     ///
@@ -115,12 +156,12 @@ impl Ollama {
         self.url.host().unwrap().to_string()
     }
 
-    /// Returns the URL of the Ollama instance as a [`Url`].
+    /// Returns a reference to the URL of the Ollama service.
     pub fn url(&self) -> &Url {
         &self.url
     }
 
-    /// Returns the URL of the Ollama instance as a [str].
+    /// Returns the URL of the Ollama service as a `&str`.
     ///
     /// Syntax in pseudo-BNF:
     ///
