@@ -4,7 +4,7 @@ use ollama_rs::{coordinator::Coordinator, generation::chat::ChatMessage, Ollama}
 
 /// Get the CPU temperature in Celsius.
 #[ollama_rs::function]
-async fn get_cpu_temperature() -> Result<String, Box<dyn std::error::Error>> {
+async fn get_cpu_temperature() -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     Ok("42.7".to_string())
 }
 
@@ -12,7 +12,9 @@ async fn get_cpu_temperature() -> Result<String, Box<dyn std::error::Error>> {
 ///
 /// * path - Path to check available space for.
 #[ollama_rs::function]
-async fn get_available_space(path: PathBuf) -> Result<String, Box<dyn std::error::Error>> {
+async fn get_available_space(
+    path: PathBuf,
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     Ok(fs2::available_space(path).map_or_else(
         // Note: this will let LLM handle the error. Return `Err` if you want to bubble it up.
         |err| format!("failed to get available space: {err}"),
@@ -24,7 +26,7 @@ async fn get_available_space(path: PathBuf) -> Result<String, Box<dyn std::error
 ///
 /// * city - City to get the weather for.
 #[ollama_rs::function]
-async fn get_weather(city: String) -> Result<String, Box<dyn std::error::Error>> {
+async fn get_weather(city: String) -> Result<String, Box<dyn std::error::Error + Sync + Send>> {
     Ok(reqwest::get(format!("https://wttr.in/{city}?format=%C+%t"))
         .await?
         .text()
@@ -32,7 +34,7 @@ async fn get_weather(city: String) -> Result<String, Box<dyn std::error::Error>>
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let ollama = Ollama::default();
     let history = vec![];
     let tools = ollama_rs::tool_group![get_cpu_temperature, get_available_space, get_weather];

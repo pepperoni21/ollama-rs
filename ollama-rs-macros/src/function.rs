@@ -100,7 +100,7 @@ fn build_tool_impl(
 
             async fn call(&mut self, Self::Params { #(#function_params_struct_field_names),* }: Self::Params) -> ::std::result::Result<
                 ::std::string::String,
-                ::std::boxed::Box<dyn ::std::error::Error>,
+                ::std::boxed::Box<dyn ::std::error::Error + Send + Sync>,
             > {
                 #function_body
             }
