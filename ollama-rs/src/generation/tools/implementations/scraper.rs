@@ -36,7 +36,7 @@ impl Tool for Scraper {
         "Scrapes text content from websites and splits it into manageable chunks."
     }
 
-    async fn call(&mut self, params: Self::Params) -> Result<String, Box<dyn Error>> {
+    async fn call(&mut self, params: Self::Params) -> Result<String, Box<dyn Error + Sync + Send>> {
         let client = Client::new();
         let response = client.get(params.website).send().await?.text().await?;
 

@@ -39,7 +39,7 @@ impl StockScraper {
         &self,
         exchange: &str,
         ticker: &str,
-    ) -> Result<HashMap<String, String>, Box<dyn Error>> {
+    ) -> Result<HashMap<String, String>, Box<dyn Error + Send + Sync>> {
         let target_url = format!(
             "{}/quote/{}:{}?hl={}",
             self.base_url, ticker, exchange, self.language
@@ -81,7 +81,7 @@ impl Tool for StockScraper {
         "Scrapes stock information from Google Finance."
     }
 
-    async fn call(&mut self, params: Params) -> Result<String, Box<dyn Error>> {
+    async fn call(&mut self, params: Params) -> Result<String, Box<dyn Error + Sync + Send>> {
         let result = self.scrape(&params.exchange, &params.ticker).await?;
         Ok(serde_json::to_string(&result)?)
     }

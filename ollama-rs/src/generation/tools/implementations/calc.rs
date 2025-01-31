@@ -31,7 +31,7 @@ impl Tool for Calculator {
     async fn call(
         &mut self,
         parameters: Self::Params,
-    ) -> Result<String, Box<dyn std::error::Error>> {
+    ) -> Result<String, Box<dyn std::error::Error + Sync + Send>> {
         let mut ctx: Context<f64> = Context::default();
 
         let res = match ctx.evaluate(&parameters.expression) {
