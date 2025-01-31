@@ -8,6 +8,12 @@ use crate::{
     Ollama,
 };
 
+/// A coordinator for managing chat interactions and tool usage.
+///
+/// This struct is responsible for coordinating chat messages and tool
+/// interactions within the Ollama service. It maintains the state of the
+/// chat history, tools, and generation options.
+
 pub struct Coordinator<C: ChatHistory, T: ToolGroup> {
     model: String,
     ollama: Ollama,
@@ -18,6 +24,17 @@ pub struct Coordinator<C: ChatHistory, T: ToolGroup> {
 }
 
 impl<C: ChatHistory> Coordinator<C, ()> {
+    /// Creates a new `Coordinator` instance without tools.
+    ///
+    /// # Arguments
+    ///
+    /// * `ollama` - The Ollama client instance.
+    /// * `model` - The model to be used for chat interactions.
+    /// * `history` - The chat history manager.
+    ///
+    /// # Returns
+    ///
+    /// A new `Coordinator` instance.
     pub fn new(ollama: Ollama, model: String, history: C) -> Self {
         Self {
             model,
@@ -31,6 +48,18 @@ impl<C: ChatHistory> Coordinator<C, ()> {
 }
 
 impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
+    /// Creates a new `Coordinator` instance with tools.
+    ///
+    /// # Arguments
+    ///
+    /// * `ollama` - The Ollama client instance.
+    /// * `model` - The model to be used for chat interactions.
+    /// * `history` - The chat history manager.
+    /// * `tools` - The tool group to be used.
+    ///
+    /// # Returns
+    ///
+    /// A new `Coordinator` instance with tools.
     pub fn new_with_tools(ollama: Ollama, model: String, history: C, tools: T) -> Self {
         Self {
             model,
