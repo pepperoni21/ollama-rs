@@ -25,7 +25,7 @@ pub trait Tool {
     fn call(
         &mut self,
         parameters: Self::Params,
-    ) -> impl Future<Output = Result<String, Box<dyn Error>>>;
+    ) -> impl Future<Output = Result<String, Box<dyn Error + Sync + Send>>>;
 }
 
 pub trait Parameters: DeserializeOwned + JsonSchema {}

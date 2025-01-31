@@ -29,7 +29,7 @@ impl Tool for Browserless {
         "Scrapes text content from websites and splits it into manageable chunks."
     }
 
-    async fn call(&mut self, params: Self::Params) -> Result<String, Box<dyn Error>> {
+    async fn call(&mut self, params: Self::Params) -> Result<String, Box<dyn Error + Sync + Send>> {
         let website = params.website;
         let browserless_token =
             env::var("BROWSERLESS_TOKEN").expect("BROWSERLESS_TOKEN must be set");
