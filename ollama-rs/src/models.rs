@@ -2,7 +2,6 @@
 ///
 /// These modules provide functionality for copying, creating, deleting,
 /// listing, pulling, pushing, and showing information about models.
-
 pub mod copy;
 pub mod create;
 pub mod delete;

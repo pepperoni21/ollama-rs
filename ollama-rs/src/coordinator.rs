@@ -13,7 +13,6 @@ use crate::{
 /// This struct is responsible for coordinating chat messages and tool
 /// interactions within the Ollama service. It maintains the state of the
 /// chat history, tools, and generation options.
-
 pub struct Coordinator<C: ChatHistory, T: ToolGroup> {
     model: String,
     ollama: Ollama,

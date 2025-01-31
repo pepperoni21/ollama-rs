@@ -40,7 +40,10 @@ impl DDGSearcher {
         }
     }
 
-    pub async fn search(&self, query: &str) -> Result<Vec<SearchResult>, Box<dyn Error + Send + Sync>> {
+    pub async fn search(
+        &self,
+        query: &str,
+    ) -> Result<Vec<SearchResult>, Box<dyn Error + Send + Sync>> {
         let url = format!("{}/html/?q={}", self.base_url, query);
         let resp = self.client.get(&url).send().await?;
         let body = resp.text().await?;

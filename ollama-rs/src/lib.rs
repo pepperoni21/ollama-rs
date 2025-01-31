@@ -14,10 +14,6 @@ pub mod headers;
 pub mod history;
 pub mod models;
 
-/// The main module for the ollama-rs crate.
-///
-/// This module provides the core functionality and traits for the crate.
-
 /// A trait to try to convert some type into a [`Url`].
 ///
 /// This trait is "sealed", such that only types within ollama-rs can
