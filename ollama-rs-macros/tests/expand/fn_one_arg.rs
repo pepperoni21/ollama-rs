@@ -5,7 +5,6 @@ extern crate ollama_rs_macros;
 ///
 /// * name - Whom to say hello to
 #[function]
-async fn hello_world(name: String) -> Result<String, Box<dyn std::error::Error>> {
-
+async fn hello_world(name: String) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     Ok(format!("Hello {}", name))
 }

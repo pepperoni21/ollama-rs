@@ -30,7 +30,7 @@ impl ::ollama_rs::generation::tools::Tool for hello_world {
         Self::Params { greeting, name }: Self::Params,
     ) -> ::std::result::Result<
         ::std::string::String,
-        ::std::boxed::Box<dyn ::std::error::Error>,
+        ::std::boxed::Box<dyn ::std::error::Error + Send + Sync>,
     > {
         {
             Ok(
@@ -76,7 +76,7 @@ impl ::ollama_rs::generation::tools::Tool for dummy {
         Self::Params { one, two, three }: Self::Params,
     ) -> ::std::result::Result<
         ::std::string::String,
-        ::std::boxed::Box<dyn ::std::error::Error>,
+        ::std::boxed::Box<dyn ::std::error::Error + Send + Sync>,
     > {
         {
             Ok(

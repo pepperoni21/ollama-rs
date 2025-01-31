@@ -3,3 +3,4 @@
 shell.nix
 .idea
 .DS_Store
+**/.zed

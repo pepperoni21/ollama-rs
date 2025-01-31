@@ -28,7 +28,7 @@ impl ::ollama_rs::generation::tools::Tool for hello_world {
         Self::Params { name }: Self::Params,
     ) -> ::std::result::Result<
         ::std::string::String,
-        ::std::boxed::Box<dyn ::std::error::Error>,
+        ::std::boxed::Box<dyn ::std::error::Error + Send + Sync>,
     > {
         {
             Ok(
