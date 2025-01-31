@@ -30,6 +30,7 @@ schemars = { version = "0.8.21", features = ["preserve_order"] }
 thiserror = "2.0.9"
 calc = { version = "0.4.0", optional = true }
 html2md = { version = "0.2.14", optional = true }
+static_assertions = "1.1.0"
 
 ollama-rs-macros = { workspace = true, optional = true }
 

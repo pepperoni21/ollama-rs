@@ -233,7 +233,7 @@ impl Tool for SerperSearchTool {
         "Conducts a web search using a specified search type and returns the results."
     }
 
-    async fn call(&mut self, params: Params) -> Result<String, Box<dyn Error>> {
+    async fn call(&mut self, params: Params) -> Result<String, Box<dyn Error + Sync + Send>> {
         let lang = params.lang.as_deref().unwrap_or("en");
         let url = format!("https://google.serper.dev/{}", params.search_type.name());
         let gl = if lang != "en" { lang } else { "us" };

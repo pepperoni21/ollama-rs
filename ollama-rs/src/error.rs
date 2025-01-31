@@ -1,6 +1,8 @@
 use serde::Deserialize;
+use static_assertions::assert_impl_all;
 use thiserror::Error;
 
+assert_impl_all!(OllamaError: Send, Sync);
 /// A result type for operations in the ollama-rs crate.
 ///
 /// This type is used throughout the crate to represent the result of an operation,
@@ -47,5 +49,5 @@ pub enum ToolCallError {
     )]
     InvalidToolArguments(#[from] serde_json::Error),
     #[error("Tool errored internally when it was called")]
-    InternalToolError(#[from] Box<dyn std::error::Error>),
+    InternalToolError(#[from] Box<dyn std::error::Error + Send + Sync>),
 }

@@ -40,7 +40,7 @@ impl DDGSearcher {
         }
     }
 
-    pub async fn search(&self, query: &str) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+    pub async fn search(&self, query: &str) -> Result<Vec<SearchResult>, Box<dyn Error + Send + Sync>> {
         let url = format!("{}/html/?q={}", self.base_url, query);
         let resp = self.client.get(&url).send().await?;
         let body = resp.text().await?;
@@ -102,7 +102,7 @@ impl Tool for DDGSearcher {
         "Searches the web using DuckDuckGo's HTML interface."
     }
 
-    async fn call(&mut self, params: Params) -> Result<String, Box<dyn Error>> {
+    async fn call(&mut self, params: Params) -> Result<String, Box<dyn Error + Sync + Send>> {
         let results = self.search(&params.query).await?;
         let results_json = serde_json::to_string(&results)?;
         Ok(results_json)
