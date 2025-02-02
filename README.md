@@ -22,6 +22,7 @@ This library was created following the [Ollama API](https://github.com/jmorganca
   - [Generate Embeddings](#generate-embeddings)
   - [Generate Embeddings (Batch)](#generate-embeddings-batch)
   - [Make a Function Call](#make-a-function-call)
+  - [Create a custom tool](#create-a-custom-tool)
 
 ## Installation
 
@@ -251,3 +252,25 @@ println!("{}", resp.message.content);
 ```
 
 _Uses the given tools (such as searching the web) to find an answer, feeds that answer back into the LLM, and returns a `ChatMessageResponse` with the answer to the question._
+
+### Create a custom tool
+
+The `function` macro simplifies the creation of custom tools. Below is an example of a tool that retrieves the current weather for a specified city:
+
+```rust
+/// Retrieve the weather for a specified city.
+///
+/// * city - The city for which to get the weather.
+#[ollama_rs::function]
+async fn get_weather(city: String) -> Result<String, Box<dyn std::error::Error + Sync + Send>> {
+    let url = format!("https://wttr.in/{city}?format=%C+%t");
+    let response = reqwest::get(&url).await?.text().await?;
+    Ok(response)
+}
+```
+
+To create a custom tool, define a function that returns a `Result<String, Box<dyn std::error::Error + Sync + Send>>` and annotate it with the `function` macro. This function will be automatically converted into a tool that can be used with the `Coordinator`, just like any other tool.
+
+Ensure that the doc comment above the function clearly describes the tool's purpose and its parameters. This information will be provided to the LLM to help it understand how to use the tool.
+
+For a more detailed example, see the [function call example](https://github.com/pepperoni21/ollama-rs/blob/0.2.4/ollama-rs/examples/function_call.rs).
