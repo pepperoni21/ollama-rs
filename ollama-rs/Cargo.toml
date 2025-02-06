@@ -32,7 +32,7 @@ calc = { version = "0.4.0", optional = true }
 html2md = { version = "0.2.14", optional = true }
 static_assertions = "1.1.0"
 
-ollama-rs-macros = { workspace = true, optional = true }
+ollama-rs-macros = { version = "0.2.5", optional = true }
 
 [features]
 default = ["reqwest/default-tls"]
