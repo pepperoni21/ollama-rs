@@ -11,6 +11,9 @@ pub struct Params {
     website: String,
 }
 
+/**
+ * A tool that scrapes text content from websites and splits it into manageable chunks.
+ */
 pub struct Scraper {}
 
 impl Default for Scraper {

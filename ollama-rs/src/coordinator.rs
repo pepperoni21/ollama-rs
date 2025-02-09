@@ -70,16 +70,43 @@ impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
         }
     }
 
+    /**
+     * Sets the generation options for the coordinator.
+     * 
+     * # Arguments
+     * 
+     * * `options` - The generation options to be set.
+     */
     pub fn options(mut self, options: GenerationOptions) -> Self {
         self.options = options;
         self
     }
 
+    /**
+     * Sets the debug mode for the coordinator.
+     * 
+     * # Arguments
+     * 
+     * * `debug` - The debug mode to be set.
+     */
     pub fn debug(mut self, debug: bool) -> Self {
         self.debug = debug;
         self
     }
 
+    /**
+     * Sends a chat message to the Ollama service, with tool calls.
+     * If the response contains tool calls, the functions are exucuted, appended to the chat history, and the chat is re-sent.
+     * 
+     * # Arguments
+     * 
+     * * `messages` - The chat messages to be sent.
+     * 
+     * # Returns
+     * 
+     * The response from the Ollama service. 
+     *
+     */
     pub async fn chat(
         &mut self,
         messages: Vec<ChatMessage>,

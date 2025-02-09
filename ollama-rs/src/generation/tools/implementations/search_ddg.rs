@@ -14,13 +14,28 @@ pub struct Params {
     query: String,
 }
 
+/**
+ * A search result from a web search.
+ */
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchResult {
+    /**
+     * The title of the search result.
+     */
     title: String,
+    /**
+     * The URL of the search result.
+     */
     link: String,
+    /**
+     * A snippet of the search result.
+     */
     snippet: String,
 }
 
+/**
+ * A tool that searches the web using DuckDuckGo's HTML interface.
+ */
 pub struct DDGSearcher {
     pub client: reqwest::Client,
     pub base_url: String,
@@ -40,6 +55,17 @@ impl DDGSearcher {
         }
     }
 
+    /**
+     * Searches the web using DuckDuckGo's HTML interface.
+     * 
+     * # Arguments
+     * 
+     * * `query` - The search query to send to DuckDuckGo.
+     * 
+     * # Returns
+     * 
+     * A vector of search results.
+     */
     pub async fn search(
         &self,
         query: &str,
@@ -104,7 +130,7 @@ impl Tool for DDGSearcher {
     fn description() -> &'static str {
         "Searches the web using DuckDuckGo's HTML interface."
     }
-
+    
     async fn call(&mut self, params: Params) -> Result<String, Box<dyn Error + Sync + Send>> {
         let results = self.search(&params.query).await?;
         let results_json = serde_json::to_string(&results)?;

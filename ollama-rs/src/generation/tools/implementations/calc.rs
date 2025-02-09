@@ -15,6 +15,9 @@ pub struct Params {
     expression: String,
 }
 
+/**
+ * A tool that evaluates an arbitrary mathematical expression.
+ */
 pub struct Calculator {}
 
 impl Tool for Calculator {
