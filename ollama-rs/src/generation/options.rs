@@ -6,7 +6,7 @@ pub struct GenerationOptions {
     pub(super) mirostat: Option<u8>,
     pub(super) mirostat_eta: Option<f32>,
     pub(super) mirostat_tau: Option<f32>,
-    pub(super) num_ctx: Option<u32>,
+    pub(super) num_ctx: Option<u64>,
     pub(super) num_gqa: Option<u32>,
     pub(super) num_gpu: Option<u32>,
     pub(super) num_thread: Option<u32>,
@@ -41,7 +41,7 @@ impl GenerationOptions {
     }
 
     /// Sets the size of the context window used to generate the next token. (Default: 2048)
-    pub fn num_ctx(mut self, num_ctx: u32) -> Self {
+    pub fn num_ctx(mut self, num_ctx: u64) -> Self {
         self.num_ctx = Some(num_ctx);
         self
     }
