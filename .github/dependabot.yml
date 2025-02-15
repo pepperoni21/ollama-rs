@@ -1,11 +1,6 @@
 version: 2
 updates:
   - package-ecosystem: "cargo"
-    directory: "/ollama-rs"
-    schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "cargo"
-    directory: "/ollama-rs-macros"
+    directory: "/"
     schedule:
       interval: "weekly"
