@@ -203,7 +203,7 @@ dependencies = [
  "regex",
  "rustyline",
  "structopt",
- "thiserror 1.0.60",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -386,9 +386,9 @@ checksum = "3a68a4904193147e0a8dec3314640e6db742afd5f6e634f428a6af230d9b3591"
 
 [[package]]
 name = "either"
-version = "1.11.0"
+version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a47c1c47d2f5964e29c61246e81db715514cd532db6b5116a25ea3c03d6780a2"
+checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 
 [[package]]
 name = "ena"
@@ -876,9 +876,9 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.12.1"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
 dependencies = [
  "either",
 ]
@@ -899,7 +899,7 @@ dependencies = [
  "combine",
  "jni-sys",
  "log",
- "thiserror 1.0.60",
+ "thiserror 1.0.69",
  "walkdir",
 ]
 
@@ -1141,7 +1141,7 @@ dependencies = [
  "iterext",
  "lazy_static",
  "regex",
- "thiserror 1.0.60",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1465,7 +1465,7 @@ dependencies = [
  "rustc-hash",
  "rustls",
  "socket2",
- "thiserror 1.0.60",
+ "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -1482,7 +1482,7 @@ dependencies = [
  "rustc-hash",
  "rustls",
  "slab",
- "thiserror 1.0.60",
+ "thiserror 1.0.69",
  "tinyvec",
  "tracing",
 ]
@@ -1566,7 +1566,7 @@ checksum = "ba009ff324d1fc1b900bd1fdb31564febe58a8ccc8a6fdbb93b543d33b13ca43"
 dependencies = [
  "getrandom",
  "libredox",
- "thiserror 1.0.60",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -2153,18 +2153,18 @@ dependencies = [
 
 [[package]]
 name = "text-splitter"
-version = "0.13.1"
+version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3634ff66852bfbf7e8e987735bac08168daa5d42dc39a0df7d05fc83eaa3fe4"
+checksum = "2ab9dc04b7cf08eb01c07c272bf699fa55679a326ddf7dd075e14094efc80fb9"
 dependencies = [
  "ahash",
  "auto_enums",
  "either",
- "itertools 0.12.1",
+ "itertools 0.13.0",
  "once_cell",
  "regex",
  "strum",
- "thiserror 1.0.60",
+ "thiserror 1.0.69",
  "unicode-segmentation",
 ]
 
@@ -2179,11 +2179,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.60"
+version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "579e9083ca58dd9dcf91a9923bb9054071b9ebbd800b342194c9feb0ee89fc18"
+checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
 dependencies = [
- "thiserror-impl 1.0.60",
+ "thiserror-impl 1.0.69",
 ]
 
 [[package]]
@@ -2197,9 +2197,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.60"
+version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2470041c06ec3ac1ab38d0356a6119054dedaea53e12fbefc0de730a1c08524"
+checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
 dependencies = [
  "proc-macro2",
  "quote",
