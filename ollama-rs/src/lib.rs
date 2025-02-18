@@ -119,6 +119,33 @@ impl Ollama {
         Self::from_url(url)
     }
 
+    /// Creates a new `Ollama` instance with the specified host, port, and `reqwest` client.
+    ///
+    /// # Arguments
+    ///
+    /// * `host` - The host of the Ollama service.
+    /// * `port` - The port of the Ollama service.
+    /// * `reqwest_client` - The `reqwest` client instance.
+    ///
+    /// # Returns
+    ///
+    /// A new `Ollama` instance with the specified `reqwest` client.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the host is not a valid URL or if the URL cannot have a port.
+    pub fn new_with_client(host: impl IntoUrl, port: u16, reqwest_client: reqwest::Client) -> Self {
+        let mut url: Url = host.into_url().unwrap();
+        url.set_port(Some(port)).unwrap();
+
+        Self {
+            url,
+            reqwest_client,
+            #[cfg(feature = "headers")]
+            request_headers: reqwest::header::HeaderMap::new(),
+        }
+    }
+
     /// Attempts to create a new `Ollama` instance from a URL.
     ///
     /// # Arguments
