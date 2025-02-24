@@ -2,8 +2,11 @@ use std::path::PathBuf;
 
 use ollama_rs::{
     coordinator::Coordinator,
-    generation::chat::ChatMessage,
-    generation::parameters::{FormatType, JsonSchema, JsonStructure},
+    generation::{
+        chat::ChatMessage,
+        options::GenerationOptions,
+        parameters::{FormatType, JsonSchema, JsonStructure},
+    },
     Ollama,
 };
 
@@ -33,7 +36,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let format = FormatType::StructuredJson(JsonStructure::new::<Weather>());
 
     let mut coordinator =
-        Coordinator::new_with_tools(ollama, "llama3.2".to_string(), history, tools).format(format);
+        Coordinator::new_with_tools(ollama, "llama3.2".to_string(), history, tools)
+            .format(format)
+            .options(GenerationOptions::default().temperature(0.0));
 
     let user_messages = vec!["What's the weather in Nanaimo?"];
 
