@@ -1,6 +1,6 @@
 use crate::{
     generation::{
-        chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse},
+        chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse, MessageRole},
         options::GenerationOptions,
         parameters::FormatType,
         tools::ToolGroup,
@@ -105,7 +105,18 @@ impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
             .tools::<T>();
 
         if let Some(format) = &self.format {
-            request = request.format(format.clone());
+            let mut tools = vec![];
+            T::tool_info(&mut tools);
+
+            if tools.len() == 0 {
+                request = request.format(format.clone());
+            } else {
+                if let Some(last_message) = self.history.messages().last() {
+                    if last_message.role == MessageRole::Tool {
+                        request = request.format(format.clone());
+                    }
+                }
+            }
         }
 
         let resp = self
