@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use ollama_rs::{
     coordinator::Coordinator,
     generation::{
