@@ -1,6 +1,8 @@
+use std::sync::{Arc, Mutex};
+
 use crate::{
     generation::{
-        chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse},
+        chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse, ChatMessageResponseStream},
         options::GenerationOptions,
         tools::ToolGroup,
     },
@@ -128,5 +130,32 @@ impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
 
             Ok(resp)
         }
+    }
+}
+
+impl<T: ToolGroup> Coordinator<Arc<Mutex<Vec<ChatMessage>>>, T> {
+    pub async fn chat_stream(
+        &mut self,
+        messages: Vec<ChatMessage>,
+    ) -> crate::error::Result<ChatMessageResponseStream> {
+        if self.debug {
+            for m in &messages {
+                eprintln!("Hit {} with:", self.model);
+                eprintln!("\t{:?}: '{}'", m.role, m.content);
+            }
+        }
+        
+        let stream: ChatMessageResponseStream = self
+            .ollama
+            .send_chat_messages_with_history_stream(
+                Arc::clone(&self.history),
+                ChatMessageRequest::new(
+                    self.model.clone(),
+                    messages,
+                ),
+            )
+            .await?;
+        
+        Ok(stream)
     }
 }
