@@ -25,8 +25,7 @@ async fn get_weather(city: String) -> Result<String, Box<dyn std::error::Error +
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
-    //let ollama = Ollama::default();
-    let ollama = Ollama::new("http://ryzen.local".to_string(), 11434);
+    let ollama = Ollama::default();
 
     let history = vec![];
     let tools = ollama_rs::tool_group![get_weather];
