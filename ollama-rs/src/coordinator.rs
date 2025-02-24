@@ -2,6 +2,7 @@ use crate::{
     generation::{
         chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse},
         options::GenerationOptions,
+        parameters::FormatType,
         tools::ToolGroup,
     },
     history::ChatHistory,
@@ -20,6 +21,7 @@ pub struct Coordinator<C: ChatHistory, T: ToolGroup> {
     history: C,
     tools: T,
     debug: bool,
+    format: Option<FormatType>,
 }
 
 impl<C: ChatHistory> Coordinator<C, ()> {
@@ -42,6 +44,7 @@ impl<C: ChatHistory> Coordinator<C, ()> {
             history,
             tools: (),
             debug: false,
+            format: None,
         }
     }
 }
@@ -67,7 +70,13 @@ impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
             history,
             tools,
             debug: false,
+            format: None,
         }
+    }
+
+    pub fn format(mut self, format: FormatType) -> Self {
+        self.format = Some(format);
+        self
     }
 
     pub fn options(mut self, options: GenerationOptions) -> Self {
@@ -91,14 +100,17 @@ impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
             }
         }
 
+        let mut request = ChatMessageRequest::new(self.model.clone(), messages)
+            .options(self.options.clone())
+            .tools::<T>();
+
+        if let Some(format) = &self.format {
+            request = request.format(format.clone());
+        }
+
         let resp = self
             .ollama
-            .send_chat_messages_with_history(
-                &mut self.history,
-                ChatMessageRequest::new(self.model.clone(), messages)
-                    .options(self.options.clone())
-                    .tools::<T>(),
-            )
+            .send_chat_messages_with_history(&mut self.history, request)
             .await?;
 
         if !resp.message.tool_calls.is_empty() {
