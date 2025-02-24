@@ -108,6 +108,10 @@ impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
             let mut tools = vec![];
             T::tool_info(&mut tools);
 
+            // If no tools are specified, set the format on the request. Otherwise wait for the
+            // recursive call by checking that the last message in the history has a Tool role,
+            // before setting the format. Ollama otherwise won't call the tool if the format
+            // is set on the first request.
             if tools.len() == 0 {
                 request = request.format(format.clone());
             } else {
