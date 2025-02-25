@@ -15,7 +15,7 @@ async fn test_show_model_info() {
 
 #[cfg(feature = "modelfile")]
 #[tokio::test]
-async fn test_show_model_info_from() {
+async fn test_model_info_modelfile_param_stop() {
     let ollama = ollama_rs::Ollama::default();
 
     let model_info = ollama
