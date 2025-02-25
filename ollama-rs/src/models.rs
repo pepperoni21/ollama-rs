@@ -34,6 +34,9 @@ pub struct LocalModel {
 /// This struct contains various fields that describe a model's attributes,
 /// such as its license, file, parameters, and template.
 /// Some fields may be empty if the model does not have them.
+///
+/// By default the modelfile is a string, but if the `modelfile` feature is enabled,
+/// it will be a `Modelfile` struct. See the modelfile crate for more information.
 #[cfg_attr(feature = "modelfile", serde_with::serde_as)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelInfo {
