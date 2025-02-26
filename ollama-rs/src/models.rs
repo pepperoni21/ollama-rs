@@ -10,6 +10,12 @@ pub mod pull;
 pub mod push;
 pub mod show_info;
 
+#[cfg(feature = "modelfile")]
+use modelfile::modelfile::Modelfile;
+
+#[cfg(feature = "modelfile")]
+use serde_with;
+
 use serde::{Deserialize, Serialize};
 
 /// Represents a local model pulled from Ollama.
@@ -28,10 +34,18 @@ pub struct LocalModel {
 /// This struct contains various fields that describe a model's attributes,
 /// such as its license, file, parameters, and template.
 /// Some fields may be empty if the model does not have them.
+///
+/// By default the modelfile is a string, but if the `modelfile` feature is enabled,
+/// it will be a `Modelfile` struct. See the modelfile crate for more information.
+#[cfg_attr(feature = "modelfile", serde_with::serde_as)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelInfo {
     #[serde(default = "String::new")]
     pub license: String,
+    #[cfg(feature = "modelfile")]
+    #[serde_as(as = "serde_with::DisplayFromStr")]
+    pub modelfile: Modelfile,
+    #[cfg(not(feature = "modelfile"))]
     #[serde(default = "String::new")]
     pub modelfile: String,
     #[serde(default = "String::new")]
