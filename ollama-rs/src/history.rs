@@ -1,4 +1,6 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, sync::Arc};
+
+use std::sync::Mutex;
 
 use crate::generation::chat::ChatMessage;
 
@@ -36,5 +38,40 @@ impl ChatHistory for Vec<ChatMessage> {
     /// efficient borrowing or cloning as needed.
     fn messages(&self) -> Cow<'_, [ChatMessage]> {
         Cow::Borrowed(self)
+    }
+}
+
+
+impl ChatHistory for Arc<Mutex<Vec<ChatMessage>>> {
+    /// Adds a chat message to the history.
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The chat message to be added.
+    fn push(&mut self, message: ChatMessage) {
+        match self.lock() {
+            Ok(mut _self) => {
+                _self.push(message);
+            }
+            Err(error) => {
+                eprintln!("Error pushing message to history: {:?}", error);
+            }
+        }
+    }
+
+    /// Returns a reference to the list of chat messages in the history.
+    ///
+    /// The messages are returned as a `Cow` (Clone on Write) to allow for
+    /// efficient borrowing or cloning as needed.
+    fn messages(&self) -> Cow<'_, [ChatMessage]> {
+        match self.lock() {
+            Ok(inner) => {
+                Cow::Owned(inner.clone())
+            }
+            Err(error) => {
+                eprintln!("Error pushing message to history: {:?}", error);
+                Cow::Owned(vec![])
+            }
+        }
     }
 }
