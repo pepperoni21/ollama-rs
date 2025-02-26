@@ -1479,7 +1479,7 @@ dependencies = [
 
 [[package]]
 name = "ollama-rs"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "async-stream",
  "base64",
@@ -1508,7 +1508,7 @@ dependencies = [
 
 [[package]]
 name = "ollama-rs-macros"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "macrotest",
  "proc-macro2",
