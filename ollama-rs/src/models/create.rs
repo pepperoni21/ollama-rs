@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{error::OllamaError, Ollama};
+use crate::{error::OllamaError, generation::chat::ChatMessage, Ollama};
 
 /// A stream of `CreateModelStatus` objects
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
@@ -85,35 +85,131 @@ impl Ollama {
     }
 }
 
+#[derive(Serialize)]
+pub enum QuantizationType {
+    #[serde(rename = "q2_K")]
+    Q2K,
+    #[serde(rename = "q3_K_L")]
+    Q3KL,
+    #[serde(rename = "q3_K_M")]
+    Q3KM,
+    #[serde(rename = "q3_K_S")]
+    Q3KS,
+    #[serde(rename = "q4_0")]
+    Q40,
+    #[serde(rename = "q4_1")]
+    Q41,
+    #[serde(rename = "q4_K_M")]
+    Q4KM,
+    #[serde(rename = "q4_K_S")]
+    Q4KS,
+    #[serde(rename = "q5_0")]
+    Q50,
+    #[serde(rename = "q5_1")]
+    Q51,
+    #[serde(rename = "q5_K_M")]
+    Q5KM,
+    #[serde(rename = "q5_K_S")]
+    Q5KS,
+    #[serde(rename = "q6_K")]
+    Q6K,
+    #[serde(rename = "q8_0")]
+    Q80,
+}
+
 /// A create model request to Ollama.
 #[derive(Serialize)]
 pub struct CreateModelRequest {
-    #[serde(rename = "name")]
+    /// Name of the model to create
+    #[serde(rename = "model")]
     model_name: String,
-    path: Option<String>,
-    modelfile: Option<String>,
+    /// Name of an existing model to create the new model from
+    #[serde(rename = "from")]
+    from_model: Option<String>,
+    /// A dictionary of file names to SHA256 digests of blobs to create the model from
+    files: Option<std::collections::HashMap<String, String>>,
+    /// A dictionary of file names to SHA256 digests of blobs for LORA adapters
+    adapters: Option<std::collections::HashMap<String, String>>,
+    /// The prompt template for the model
+    template: Option<String>,
+    /// A string or list of strings containing the license or licenses for the model
+    license: Option<Vec<String>>,
+    /// A string containing the system prompt for the model
+    system: Option<String>,
+    /// A dictionary of parameters for the model
+    parameters: Option<std::collections::HashMap<String, String>>,
+    /// A list of message objects used to create a conversation
+    messages: Option<Vec<ChatMessage>>,
     stream: bool,
+    /// Quantize a non-quantized model
+    quantize: Option<QuantizationType>,
 }
 
 impl CreateModelRequest {
-    /// Create a model described in the Modelfile at `path`.
-    pub fn path(model_name: String, path: String) -> Self {
+    pub fn new(model_name: String) -> Self {
         Self {
             model_name,
-            path: Some(path),
-            modelfile: None,
+            from_model: None,
+            files: None,
+            adapters: None,
+            template: None,
+            license: None,
+            system: None,
+            parameters: None,
+            messages: None,
             stream: false,
+            quantize: None,
         }
     }
 
-    /// Create a model described by the Modelfile contents passed to `modelfile`.
-    pub fn modelfile(model_name: String, modelfile: String) -> Self {
-        Self {
-            model_name,
-            path: None,
-            modelfile: Some(modelfile),
-            stream: false,
-        }
+    pub fn from_model(mut self, from_model: String) -> Self {
+        self.from_model = Some(from_model);
+        self
+    }
+
+    pub fn files(mut self, files: std::collections::HashMap<String, String>) -> Self {
+        self.files = Some(files);
+        self
+    }
+
+    pub fn adapters(mut self, adapters: std::collections::HashMap<String, String>) -> Self {
+        self.adapters = Some(adapters);
+        self
+    }
+
+    pub fn template(mut self, template: String) -> Self {
+        self.template = Some(template);
+        self
+    }
+
+    pub fn license(mut self, license: String) -> Self {
+        self.license = Some(vec![license]);
+        self
+    }
+
+    pub fn licenses(mut self, licenses: Vec<String>) -> Self {
+        self.license = Some(licenses);
+        self
+    }
+
+    pub fn system(mut self, system: String) -> Self {
+        self.system = Some(system);
+        self
+    }
+
+    pub fn parameters(mut self, parameters: std::collections::HashMap<String, String>) -> Self {
+        self.parameters = Some(parameters);
+        self
+    }
+
+    pub fn messages(mut self, messages: Vec<ChatMessage>) -> Self {
+        self.messages = Some(messages);
+        self
+    }
+
+    pub fn quantize(mut self, quantize: QuantizationType) -> Self {
+        self.quantize = Some(quantize);
+        self
     }
 }
 

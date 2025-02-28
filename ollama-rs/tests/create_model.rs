@@ -6,11 +6,14 @@ use tokio_stream::StreamExt;
 async fn test_create_model_stream() {
     let ollama = Ollama::default();
 
+    let request = CreateModelRequest::new("testmodel".into())
+    .license("Test".into())
+    .system("You're a chat bot. (very useful information)".into())
+    .template("Template".into())
+    .from_model("llama2:latest".into());
+
     let mut res = ollama
-        .create_model_stream(CreateModelRequest::path(
-            "model".into(),
-            "/tmp/Modelfile.example".into(),
-        ))
+        .create_model_stream(request)
         .await
         .unwrap();
 
@@ -35,11 +38,14 @@ async fn test_create_model_stream() {
 async fn test_create_model() {
     let ollama = Ollama::default();
 
+    let request = CreateModelRequest::new("testmodel".into())
+    .license("Test".into())
+    .system("You're a chat bot. (very useful information)".into())
+    .template("Template".into())
+    .from_model("llama2:latest".into());
+
     let res = ollama
-        .create_model(CreateModelRequest::path(
-            "model".into(),
-            "/tmp/Modelfile.example".into(),
-        ))
+        .create_model(request)
         .await
         .unwrap();
 
