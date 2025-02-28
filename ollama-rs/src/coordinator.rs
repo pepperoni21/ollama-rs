@@ -1,11 +1,11 @@
 use crate::{
     generation::{
         chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse, MessageRole},
-        options::GenerationOptions,
         parameters::FormatType,
         tools::ToolGroup,
     },
     history::ChatHistory,
+    models::ModelOptions,
     Ollama,
 };
 
@@ -17,7 +17,7 @@ use crate::{
 pub struct Coordinator<C: ChatHistory, T: ToolGroup> {
     model: String,
     ollama: Ollama,
-    options: GenerationOptions,
+    options: ModelOptions,
     history: C,
     tools: T,
     debug: bool,
@@ -40,7 +40,7 @@ impl<C: ChatHistory> Coordinator<C, ()> {
         Self {
             model,
             ollama,
-            options: GenerationOptions::default(),
+            options: ModelOptions::default(),
             history,
             tools: (),
             debug: false,
@@ -66,7 +66,7 @@ impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
         Self {
             model,
             ollama,
-            options: GenerationOptions::default(),
+            options: ModelOptions::default(),
             history,
             tools,
             debug: false,
@@ -79,7 +79,7 @@ impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
         self
     }
 
-    pub fn options(mut self, options: GenerationOptions) -> Self {
+    pub fn options(mut self, options: ModelOptions) -> Self {
         self.options = options;
         self
     }

@@ -1,7 +1,4 @@
-use ollama_rs::{
-    generation::{completion::request::GenerationRequest, options::GenerationOptions},
-    Ollama,
-};
+use ollama_rs::{generation::completion::request::GenerationRequest, models::ModelOptions, Ollama};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -9,7 +6,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let model = "llama2:latest".to_string();
     let prompt = "Why is the sky blue?".to_string();
 
-    let options = GenerationOptions::default()
+    let options = ModelOptions::default()
         .temperature(0.2)
         .repeat_penalty(1.5)
         .top_k(25)

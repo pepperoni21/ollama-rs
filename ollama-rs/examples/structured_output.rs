@@ -1,9 +1,9 @@
 use ollama_rs::{
     generation::{
         completion::request::GenerationRequest,
-        options::GenerationOptions,
         parameters::{FormatType, JsonSchema, JsonStructure},
     },
+    models::ModelOptions,
     Ollama,
 };
 use serde::Deserialize;
@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .generate(
             GenerationRequest::new(model, prompt)
                 .format(format)
-                .options(GenerationOptions::default().temperature(0.0)),
+                .options(ModelOptions::default().temperature(0.0)),
         )
         .await?;
 
