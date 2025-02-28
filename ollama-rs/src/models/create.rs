@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error::OllamaError, generation::chat::ChatMessage, Ollama};
 
+use super::ModelOptions;
+
 /// A stream of `CreateModelStatus` objects
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
@@ -137,7 +139,7 @@ pub struct CreateModelRequest {
     /// A string containing the system prompt for the model
     system: Option<String>,
     /// A dictionary of parameters for the model
-    parameters: Option<std::collections::HashMap<String, String>>,
+    parameters: Option<ModelOptions>,
     /// A list of message objects used to create a conversation
     messages: Option<Vec<ChatMessage>>,
     stream: bool,
@@ -197,7 +199,7 @@ impl CreateModelRequest {
         self
     }
 
-    pub fn parameters(mut self, parameters: std::collections::HashMap<String, String>) -> Self {
+    pub fn parameters(mut self, parameters: ModelOptions) -> Self {
         self.parameters = Some(parameters);
         self
     }
