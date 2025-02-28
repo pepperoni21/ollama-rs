@@ -100,12 +100,12 @@ Same output as above but streamed.
 
 ```rust
 use ollama_rs::generation::completion::GenerationRequest;
-use ollama_rs::generation::options::GenerationOptions;
+use ollama_rs::models::ModelOptions;
 
 let model = "llama2:latest".to_string();
 let prompt = "Why is the sky blue?".to_string();
 
-let options = GenerationOptions::default()
+let options = ModelOptions::default()
     .temperature(0.2)
     .repeat_penalty(1.5)
     .top_k(25)
@@ -235,14 +235,14 @@ _Returns a `GenerateEmbeddingsResponse` struct containing the embeddings (a vect
 use ollama_rs::coordinator::Coordinator;
 use ollama_rs::generation::chat::{ChatMessage, ChatMessageRequest};
 use ollama_rs::generation::tools::implementations::{DDGSearcher, Scraper, Calculator};
-use ollama_rs::generation::options::GenerationOptions;
+use ollama_rs::models::ModelOptions;
 use ollama_rs::tool_group;
 
 let tools = tool_group![DDGSearcher::new(), Scraper {}, Calculator {}];
 let mut history = vec![];
 
 let mut coordinator = Coordinator::new_with_tools(ollama, "qwen2.5:32b".to_string(), history, tools)
-    .options(GenerationOptions::default().num_ctx(16384));
+    .options(ModelOptions::default().num_ctx(16384));
 
 let resp = coordinator
     .chat(vec![ChatMessage::user("What is the current oil price?")])
