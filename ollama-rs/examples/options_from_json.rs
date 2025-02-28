@@ -1,7 +1,4 @@
-use ollama_rs::{
-    generation::{completion::request::GenerationRequest, options::GenerationOptions},
-    Ollama,
-};
+use ollama_rs::{generation::completion::request::GenerationRequest, models::ModelOptions, Ollama};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -17,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
       "top_k": 25,
       "top_p": 0.25
     }"#;
-    let options: GenerationOptions =
+    let options: ModelOptions =
         serde_json::from_str(options_str).expect("JSON was not well-formatted");
     let res = ollama
         .generate(GenerationRequest::new(model, prompt).options(options))

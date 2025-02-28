@@ -2,9 +2,9 @@ use ollama_rs::{
     coordinator::Coordinator,
     generation::{
         chat::ChatMessage,
-        options::GenerationOptions,
         parameters::{FormatType, JsonSchema, JsonStructure},
     },
+    models::ModelOptions,
     Ollama,
 };
 
@@ -36,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let mut coordinator =
         Coordinator::new_with_tools(ollama, "llama3.2".to_string(), history, tools)
             .format(format)
-            .options(GenerationOptions::default().temperature(0.0));
+            .options(ModelOptions::default().temperature(0.0));
 
     let user_messages = vec!["What's the weather in Nanaimo?"];
 

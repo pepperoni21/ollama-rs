@@ -2,10 +2,12 @@ use std::borrow::Cow;
 
 use serde::Serialize;
 
-use crate::generation::{
-    images::Image,
-    options::GenerationOptions,
-    parameters::{FormatType, KeepAlive},
+use crate::{
+    generation::{
+        images::Image,
+        parameters::{FormatType, KeepAlive},
+    },
+    models::ModelOptions,
 };
 
 use super::GenerationContext;
@@ -18,7 +20,7 @@ pub struct GenerationRequest<'a> {
     pub prompt: Cow<'a, str>,
     pub suffix: Option<Cow<'a, str>>,
     pub images: Vec<Image>,
-    pub options: Option<GenerationOptions>,
+    pub options: Option<ModelOptions>,
     pub system: Option<Cow<'a, str>>,
     pub template: Option<Cow<'a, str>>,
     pub context: Option<GenerationContext>,
@@ -71,7 +73,7 @@ impl<'a> GenerationRequest<'a> {
     }
 
     /// Additional model parameters listed in the documentation for the Modelfile
-    pub fn options(mut self, options: GenerationOptions) -> Self {
+    pub fn options(mut self, options: ModelOptions) -> Self {
         self.options = Some(options);
         self
     }

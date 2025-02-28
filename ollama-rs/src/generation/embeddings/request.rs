@@ -1,6 +1,6 @@
 use serde::{Serialize, Serializer};
 
-use crate::generation::{options::GenerationOptions, parameters::KeepAlive};
+use crate::{generation::parameters::KeepAlive, models::ModelOptions};
 
 #[derive(Debug)]
 pub enum EmbeddingsInput {
@@ -54,7 +54,7 @@ pub struct GenerateEmbeddingsRequest {
     model_name: String,
     input: EmbeddingsInput,
     truncate: Option<bool>,
-    options: Option<GenerationOptions>,
+    options: Option<ModelOptions>,
     keep_alive: Option<KeepAlive>,
 }
 
@@ -67,7 +67,7 @@ impl GenerateEmbeddingsRequest {
         }
     }
 
-    pub fn options(mut self, options: GenerationOptions) -> Self {
+    pub fn options(mut self, options: ModelOptions) -> Self {
         self.options = Some(options);
         self
     }

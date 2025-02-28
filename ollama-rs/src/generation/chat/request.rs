@@ -1,9 +1,11 @@
 use serde::Serialize;
 
-use crate::generation::{
-    options::GenerationOptions,
-    parameters::FormatType,
-    tools::{ToolGroup, ToolInfo},
+use crate::{
+    generation::{
+        parameters::FormatType,
+        tools::{ToolGroup, ToolInfo},
+    },
+    models::ModelOptions,
 };
 
 use super::ChatMessage;
@@ -16,7 +18,7 @@ pub struct ChatMessageRequest {
     pub messages: Vec<ChatMessage>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub tools: Vec<ToolInfo>,
-    pub options: Option<GenerationOptions>,
+    pub options: Option<ModelOptions>,
     pub template: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<FormatType>,
@@ -39,7 +41,7 @@ impl ChatMessageRequest {
     }
 
     /// Additional model parameters listed in the documentation for the Modelfile
-    pub fn options(mut self, options: GenerationOptions) -> Self {
+    pub fn options(mut self, options: ModelOptions) -> Self {
         self.options = Some(options);
         self
     }
