@@ -18,7 +18,9 @@ pub struct ChatMessageRequest {
     pub messages: Vec<ChatMessage>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub tools: Vec<ToolInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub options: Option<ModelOptions>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub template: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<FormatType>,

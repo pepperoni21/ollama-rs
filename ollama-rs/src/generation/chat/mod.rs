@@ -204,6 +204,7 @@ pub struct ChatMessage {
     pub content: String,
     #[serde(default)]
     pub tool_calls: Vec<ToolCall>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub images: Option<Vec<Image>>,
 }
 
