@@ -33,6 +33,15 @@ This library was created following the [Ollama API](https://github.com/jmorganca
 ollama-rs = "0.2.6"
 ```
 
+If you absolutely want the latest version, you can use the `master` branch by adding the following to your `Cargo.toml` file:
+
+```toml
+[dependencies]
+ollama-rs = { git = "https://github.com/pepperoni21/ollama-rs.git", branch = "master" }
+```
+
+*Note that the `master` branch may not be stable and may contain breaking changes.*
+
 ## Initialization
 
 ### Initialize Ollama
