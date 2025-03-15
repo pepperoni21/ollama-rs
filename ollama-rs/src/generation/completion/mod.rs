@@ -114,11 +114,11 @@ pub struct GenerationResponse {
     /// Time spent generating the response
     pub total_duration: Option<u64>,
     /// Number of tokens in the prompt
-    pub prompt_eval_count: Option<u16>,
+    pub prompt_eval_count: Option<u64>,
     /// Time spent in nanoseconds evaluating the prompt
     pub prompt_eval_duration: Option<u64>,
     /// Number of tokens in the response
-    pub eval_count: Option<u16>,
+    pub eval_count: Option<u64>,
     /// Time spent in nanoseconds generating the response
     pub eval_duration: Option<u64>,
 }
