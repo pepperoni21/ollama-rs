@@ -189,11 +189,11 @@ pub struct ChatMessageFinalResponseData {
     /// Time spent generating the response
     pub total_duration: u64,
     /// Number of tokens in the prompt
-    pub prompt_eval_count: u16,
+    pub prompt_eval_count: u64,
     /// Time spent in nanoseconds evaluating the prompt
     pub prompt_eval_duration: u64,
     /// Number of tokens the response
-    pub eval_count: u16,
+    pub eval_count: u64,
     /// Time in nanoseconds spent generating the response
     pub eval_duration: u64,
 }
