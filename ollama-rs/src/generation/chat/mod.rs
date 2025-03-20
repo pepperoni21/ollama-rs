@@ -11,6 +11,9 @@ use async_stream::stream;
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
 use std::sync::{Arc, Mutex};
+#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
+#[cfg(feature = "stream")]
+use tokio_stream::StreamExt;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
@@ -27,8 +30,6 @@ impl Ollama {
         &self,
         request: ChatMessageRequest,
     ) -> crate::error::Result<ChatMessageResponseStream> {
-        use tokio_stream::StreamExt;
-
         let mut request = request;
         request.stream = true;
 
@@ -49,24 +50,66 @@ impl Ollama {
             ));
         }
 
-        let stream = Box::new(res.bytes_stream().map(|res| match res {
-            Ok(bytes) => {
-                let res = serde_json::from_slice::<ChatMessageResponse>(&bytes);
-                match res {
-                    Ok(res) => Ok(res),
+        let s = stream! {
+            let mut buffer = String::new();
+
+            let mut stream = res.bytes_stream();
+            while let Some(chunk_result) = stream.next().await {
+                match chunk_result {
+                    Ok(chunk) => {
+                        // Convert bytes to string and append to buffer
+                        if let Ok(chunk_str) = String::from_utf8(chunk.to_vec()) {
+                            buffer.push_str(&chunk_str);
+
+                            // Process complete lines in the buffer
+                            let mut lines_to_process = Vec::new();
+                            let mut start_pos = 0;
+
+                            // Find all complete lines in the buffer and collect them
+                            while let Some(pos) = buffer[start_pos..].find('\n') {
+                                let actual_pos = start_pos + pos;
+                                let line = buffer[start_pos..actual_pos].trim().to_string();
+                                if !line.is_empty() {
+                                    lines_to_process.push(line);
+                                }
+                                start_pos = actual_pos + 1;
+                            }
+
+                            // If we processed any lines, truncate the buffer
+                            if start_pos > 0 {
+                                buffer = buffer[start_pos..].to_string();
+                            }
+
+                            // Process all collected lines
+                            for line in lines_to_process {
+                                // Parse the JSON line
+                                match serde_json::from_str::<ChatMessageResponse>(&line) {
+                                    Ok(response) => yield Ok(response),
+                                    Err(e) => {
+                                        eprintln!("Failed to deserialize response: {}", e);
+                                        // Continue processing other lines even if one fails
+                                    }
+                                }
+                            }
+                        }
+                    }
                     Err(e) => {
-                        eprintln!("Failed to deserialize response: {}", e);
-                        Err(())
+                        eprintln!("Failed to read response: {}", e);
+                        yield Err(());
+                        break;
                     }
                 }
             }
-            Err(e) => {
-                eprintln!("Failed to read response: {}", e);
-                Err(())
-            }
-        }));
 
-        Ok(std::pin::Pin::from(stream))
+            // Process any remaining data in the buffer
+            if !buffer.is_empty() {
+                if let Ok(response) = serde_json::from_str::<ChatMessageResponse>(&buffer) {
+                    yield Ok(response);
+                }
+            }
+        };
+
+        Ok(Box::pin(s))
     }
 
     /// Chat message generation.
@@ -132,7 +175,7 @@ impl Ollama {
                 let msg_part = item.clone().message.content;
 
                 if item.done {
-        history.lock().unwrap().push(ChatMessage::assistant(result.clone()));
+                    history.lock().unwrap().push(ChatMessage::assistant(result.clone()));
                 } else {
                     result.push_str(&msg_part);
                 }
