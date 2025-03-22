@@ -2,7 +2,7 @@ use serde::Serialize;
 
 use crate::{
     generation::{
-        parameters::FormatType,
+        parameters::{FormatType, KeepAlive},
         tools::{ToolGroup, ToolInfo},
     },
     models::ModelOptions,
@@ -24,6 +24,8 @@ pub struct ChatMessageRequest {
     pub template: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<FormatType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub keep_alive: Option<KeepAlive>,
     /// Must be false if tools are provided
     pub(crate) stream: bool,
 }
@@ -36,6 +38,7 @@ impl ChatMessageRequest {
             options: None,
             template: None,
             format: None,
+            keep_alive: None,
             // Stream value will be overwritten by Ollama::send_chat_messages_stream() and Ollama::send_chat_messages() methods
             stream: false,
             tools: vec![],
@@ -57,6 +60,12 @@ impl ChatMessageRequest {
     /// The format to return a response in.
     pub fn format(mut self, format: FormatType) -> Self {
         self.format = Some(format);
+        self
+    }
+
+    /// Used to control how long a model stays loaded in memory, by default models are unloaded after 5 minutes of inactivity
+    pub fn keep_alive(mut self, keep_alive: KeepAlive) -> Self {
+        self.keep_alive = Some(keep_alive);
         self
     }
 
