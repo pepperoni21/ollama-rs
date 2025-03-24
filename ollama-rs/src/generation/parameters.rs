@@ -85,7 +85,7 @@ impl TimeUnit {
         match self {
             TimeUnit::Seconds => "s",
             TimeUnit::Minutes => "m",
-            TimeUnit::Hours => "hr",
+            TimeUnit::Hours => "h",
         }
     }
 }
