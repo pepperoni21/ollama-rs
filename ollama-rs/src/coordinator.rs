@@ -1,8 +1,10 @@
+use std::collections::HashMap;
+
 use crate::{
     generation::{
         chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse, MessageRole},
         parameters::FormatType,
-        tools::ToolGroup,
+        tools::{Tool, ToolHolder, ToolInfo},
     },
     history::ChatHistory,
     models::ModelOptions,
@@ -14,17 +16,18 @@ use crate::{
 /// This struct is responsible for coordinating chat messages and tool
 /// interactions within the Ollama service. It maintains the state of the
 /// chat history, tools, and generation options.
-pub struct Coordinator<C: ChatHistory, T: ToolGroup> {
+pub struct Coordinator<C: ChatHistory> {
     model: String,
     ollama: Ollama,
     options: ModelOptions,
     history: C,
-    tools: T,
+    tool_infos: Vec<ToolInfo>,
+    tools: HashMap<&'static str, Box<dyn ToolHolder>>,
     debug: bool,
     format: Option<FormatType>,
 }
 
-impl<C: ChatHistory> Coordinator<C, ()> {
+impl<C: ChatHistory> Coordinator<C> {
     /// Creates a new `Coordinator` instance without tools.
     ///
     /// # Arguments
@@ -42,36 +45,17 @@ impl<C: ChatHistory> Coordinator<C, ()> {
             ollama,
             options: ModelOptions::default(),
             history,
-            tools: (),
+            tool_infos: Vec::default(),
+            tools: HashMap::default(),
             debug: false,
             format: None,
         }
     }
-}
 
-impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
-    /// Creates a new `Coordinator` instance with tools.
-    ///
-    /// # Arguments
-    ///
-    /// * `ollama` - The Ollama client instance.
-    /// * `model` - The model to be used for chat interactions.
-    /// * `history` - The chat history manager.
-    /// * `tools` - The tool group to be used.
-    ///
-    /// # Returns
-    ///
-    /// A new `Coordinator` instance with tools.
-    pub fn new_with_tools(ollama: Ollama, model: String, history: C, tools: T) -> Self {
-        Self {
-            model,
-            ollama,
-            options: ModelOptions::default(),
-            history,
-            tools,
-            debug: false,
-            format: None,
-        }
+    pub fn add_tool<T: Tool + 'static>(mut self, tool: T) -> Self {
+        self.tool_infos.push(ToolInfo::new::<_, T>());
+        self.tools.insert(T::name(), Box::new(tool));
+        self
     }
 
     pub fn format(mut self, format: FormatType) -> Self {
@@ -102,17 +86,14 @@ impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
 
         let mut request = ChatMessageRequest::new(self.model.clone(), messages)
             .options(self.options.clone())
-            .tools::<T>();
+            .tools(self.tool_infos.clone());
 
         if let Some(format) = &self.format {
-            let mut tools = vec![];
-            T::tool_info(&mut tools);
-
             // If no tools are specified, set the format on the request. Otherwise wait for the
             // recursive call by checking that the last message in the history has a Tool role,
             // before setting the format. Ollama otherwise won't call the tool if the format
             // is set on the first request.
-            if tools.is_empty() {
+            if self.tool_infos.is_empty() {
                 request = request.format(format.clone());
             } else if let Some(last_message) = self.history.messages().last() {
                 if last_message.role == MessageRole::Tool {
@@ -129,10 +110,17 @@ impl<C: ChatHistory, T: ToolGroup> Coordinator<C, T> {
         if !resp.message.tool_calls.is_empty() {
             for call in resp.message.tool_calls {
                 if self.debug {
-                    eprintln!("Tool call: {:?}", call.function);
+                    eprintln!("Tool call: {:?}", call.function); // TODO: Use log crate?
                 }
 
-                let resp = self.tools.call(&call.function).await?;
+                let Some(tool) = self.tools.get_mut(call.function.name.as_str()) else {
+                    return Err(crate::error::ToolCallError::UnknownToolName.into());
+                };
+
+                let resp = tool
+                    .call(call.function.arguments)
+                    .await
+                    .map_err(crate::error::ToolCallError::InternalToolError)?;
 
                 if self.debug {
                     eprintln!("Tool response: {}", &resp);

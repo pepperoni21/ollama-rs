@@ -22,12 +22,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let ollama = Ollama::default();
     let history = vec![];
-    let tools = (DDGSearcher::new(), (Scraper {}, Calculator {}));
 
-    let mut coordinator =
-        Coordinator::new_with_tools(ollama, "qwen2.5:32b".to_string(), history, tools)
-            .options(ModelOptions::default().num_ctx(16384))
-            .debug(debug);
+    let mut coordinator = Coordinator::new(ollama, "qwen2.5:32b".to_string(), history)
+        .options(ModelOptions::default().num_ctx(16384))
+        .add_tool(DDGSearcher::new())
+        .add_tool(Scraper {})
+        .add_tool(Calculator {})
+        .debug(debug);
 
     let stdin = stdin();
     let mut stdout = stdout();

@@ -3,7 +3,7 @@
 use url::Url;
 
 #[cfg(feature = "macros")]
-pub use ollama_rs_macros::{function, tool_group};
+pub use ollama_rs_macros::function;
 
 pub mod coordinator;
 pub mod error;
