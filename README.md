@@ -245,13 +245,14 @@ use ollama_rs::coordinator::Coordinator;
 use ollama_rs::generation::chat::{ChatMessage, ChatMessageRequest};
 use ollama_rs::generation::tools::implementations::{DDGSearcher, Scraper, Calculator};
 use ollama_rs::models::ModelOptions;
-use ollama_rs::tool_group;
 
-let tools = tool_group![DDGSearcher::new(), Scraper {}, Calculator {}];
 let mut history = vec![];
 
-let mut coordinator = Coordinator::new_with_tools(ollama, "qwen2.5:32b".to_string(), history, tools)
-    .options(ModelOptions::default().num_ctx(16384));
+let mut coordinator = Coordinator::new(ollama, "qwen2.5:32b".to_string(), history)
+    .options(ModelOptions::default().num_ctx(16384))
+    .add_tool(DDGSearcher::new())
+    .add_tool(Scraper {})
+    .add_tool(Calculator {});
 
 let resp = coordinator
     .chat(vec![ChatMessage::user("What is the current oil price?")])

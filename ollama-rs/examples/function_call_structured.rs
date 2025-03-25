@@ -29,14 +29,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let ollama = Ollama::default();
 
     let history = vec![];
-    let tools = ollama_rs::tool_group![get_weather];
 
     let format = FormatType::StructuredJson(JsonStructure::new::<Weather>());
 
-    let mut coordinator =
-        Coordinator::new_with_tools(ollama, "llama3.2".to_string(), history, tools)
-            .format(format)
-            .options(ModelOptions::default().temperature(0.0));
+    let mut coordinator = Coordinator::new(ollama, "llama3.2".to_string(), history)
+        .format(format)
+        .options(ModelOptions::default().temperature(0.0))
+        .add_tool(get_weather);
 
     let user_messages = vec!["What's the weather in Nanaimo?"];
 

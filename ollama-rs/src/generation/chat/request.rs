@@ -3,7 +3,7 @@ use serde::Serialize;
 use crate::{
     generation::{
         parameters::{FormatType, KeepAlive},
-        tools::{ToolGroup, ToolInfo},
+        tools::ToolInfo,
     },
     models::ModelOptions,
 };
@@ -70,10 +70,8 @@ impl ChatMessageRequest {
     }
 
     /// Tools that are available to the LLM.
-    pub fn tools<T: ToolGroup>(mut self) -> Self {
-        self.tools.clear();
-        T::tool_info(&mut self.tools);
-
+    pub fn tools(mut self, tools: Vec<ToolInfo>) -> Self {
+        self.tools = tools;
         self
     }
 }

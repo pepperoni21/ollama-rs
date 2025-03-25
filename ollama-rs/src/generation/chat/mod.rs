@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{error::OllamaError, history::ChatHistory, Ollama};
-pub mod request;
 use super::{images::Image, tools::ToolCall};
+use crate::{error::OllamaError, history::ChatHistory, Ollama};
 use request::ChatMessageRequest;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
@@ -14,6 +13,8 @@ use std::sync::{Arc, Mutex};
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
 use tokio_stream::StreamExt;
+
+pub mod request;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
