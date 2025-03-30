@@ -21,9 +21,9 @@ pub enum OllamaError {
     JsonError(#[from] serde_json::Error),
     #[error("Reqwest error")]
     ReqwestError(#[from] reqwest::Error),
-    #[error("Internal Ollama error")]
+    #[error("Internal Ollama error: {}", .0.message)]
     InternalError(InternalOllamaError),
-    #[error("Error in Ollama")]
+    #[error("{0}")]
     Other(String),
 }
 
