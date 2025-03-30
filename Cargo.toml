@@ -6,4 +6,4 @@ members = ["ollama-rs", "ollama-rs-macros"]
 ollama-rs-macros = { path = "ollama-rs-macros" }
 
 [workspace.package]
-version = "0.2.6"
+version = "0.3.0"
