@@ -1,25 +1,24 @@
 use std::borrow::Cow;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-use crate::{
-    generation::{
-        images::Image,
-        parameters::{FormatType, KeepAlive},
-    },
-    models::ModelOptions,
-};
+use crate::{generation::images::Image, models::ModelOptions};
 
 use super::GenerationContext;
 
+fn default_true() -> bool {
+    true
+}
+
 /// A generation request to Ollama.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenerationRequest<'a> {
     #[serde(rename = "model")]
     pub model_name: String,
     pub prompt: Cow<'a, str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub suffix: Option<Cow<'a, str>>,
+    #[serde(default)]
     pub images: Vec<Image>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub options: Option<ModelOptions>,
@@ -29,11 +28,14 @@ pub struct GenerationRequest<'a> {
     pub template: Option<Cow<'a, str>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub context: Option<GenerationContext>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub format: Option<FormatType>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub keep_alive: Option<KeepAlive>,
-    pub(crate) stream: bool,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub format: Option<FormatType>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub keep_alive: Option<KeepAlive>,
+    #[serde(default = "default_true")]
+    pub stream: bool,
+    #[serde(default)]
+    pub raw: bool,
 }
 
 impl<'a> GenerationRequest<'a> {
@@ -47,10 +49,11 @@ impl<'a> GenerationRequest<'a> {
             system: None,
             template: None,
             context: None,
-            format: None,
-            keep_alive: None,
+            // format: None,
+            // keep_alive: None,
             // Stream value will be overwritten by Ollama::generate_stream() and Ollama::generate() methods
-            stream: false,
+            stream: true,
+            raw: false,
         }
     }
 
@@ -102,15 +105,15 @@ impl<'a> GenerationRequest<'a> {
         self
     }
 
-    /// The format to return a response in.
-    pub fn format(mut self, format: FormatType) -> Self {
-        self.format = Some(format);
-        self
-    }
+    // /// The format to return a response in.
+    // pub fn format(mut self, format: FormatType) -> Self {
+    //     self.format = Some(format);
+    //     self
+    // }
 
-    /// Used to control how long a model stays loaded in memory, by default models are unloaded after 5 minutes of inactivity
-    pub fn keep_alive(mut self, keep_alive: KeepAlive) -> Self {
-        self.keep_alive = Some(keep_alive);
-        self
-    }
+    // /// Used to control how long a model stays loaded in memory, by default models are unloaded after 5 minutes of inactivity
+    // pub fn keep_alive(mut self, keep_alive: KeepAlive) -> Self {
+    //     self.keep_alive = Some(keep_alive);
+    //     self
+    // }
 }

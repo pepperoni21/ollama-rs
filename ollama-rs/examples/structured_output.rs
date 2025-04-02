@@ -34,7 +34,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let res = ollama
         .generate(
             GenerationRequest::new(model, prompt)
-                .format(format)
+                // .format(format)
                 .options(ModelOptions::default().temperature(0.0)),
         )
         .await?;
