@@ -1,12 +1,11 @@
 use ollama_rs::{
     generation::{
         completion::request::GenerationRequest,
-        parameters::{FormatType, JsonSchema, JsonStructure},
+        parameters::{FormatType, JsonStructure},
     },
     models::ModelOptions,
     Ollama,
 };
-use serde::Deserialize;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
