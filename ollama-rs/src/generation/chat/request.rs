@@ -1,33 +1,30 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-use crate::{
-    generation::{
-        parameters::{FormatType, KeepAlive},
-        tools::ToolInfo,
-    },
-    models::ModelOptions,
-};
+use crate::models::ModelOptions;
 
 use super::ChatMessage;
 
+fn default_true() -> bool {
+    true
+}
+
 /// A chat message request to Ollama.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatMessageRequest {
     #[serde(rename = "model")]
     pub model_name: String,
     pub messages: Vec<ChatMessage>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub tools: Vec<ToolInfo>,
+    // #[serde(skip_serializing_if = "Vec::is_empty")]
+    // pub tools: Vec<ToolInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub options: Option<ModelOptions>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub template: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub format: Option<FormatType>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub keep_alive: Option<KeepAlive>,
-    /// Must be false if tools are provided
-    pub(crate) stream: bool,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub format: Option<FormatType>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default = "default_true")]
+    pub stream: bool,
 }
 
 impl ChatMessageRequest {
@@ -37,11 +34,11 @@ impl ChatMessageRequest {
             messages,
             options: None,
             template: None,
-            format: None,
-            keep_alive: None,
+            // format: None,
+            // keep_alive: None,
             // Stream value will be overwritten by Ollama::send_chat_messages_stream() and Ollama::send_chat_messages() methods
             stream: false,
-            tools: vec![],
+            // tools: vec![],
         }
     }
 
@@ -57,21 +54,21 @@ impl ChatMessageRequest {
         self
     }
 
-    /// The format to return a response in.
-    pub fn format(mut self, format: FormatType) -> Self {
-        self.format = Some(format);
-        self
-    }
+    // /// The format to return a response in.
+    // pub fn format(mut self, format: FormatType) -> Self {
+    //     self.format = Some(format);
+    //     self
+    // }
 
-    /// Used to control how long a model stays loaded in memory, by default models are unloaded after 5 minutes of inactivity
-    pub fn keep_alive(mut self, keep_alive: KeepAlive) -> Self {
-        self.keep_alive = Some(keep_alive);
-        self
-    }
+    // /// Used to control how long a model stays loaded in memory, by default models are unloaded after 5 minutes of inactivity
+    // pub fn keep_alive(mut self, keep_alive: KeepAlive) -> Self {
+    //     self.keep_alive = Some(keep_alive);
+    //     self
+    // }
 
-    /// Tools that are available to the LLM.
-    pub fn tools(mut self, tools: Vec<ToolInfo>) -> Self {
-        self.tools = tools;
-        self
-    }
+    // /// Tools that are available to the LLM.
+    // pub fn tools(mut self, tools: Vec<ToolInfo>) -> Self {
+    //     self.tools = tools;
+    //     self
+    // }
 }
