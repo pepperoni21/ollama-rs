@@ -45,6 +45,10 @@ impl JsonStructure {
 
         Self { schema }
     }
+
+    pub fn new_for_schema(schema: RootSchema) -> Self {
+        Self { schema }
+    }
 }
 
 /// Used to control how long a model stays loaded in memory, by default models are unloaded after 5 minutes of inactivity
