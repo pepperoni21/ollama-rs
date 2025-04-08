@@ -31,13 +31,12 @@ impl Ollama {
         };
 
         let url = format!("{}api/push", self.url_str());
-        let serialized = serde_json::to_string(&request)?;
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder.body(serialized).send().await?;
+        let res = builder.json(&request).send().await?;
 
         if !res.status().is_success() {
             return Err(OllamaError::Other(res.text().await?));
@@ -83,13 +82,12 @@ impl Ollama {
         };
 
         let url = format!("{}api/push", self.url_str());
-        let serialized = serde_json::to_string(&request)?;
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder.body(serialized).send().await?;
+        let res = builder.json(&request).send().await?;
 
         if !res.status().is_success() {
             return Err(OllamaError::Other(res.text().await?));

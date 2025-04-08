@@ -8,13 +8,12 @@ impl Ollama {
         let request = DeleteModelRequest { model_name };
 
         let url = format!("{}api/delete", self.url_str());
-        let serialized = serde_json::to_string(&request)?;
         let builder = self.reqwest_client.delete(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder.body(serialized).send().await?;
+        let res = builder.json(&request).send().await?;
 
         if res.status().is_success() {
             Ok(())
