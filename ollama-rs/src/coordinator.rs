@@ -22,7 +22,7 @@ pub struct Coordinator<C: ChatHistory> {
     options: ModelOptions,
     history: C,
     tool_infos: Vec<ToolInfo>,
-    tools: HashMap<&'static str, Box<dyn ToolHolder>>,
+    tools: HashMap<String, Box<dyn ToolHolder>>,
     debug: bool,
     format: Option<FormatType>,
 }
@@ -54,7 +54,7 @@ impl<C: ChatHistory> Coordinator<C> {
 
     pub fn add_tool<T: Tool + 'static>(mut self, tool: T) -> Self {
         self.tool_infos.push(ToolInfo::new::<_, T>());
-        self.tools.insert(T::name(), Box::new(tool));
+        self.tools.insert(T::name().to_string(), Box::new(tool));
         self
     }
 
