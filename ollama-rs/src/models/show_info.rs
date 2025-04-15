@@ -8,13 +8,15 @@ impl Ollama {
     /// Show details about a model including modelfile, template, parameters, license, and system prompt.
     pub async fn show_model_info(&self, model_name: String) -> crate::error::Result<ModelInfo> {
         let url = format!("{}api/show", self.url_str());
-        let serialized = serde_json::to_string(&ModelInfoRequest { model_name })?;
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder.body(serialized).send().await?;
+        let res = builder
+            .json(&ModelInfoRequest { model_name })
+            .send()
+            .await?;
 
         if !res.status().is_success() {
             return Err(OllamaError::Other(res.text().await?));
