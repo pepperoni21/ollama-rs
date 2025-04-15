@@ -232,6 +232,8 @@ pub struct ChatMessageResponse {
 pub struct ChatMessageFinalResponseData {
     /// Time spent generating the response
     pub total_duration: u64,
+    /// Time spent in nanoseconds loading the model
+    pub load_duration: u64,
     /// Number of tokens in the prompt
     pub prompt_eval_count: u64,
     /// Time spent in nanoseconds evaluating the prompt
