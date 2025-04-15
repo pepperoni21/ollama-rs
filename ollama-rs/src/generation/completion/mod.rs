@@ -111,6 +111,8 @@ pub struct GenerationResponse {
     pub context: Option<GenerationContext>,
     /// Time spent generating the response
     pub total_duration: Option<u64>,
+    /// Time spent in nanoseconds loading the model
+    pub load_duration: Option<u64>,
     /// Number of tokens in the prompt
     pub prompt_eval_count: Option<u64>,
     /// Time spent in nanoseconds evaluating the prompt
