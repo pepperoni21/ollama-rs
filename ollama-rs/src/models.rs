@@ -54,6 +54,8 @@ pub struct ModelInfo {
     pub template: String,
     #[serde(default = "serde_json::Map::new")]
     pub model_info: serde_json::Map<String, serde_json::Value>,
+    #[serde(default = "Vec::new")]
+    pub capabilities: Vec<String>,
 }
 
 // Options for generation requests to Ollama.
