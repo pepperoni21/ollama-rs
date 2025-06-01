@@ -121,4 +121,6 @@ pub struct GenerationResponse {
     pub eval_count: Option<u64>,
     /// Time spent in nanoseconds generating the response
     pub eval_duration: Option<u64>,
+    /// Contains the text that was inside thinking tags in the original model output when ChatMessageRequest.Think is enabled.
+    pub thinking: Option<String>,
 }

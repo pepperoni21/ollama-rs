@@ -248,6 +248,7 @@ pub struct ChatMessage {
     pub tool_calls: Vec<ToolCall>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub images: Option<Vec<Image>>,
+    pub thinking: Option<String>,
 }
 
 impl ChatMessage {
@@ -257,6 +258,7 @@ impl ChatMessage {
             content,
             tool_calls: vec![],
             images: None,
+            thinking: None,
         }
     }
 

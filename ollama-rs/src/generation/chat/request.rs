@@ -28,6 +28,7 @@ pub struct ChatMessageRequest {
     pub keep_alive: Option<KeepAlive>,
     /// Must be false if tools are provided
     pub(crate) stream: bool,
+    pub think: Option<bool>,
 }
 
 impl ChatMessageRequest {
@@ -42,6 +43,7 @@ impl ChatMessageRequest {
             // Stream value will be overwritten by Ollama::send_chat_messages_stream() and Ollama::send_chat_messages() methods
             stream: false,
             tools: vec![],
+            think: None,
         }
     }
 
@@ -72,6 +74,12 @@ impl ChatMessageRequest {
     /// Tools that are available to the LLM.
     pub fn tools(mut self, tools: Vec<ToolInfo>) -> Self {
         self.tools = tools;
+        self
+    }
+
+    /// Used to control whether thinking/reasoning models will think before responding
+    pub fn think(mut self, think: bool) -> Self {
+        self.think = Some(think);
         self
     }
 }
