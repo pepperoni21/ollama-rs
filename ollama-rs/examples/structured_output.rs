@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let model = "llama3.2:latest".to_string();
     let prompt = "Tell me about the country north of the USA".to_string();
 
-    let format = FormatType::StructuredJson(JsonStructure::new::<Output>());
+    let format = FormatType::StructuredJson(Box::new(JsonStructure::new::<Output>()));
     dbg!(&format);
     let res = ollama
         .generate(

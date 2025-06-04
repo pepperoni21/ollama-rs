@@ -8,7 +8,7 @@ pub enum FormatType {
     Json,
 
     /// Requires Ollama 0.5.0 or greater.
-    StructuredJson(JsonStructure),
+    StructuredJson(Box<JsonStructure>),
 }
 
 impl Serialize for FormatType {
