@@ -23,6 +23,7 @@ This library was created following the [Ollama API](https://github.com/jmorganca
   - [Generate Embeddings (Batch)](#generate-embeddings-batch)
   - [Make a Function Call](#make-a-function-call)
   - [Create a custom tool](#create-a-custom-tool)
+  - [Completion Generation (With Thinking)](#completion-generation-with-thinking)
 
 ## Installation
 
@@ -284,3 +285,16 @@ To create a custom tool, define a function that returns a `Result<String, Box<dy
 Ensure that the doc comment above the function clearly describes the tool's purpose and its parameters. This information will be provided to the LLM to help it understand how to use the tool.
 
 For a more detailed example, see the [function call example](https://github.com/pepperoni21/ollama-rs/blob/0.3.1/ollama-rs/examples/function_call.rs).
+
+### Completion Generation (With Thinking)
+
+```rust
+let model = "qwen3:latest".to_string();
+let prompt = "Why is the sky blue?".to_string();
+
+let res = ollama.generate(GenerationRequest::new(model, prompt).think(true)).await;
+
+if let Ok(res) = res {
+    println!("{}", res.response);
+}
+```

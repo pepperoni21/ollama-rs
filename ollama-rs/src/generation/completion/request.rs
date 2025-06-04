@@ -36,6 +36,7 @@ pub struct GenerationRequest<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_alive: Option<KeepAlive>,
     pub(crate) stream: bool,
+    pub think: Option<bool>,
 }
 
 impl<'a> GenerationRequest<'a> {
@@ -54,6 +55,7 @@ impl<'a> GenerationRequest<'a> {
             keep_alive: None,
             // Stream value will be overwritten by Ollama::generate_stream() and Ollama::generate() methods
             stream: false,
+            think: None,
         }
     }
 
@@ -120,6 +122,12 @@ impl<'a> GenerationRequest<'a> {
     /// Used to control how long a model stays loaded in memory, by default models are unloaded after 5 minutes of inactivity
     pub fn keep_alive(mut self, keep_alive: KeepAlive) -> Self {
         self.keep_alive = Some(keep_alive);
+        self
+    }
+
+    /// Used to control whether thinking/reasoning models will think before responding
+    pub fn think(mut self, think: bool) -> Self {
+        self.think = Some(think);
         self
     }
 }
