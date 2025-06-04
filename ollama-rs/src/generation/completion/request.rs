@@ -28,6 +28,8 @@ pub struct GenerationRequest<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub template: Option<Cow<'a, str>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub raw: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub context: Option<GenerationContext>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<FormatType>,
@@ -46,6 +48,7 @@ impl<'a> GenerationRequest<'a> {
             options: None,
             system: None,
             template: None,
+            raw: None,
             context: None,
             format: None,
             keep_alive: None,
@@ -93,6 +96,12 @@ impl<'a> GenerationRequest<'a> {
     /// The full prompt or prompt template (overrides what is defined in the Modelfile)
     pub fn template(mut self, template: impl Into<Cow<'a, str>>) -> Self {
         self.template = Some(template.into());
+        self
+    }
+
+    /// If `true` no formatting will be applied to the prompt. You may choose to use the `raw` parameter if you are specifying a full templated prompt in your request to the API
+    pub fn raw(mut self, raw: bool) -> Self {
+        self.raw = Some(raw);
         self
     }
 
