@@ -31,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     "#;
     let schema = serde_json::from_str(structure)?;
 
-    let format = FormatType::StructuredJson(JsonStructure::new_for_schema(schema));
+    let format = FormatType::StructuredJson(Box::new(JsonStructure::new_for_schema(schema)));
     dbg!(&format);
     let res = ollama
         .generate(

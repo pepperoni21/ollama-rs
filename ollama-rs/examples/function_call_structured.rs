@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
 
     let history = vec![];
 
-    let format = FormatType::StructuredJson(JsonStructure::new::<Weather>());
+    let format = FormatType::StructuredJson(Box::new(JsonStructure::new::<Weather>()));
 
     let mut coordinator = Coordinator::new(ollama, "llama3.2".to_string(), history)
         .format(format)
