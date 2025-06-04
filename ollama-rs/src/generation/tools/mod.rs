@@ -4,7 +4,7 @@ pub mod implementations;
 
 use std::{future::Future, pin::Pin};
 
-use schemars::{r#gen::SchemaSettings, schema::RootSchema, JsonSchema};
+use schemars::{generate::SchemaSettings, JsonSchema, Schema};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 
@@ -87,7 +87,7 @@ pub enum ToolType {
 pub struct ToolFunctionInfo {
     pub name: String,
     pub description: String,
-    pub parameters: RootSchema,
+    pub parameters: Schema,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

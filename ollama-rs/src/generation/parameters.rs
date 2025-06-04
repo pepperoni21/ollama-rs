@@ -1,4 +1,4 @@
-use schemars::{gen::SchemaSettings, schema::RootSchema};
+use schemars::{generate::SchemaSettings, Schema};
 pub use schemars::{schema_for, JsonSchema};
 use serde::{Serialize, Serializer};
 
@@ -31,7 +31,7 @@ impl Serialize for FormatType {
 /// ```
 #[derive(Debug, Clone)]
 pub struct JsonStructure {
-    schema: RootSchema,
+    schema: Schema,
 }
 
 impl JsonStructure {
@@ -46,7 +46,7 @@ impl JsonStructure {
         Self { schema }
     }
 
-    pub fn new_for_schema(schema: RootSchema) -> Self {
+    pub fn new_for_schema(schema: Schema) -> Self {
         Self { schema }
     }
 }
