@@ -45,8 +45,6 @@ impl<T: Tool> ToolHolder for T {
         parameters: Value,
     ) -> Pin<Box<dyn Future<Output = Result<String>> + '_ + Send + Sync>> {
         Box::pin(async move {
-            println!("{}", parameters);
-
             // Json returned from the model can sometimes be in different formats, see https://github.com/pepperoni21/ollama-rs/issues/210
             // This is a work-around for this issue.
             let param_value = match serde_json::from_value(parameters.clone()) {
