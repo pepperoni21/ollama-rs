@@ -49,14 +49,12 @@ impl<T: Tool> ToolHolder for T {
             // This is a work-around for this issue.
             let param_value = match serde_json::from_value(parameters.clone()) {
                 // We first try with the ToolCallFunction format
-                Ok(ToolCallFunction { name: _, arguments}) => {
-                    arguments
-                },
+                Ok(ToolCallFunction { name: _, arguments }) => arguments,
                 Err(_err) => {
                     // If that fails we then try the ToolInfo format
                     let ti: ToolInfo = serde_json::from_value(parameters)?;
                     ti.function.parameters.to_value()
-                },
+                }
             };
 
             let param = serde_json::from_value(param_value)?;
@@ -119,4 +117,3 @@ pub struct ToolCallFunction {
     #[serde(alias = "parameters")]
     pub arguments: Value,
 }
-
