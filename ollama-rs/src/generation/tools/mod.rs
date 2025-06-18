@@ -45,8 +45,25 @@ impl<T: Tool> ToolHolder for T {
         parameters: Value,
     ) -> Pin<Box<dyn Future<Output = Result<String>> + '_ + Send + Sync>> {
         Box::pin(async move {
-            let parameters = serde_json::from_value(parameters)?;
-            T::call(self, parameters).await
+            println!("{}", parameters);
+
+            // Json returned from the model can sometimes be in different formats, see https://github.com/pepperoni21/ollama-rs/issues/210
+            // This is a work-around for this issue.
+            let param_value = match serde_json::from_value(parameters.clone()) {
+                // We first try with the ToolCallFunction format
+                Ok(ToolCallFunction { name: _, arguments}) => {
+                    arguments
+                },
+                Err(_err) => {
+                    // If that fails we then try the ToolInfo format
+                    let ti: ToolInfo = serde_json::from_value(parameters)?;
+                    ti.function.parameters.to_value()
+                },
+            };
+
+            let param = serde_json::from_value(param_value)?;
+
+            T::call(self, param).await
         })
     }
 }
@@ -100,5 +117,8 @@ pub struct ToolCallFunction {
     pub name: String,
     // I don't love this (the Value)
     // But fixing it would be a big effort
+    // FIXME
+    #[serde(alias = "parameters")]
     pub arguments: Value,
 }
+
