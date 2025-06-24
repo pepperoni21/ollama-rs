@@ -1625,7 +1625,7 @@ dependencies = [
  "log",
  "modelfile",
  "ollama-rs",
- "ollama-rs-macros",
+ "ollama-rs-macros 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex",
  "reqwest",
  "schemars 1.0.0",
@@ -1646,6 +1646,17 @@ name = "ollama-rs-macros"
 version = "0.3.2"
 dependencies = [
  "macrotest",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
+]
+
+[[package]]
+name = "ollama-rs-macros"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "783def4791b92996d06f54f3753580b1cfe580aca893f70e3d789b8cafecc9d6"
+dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.104",
