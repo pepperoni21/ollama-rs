@@ -33,7 +33,7 @@ impl Tool for Browserless {
         let website = params.website;
         let browserless_token =
             env::var("BROWSERLESS_TOKEN").expect("BROWSERLESS_TOKEN must be set");
-        let url = format!("http://0.0.0.0:3000/content?token={}", browserless_token);
+        let url = format!("http://0.0.0.0:3000/content?token={browserless_token}");
         let payload = json!({
             "url": website
         });

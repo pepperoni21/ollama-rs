@@ -52,10 +52,7 @@ impl Ollama {
                     }
                 }
             }
-            Err(e) => Err(OllamaError::Other(format!(
-                "Failed to read response: {}",
-                e
-            ))),
+            Err(e) => Err(OllamaError::Other(format!("Failed to read response: {e}"))),
         }));
 
         Ok(std::pin::Pin::from(stream))
