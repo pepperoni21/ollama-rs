@@ -19,7 +19,7 @@ fn main() {
         let bytes = match download_image(IMAGE_URL).await {
             Ok(b) => b,
             Err(e) => {
-                eprintln!("Failed to download image: {}", e);
+                eprintln!("Failed to download image: {e}");
                 return;
             }
         };
@@ -36,7 +36,7 @@ fn main() {
         let response = match send_request(request).await {
             Ok(r) => r,
             Err(e) => {
-                eprintln!("Failed to get response: {}", e);
+                eprintln!("Failed to get response: {e}");
                 return;
             }
         };

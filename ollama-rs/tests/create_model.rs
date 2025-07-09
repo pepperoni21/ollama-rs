@@ -23,7 +23,7 @@ async fn test_create_model_stream() {
                     done = true;
                 }
             }
-            Err(e) => panic!("{:?}", e),
+            Err(e) => panic!("{e:?}"),
         }
     }
 
