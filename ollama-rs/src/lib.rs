@@ -5,6 +5,12 @@ use url::Url;
 #[cfg(feature = "macros")]
 pub use ollama_rs_macros::function;
 
+#[cfg(feature = "macros")]
+pub mod re_exports {
+    pub use schemars;
+    pub use serde;
+}
+
 pub mod coordinator;
 pub mod error;
 pub mod generation;

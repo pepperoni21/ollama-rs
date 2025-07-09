@@ -59,6 +59,9 @@ pub fn function_impl(_attr: TokenStream, value: TokenStream) -> TokenStream {
             #[allow(unused_imports)]
             use super::*;
 
+            use ollama_rs::re_exports::schemars;
+            use ollama_rs::re_exports::serde;
+
             #function_params_struct_definition
         }
 
@@ -118,7 +121,8 @@ fn build_params_struct(input: &ItemFn, docs: &FunctionDocs) -> syn::Result<Param
     let tokens = quote_spanned!(span =>
         #[doc(hidden)]
         #[allow(non_camel_case_types, missing_docs)]
-        #[derive(::serde::Deserialize, ::schemars::JsonSchema)]
+        #[derive(serde::Deserialize, schemars::JsonSchema)]
+        #[serde(crate="ollama_rs::re_exports::serde")]
         pub struct #name {
             #(#fields)*
         }
