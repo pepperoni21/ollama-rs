@@ -12,8 +12,8 @@ async fn test_pull_model() {
 
     while let Some(res) = res.next().await {
         match res {
-            Ok(res) => println!("{:?}", res),
-            Err(e) => panic!("{:?}", e),
+            Ok(res) => println!("{res:?}"),
+            Err(e) => panic!("{e:?}"),
         }
     }
 }

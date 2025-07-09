@@ -84,7 +84,7 @@ impl Ollama {
                                 match serde_json::from_str::<ChatMessageResponse>(&line) {
                                     Ok(response) => yield Ok(response),
                                     Err(e) => {
-                                        eprintln!("Failed to deserialize response: {}", e);
+                                        eprintln!("Failed to deserialize response: {e}");
                                         // Continue processing other lines even if one fails
                                     }
                                 }
@@ -92,7 +92,7 @@ impl Ollama {
                         }
                     }
                     Err(e) => {
-                        eprintln!("Failed to read response: {}", e);
+                        eprintln!("Failed to read response: {e}");
                         yield Err(());
                         break;
                     }

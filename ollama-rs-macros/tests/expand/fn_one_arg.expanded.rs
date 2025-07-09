@@ -33,8 +33,7 @@ impl ::ollama_rs::generation::tools::Tool for hello_world {
         {
             Ok(
                 ::alloc::__export::must_use({
-                    let res = ::alloc::fmt::format(format_args!("Hello {0}", name));
-                    res
+                    ::alloc::fmt::format(format_args!("Hello {0}", name))
                 }),
             )
         }
