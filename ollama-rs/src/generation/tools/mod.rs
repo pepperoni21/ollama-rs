@@ -50,11 +50,10 @@ impl<T: Tool> ToolHolder for T {
             let param_value = match serde_json::from_value(parameters.clone()) {
                 // We first try with the ToolCallFunction format
                 Ok(ToolCallFunction { name: _, arguments }) => arguments,
-                Err(_err) => {
-                    // If that fails we then try the ToolInfo format
-                    let ti: ToolInfo = serde_json::from_value(parameters)?;
-                    ti.function.parameters.to_value()
-                }
+                Err(_err) => match serde_json::from_value::<ToolInfo>(parameters.clone()) {
+                    Ok(ti) => ti.function.parameters.to_value(),
+                    Err(_err) => parameters,
+                },
             };
 
             let param = serde_json::from_value(param_value)?;
