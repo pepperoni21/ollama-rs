@@ -1519,9 +1519,9 @@ dependencies = [
 
 [[package]]
 name = "modelfile"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8c4b3579855d18cfa81f2014fa9bb000c8ae81aeec5eab710fbb518b8ece0c2"
+checksum = "59884eb0b4ceeac86ceaf3609a63b420e5beae055d451f51a1f94fb27c10bf5b"
 dependencies = [
  "derive_more 1.0.0",
  "nom",
