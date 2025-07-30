@@ -26,6 +26,7 @@ pub struct Coordinator<C: ChatHistory> {
     debug: bool,
     format: Option<FormatType>,
     keep_alive: Option<KeepAlive>,
+    think: Option<bool>,
 }
 
 impl<C: ChatHistory> Coordinator<C> {
@@ -51,6 +52,7 @@ impl<C: ChatHistory> Coordinator<C> {
             debug: false,
             format: None,
             keep_alive: None,
+            think: None,
         }
     }
 
@@ -80,6 +82,11 @@ impl<C: ChatHistory> Coordinator<C> {
         self
     }
 
+    pub fn think(mut self, think: bool) -> Self {
+        self.think = Some(think);
+        self
+    }
+
     pub async fn chat(
         &mut self,
         messages: Vec<ChatMessage>,
@@ -97,6 +104,10 @@ impl<C: ChatHistory> Coordinator<C> {
 
         if let Some(keep_alive) = &self.keep_alive {
             request = request.keep_alive(keep_alive.clone());
+        }
+
+        if let Some(think) = &self.think {
+            request = request.think(*think);
         }
 
         if let Some(format) = &self.format {
