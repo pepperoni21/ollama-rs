@@ -187,7 +187,7 @@ impl Ollama {
     /// Chat message generation
     /// Returns a `ChatMessageResponse` object
     pub async fn send_chat_messages_with_history<C: ChatHistory>(
-        &mut self,
+        &self,
         history: &mut C,
         mut request: ChatMessageRequest,
     ) -> crate::error::Result<ChatMessageResponse> {
