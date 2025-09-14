@@ -15,6 +15,7 @@ const PROMPT: &str = "Describe this image";
 const MODEL: &str = "llava:latest";
 
 /// Usage:
+/// cargo run --example images_to_ollama
 /// cargo run --example images_to_ollama -- https://assets.canarymedia.com/content/uploads/Alex-honnold-lead-resized.jpg
 /// cargo run --example images_to_ollama -- https://assets.canarymedia.com/content/uploads/Alex-honnold-lead-resized.jpg "What color is the shirt?"
 /// cargo run --example images_to_ollama -- https://assets.canarymedia.com/content/uploads/Alex-honnold-lead-resized.jpg "Is this person climbing free solo based on his gear?" llava:34b
