@@ -39,7 +39,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?;
 
         let mut response = String::new();
-        while let Some(Ok(res)) = stream.next().await {
+        while let Some(res) = stream.next().await {
+            let res = res.map_err(|_| "Streaming error")?;
             stdout.write_all(res.message.content.as_bytes()).await?;
             stdout.flush().await?;
             response += res.message.content.as_str();

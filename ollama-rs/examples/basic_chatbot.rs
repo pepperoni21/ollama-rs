@@ -35,13 +35,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             None => break,
         };
 
-        let mut request = GenerationRequest::new(model.clone(), input);
-        if let Some(context) = context.clone() {
-            request = request.context(context);
-        }
+        let request = {
+            let mut r = GenerationRequest::new(model.clone(), input);
+            r.context = context.clone();
+            r
+        };
         let mut stream: GenerationResponseStream = ollama.generate_stream(request).await?;
 
-        while let Some(Ok(res)) = stream.next().await {
+        while let Some(res) = stream.next().await {
+            let res = res?;
             for ele in res {
                 stdout.write_all(ele.response.as_bytes()).await?;
                 stdout.flush().await?;
