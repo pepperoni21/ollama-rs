@@ -57,7 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let resp = coordinator.chat(vec![ChatMessage::user(input)]).await?;
 
-        println!("{}", resp.message.content);
+        stdout.write_all(resp.message.content.as_bytes()).await?;
     }
 
     Ok(())
