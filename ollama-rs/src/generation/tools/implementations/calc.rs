@@ -17,6 +17,12 @@ pub struct Params {
 
 pub struct Calculator {}
 
+impl Default for Calculator {
+    fn default() -> Self {
+        Calculator {}
+    }
+}
+
 impl Tool for Calculator {
     type Params = Params;
 

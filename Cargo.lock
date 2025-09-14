@@ -1636,6 +1636,7 @@ dependencies = [
  "base64",
  "calc",
  "fs2",
+ "futures-util",
  "html2md",
  "http",
  "log",

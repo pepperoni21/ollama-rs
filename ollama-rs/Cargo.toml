@@ -51,6 +51,8 @@ modelfile = ["dep:modelfile", "dep:serde_with"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
+tokio-stream = { version = "0.1.17", features = ["io-util"] }
+futures-util = "0.3"
 ollama-rs = { path = ".", features = [
     "stream",
     "headers",
