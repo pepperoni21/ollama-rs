@@ -35,7 +35,6 @@ pub struct GenerationRequest<'a> {
     pub format: Option<FormatType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_alive: Option<KeepAlive>,
-    pub(crate) stream: bool,
     pub think: Option<bool>,
 }
 
@@ -53,8 +52,6 @@ impl<'a> GenerationRequest<'a> {
             context: None,
             format: None,
             keep_alive: None,
-            // Stream value will be overwritten by Ollama::generate_stream() and Ollama::generate() methods
-            stream: false,
             think: None,
         }
     }
