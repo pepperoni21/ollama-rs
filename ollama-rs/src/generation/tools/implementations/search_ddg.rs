@@ -56,8 +56,7 @@ impl DDGSearcher {
         self.parse(&body)
     }
     fn parse(&self, html: &str) -> Result<Vec<SearchResult>, Box<dyn Error + Send + Sync>> {
-        let document = Html::parse_document(html);
-        document
+        Html::parse_document(html)
             .select(&self.result_selector)
             .map(|result| {
                 let [title, link, snippet] = std::array::from_fn(|i| {
