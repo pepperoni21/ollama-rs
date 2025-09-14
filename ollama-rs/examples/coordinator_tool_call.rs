@@ -39,11 +39,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_tool(Calculator::default())
         .debug(debug);
 
-    let stdin_reader = tokio::io::BufReader::new(tokio::io::stdin());
-    let line_stream = tokio_stream::wrappers::LinesStream::new(stdin_reader.lines());
-    let mut commands = std::pin::pin!(
+    let mut commands = std::pin::pin!({
+        let stdin_reader = tokio::io::BufReader::new(tokio::io::stdin());
+        let line_stream = tokio_stream::wrappers::LinesStream::new(stdin_reader.lines());
         line_stream.try_take_while(|x| std::future::ready(Ok(!x.eq_ignore_ascii_case("exit"))))
-    );
+    });
     let mut stdout = tokio::io::stdout();
 
     loop {
