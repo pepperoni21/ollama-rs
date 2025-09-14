@@ -12,15 +12,21 @@ use reqwest::get;
 
 const IMAGE_URL: &str = "https://images.pexels.com/photos/1054655/pexels-photo-1054655.jpeg";
 const PROMPT: &str = "Describe this image";
+const MODEL: &str = "llava:latest";
 
-/// Usage: cargo run --example images_to_ollama -- https://assets.canarymedia.com/content/uploads/Alex-honnold-lead-resized.jpg
+/// Usage:
+/// cargo run --example images_to_ollama -- https://assets.canarymedia.com/content/uploads/Alex-honnold-lead-resized.jpg
+/// cargo run --example images_to_ollama -- https://assets.canarymedia.com/content/uploads/Alex-honnold-lead-resized.jpg "What color is the shirt?"
+/// cargo run --example images_to_ollama -- https://assets.canarymedia.com/content/uploads/Alex-honnold-lead-resized.jpg "Is Alex climbing free solo?" llava:34b
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let mut args = std::env::args().skip(1).fuse();
     let image_url = args.next().unwrap_or_else(|| IMAGE_URL.into());
-    let model = args.next().unwrap_or_else(|| "llava:latest".to_string());
+    let prompt = args.next().unwrap_or_else(|| PROMPT.into());
+    let model = args.next().unwrap_or_else(|| MODEL.into());
+
     let image = download_image(&image_url).await?;
-    let request = GenerationRequest::new(model, PROMPT).add_image(image);
+    let request = GenerationRequest::new(model, prompt).add_image(image);
     let response = send_request(request).await?;
 
     println!("{}", response.response);
