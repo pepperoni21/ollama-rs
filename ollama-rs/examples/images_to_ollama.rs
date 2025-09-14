@@ -17,7 +17,7 @@ const MODEL: &str = "llava:latest";
 /// Usage:
 /// cargo run --example images_to_ollama -- https://assets.canarymedia.com/content/uploads/Alex-honnold-lead-resized.jpg
 /// cargo run --example images_to_ollama -- https://assets.canarymedia.com/content/uploads/Alex-honnold-lead-resized.jpg "What color is the shirt?"
-/// cargo run --example images_to_ollama -- https://assets.canarymedia.com/content/uploads/Alex-honnold-lead-resized.jpg "Is Alex climbing free solo?" llava:34b
+/// cargo run --example images_to_ollama -- https://assets.canarymedia.com/content/uploads/Alex-honnold-lead-resized.jpg "Is this person climbing free solo based on his gear?" llava:34b
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let mut args = std::env::args().skip(1).fuse();
