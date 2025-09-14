@@ -15,13 +15,8 @@ pub struct Params {
     expression: String,
 }
 
+#[derive(Default)]
 pub struct Calculator {}
-
-impl Default for Calculator {
-    fn default() -> Self {
-        Calculator {}
-    }
-}
 
 impl Tool for Calculator {
     type Params = Params;
