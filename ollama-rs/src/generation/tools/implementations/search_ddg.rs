@@ -56,7 +56,7 @@ impl DDGSearcher {
         self.parse(&body)
     }
     fn parse(&self, html: &str) -> Result<Vec<SearchResult>, Box<dyn Error + Send + Sync>> {
-        let document = Html::parse_document(&html);
+        let document = Html::parse_document(html);
         document
             .select(&self.result_selector)
             .map(|result| {
@@ -64,7 +64,7 @@ impl DDGSearcher {
                     let selector = &self.text_selectors[i];
                     let text_selector = &TEXT_SELECTORS[i];
                     result
-                        .select(&selector)
+                        .select(selector)
                         .next()
                         .ok_or_else(|| {
                             format!(
