@@ -5,7 +5,7 @@ use ollama_rs::{
 
 #[tokio::test]
 async fn test_chat_history_accumulated() {
-    let mut ollama = Ollama::default();
+    let ollama = Ollama::default();
 
     let mut history = vec![];
 

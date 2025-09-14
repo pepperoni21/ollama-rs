@@ -90,7 +90,7 @@ async fn test_send_chat_messages_with_history_stream() {
 
 #[tokio::test]
 async fn test_send_chat_messages_with_history() {
-    let mut ollama = Ollama::default();
+    let ollama = Ollama::default();
     let mut history = vec![];
     let second_message = vec![ChatMessage::user("Second message".to_string())];
 
