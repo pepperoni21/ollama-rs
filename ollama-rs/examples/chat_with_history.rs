@@ -6,7 +6,7 @@ use tokio::io::{stdout, AsyncWriteExt};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut ollama = Ollama::default();
+    let ollama = Ollama::default();
     let mut history = vec![];
     let mut stdout = stdout();
 

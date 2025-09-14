@@ -62,7 +62,7 @@ impl DDGSearcher {
                     let selector = &self.text_selectors[i];
                     let text_selector = &TEXT_SELECTORS[i];
                     result
-                        .select(&selector)
+                        .select(selector)
                         .next()
                         .ok_or_else(|| {
                             format!(
