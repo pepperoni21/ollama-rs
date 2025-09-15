@@ -15,6 +15,7 @@ pub struct Params {
     expression: String,
 }
 
+#[derive(Default)]
 pub struct Calculator {}
 
 impl Tool for Calculator {
