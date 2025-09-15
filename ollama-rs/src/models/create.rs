@@ -8,7 +8,7 @@ use super::ModelOptions;
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
 pub type CreateModelStatusStream = std::pin::Pin<
-    Box<dyn tokio_stream::Stream<Item = crate::error::Result<CreateModelStatus>> + Send>,
+    Box<dyn futures_util::stream::Stream<Item = crate::error::Result<CreateModelStatus>> + Send>,
 >;
 
 impl Ollama {
@@ -19,7 +19,7 @@ impl Ollama {
         &self,
         mut request: CreateModelRequest,
     ) -> crate::error::Result<CreateModelStatusStream> {
-        use tokio_stream::StreamExt;
+        use futures_util::stream::StreamExt;
 
         use crate::error::OllamaError;
 

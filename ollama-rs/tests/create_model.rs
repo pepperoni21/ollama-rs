@@ -1,5 +1,5 @@
+use futures_util::StreamExt;
 use ollama_rs::{models::create::CreateModelRequest, Ollama};
-use tokio_stream::StreamExt;
 
 #[tokio::test]
 /// This test needs a Modelfile at /tmp to work

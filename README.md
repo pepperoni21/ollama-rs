@@ -87,7 +87,7 @@ _Requires the `stream` feature._
 ```rust
 use ollama_rs::generation::completion::GenerationRequest;
 use tokio::io::{self, AsyncWriteExt};
-use tokio_stream::StreamExt;
+use futures_util::stream::Stream;
 
 let model = "llama2:latest".to_string();
 let prompt = "Why is the sky blue?".to_string();
@@ -195,7 +195,7 @@ _Requires the `stream` feature._
 
 ```rust
 use ollama_rs::models::create::CreateModelRequest;
-use tokio_stream::StreamExt;
+use futures_util::stream::Stream;
 
 let mut res = ollama.create_model_stream(CreateModelRequest::path("model".into(), "/tmp/Modelfile.example".into())).await.unwrap();
 

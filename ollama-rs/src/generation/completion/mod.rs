@@ -11,7 +11,8 @@ pub mod request;
 /// A stream of `GenerationResponse` objects
 pub type GenerationResponseStream = std::pin::Pin<
     Box<
-        dyn tokio_stream::Stream<Item = crate::error::Result<GenerationResponseStreamChunk>> + Send,
+        dyn futures_util::stream::Stream<Item = crate::error::Result<GenerationResponseStreamChunk>>
+            + Send,
     >,
 >;
 pub type GenerationResponseStreamChunk = Vec<GenerationResponse>;
@@ -32,7 +33,7 @@ impl Ollama {
         &self,
         request: GenerationRequest<'_>,
     ) -> crate::error::Result<GenerationResponseStream> {
-        use tokio_stream::StreamExt;
+        use futures_util::stream::StreamExt;
 
         use crate::error::OllamaError;
 

@@ -1,3 +1,4 @@
+use futures_util::StreamExt;
 use futures_util::TryStreamExt;
 use ollama_rs::{
     generation::completion::{
@@ -6,7 +7,6 @@ use ollama_rs::{
     Ollama,
 };
 use tokio::io::{stdout, AsyncBufReadExt, AsyncWriteExt};
-use tokio_stream::StreamExt;
 
 const MODEL: &str = "llama2:latest";
 

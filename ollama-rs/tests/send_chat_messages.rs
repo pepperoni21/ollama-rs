@@ -1,7 +1,7 @@
-use base64::Engine;
 use std::sync::{Arc, Mutex};
-use tokio_stream::StreamExt;
 
+use base64::Engine;
+use futures_util::StreamExt;
 use ollama_rs::{
     generation::{
         chat::{request::ChatMessageRequest, ChatMessage},

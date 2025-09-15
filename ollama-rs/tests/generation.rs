@@ -1,5 +1,6 @@
 #![allow(unused_imports)]
 use base64::Engine;
+use futures_util::{stream::Stream, StreamExt};
 use ollama_rs::{
     generation::{
         completion::{request::GenerationRequest, GenerationResponseStream},
@@ -8,7 +9,6 @@ use ollama_rs::{
     Ollama,
 };
 use tokio::io::AsyncWriteExt;
-use tokio_stream::StreamExt;
 
 #[allow(dead_code)]
 const PROMPT: &str = "Why is the sky blue?";

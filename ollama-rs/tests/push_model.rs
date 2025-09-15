@@ -1,5 +1,5 @@
+use futures_util::StreamExt;
 use ollama_rs::Ollama;
-use tokio_stream::StreamExt;
 
 #[tokio::test]
 /// This test needs a local model named `test_model:latest` to work, and requires registering for ollama.ai and adding a public key first.

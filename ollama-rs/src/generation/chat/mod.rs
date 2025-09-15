@@ -9,10 +9,10 @@ use request::ChatMessageRequest;
 use async_stream::stream;
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
-use std::sync::{Arc, Mutex};
+use futures_util::stream::{Stream, StreamExt};
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
-use tokio_stream::StreamExt;
+use std::sync::{Arc, Mutex};
 
 pub mod request;
 
@@ -20,7 +20,7 @@ pub mod request;
 #[cfg(feature = "stream")]
 /// A stream of `ChatMessageResponse` objects
 pub type ChatMessageResponseStream =
-    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<ChatMessageResponse, ()>> + Send>>;
+    std::pin::Pin<Box<dyn Stream<Item = Result<ChatMessageResponse, ()>> + Send>>;
 
 impl Ollama {
     #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
@@ -149,7 +149,7 @@ impl Ollama {
         mut request: ChatMessageRequest,
     ) -> crate::error::Result<ChatMessageResponseStream> {
         use async_stream::stream;
-        use tokio_stream::StreamExt;
+        use futures_util::stream::TryStreamExt;
 
         // The request is modified to include the current chat messages
         {

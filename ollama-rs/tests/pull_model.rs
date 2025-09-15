@@ -1,5 +1,5 @@
+use futures_util::StreamExt;
 use ollama_rs::Ollama;
-use tokio_stream::StreamExt;
 
 #[tokio::test]
 async fn test_pull_model() {

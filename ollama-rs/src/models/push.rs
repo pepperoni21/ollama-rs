@@ -6,7 +6,7 @@ use crate::{error::OllamaError, Ollama};
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
 pub type PushModelStatusStream = std::pin::Pin<
-    Box<dyn tokio_stream::Stream<Item = crate::error::Result<PushModelStatus>> + Send>,
+    Box<dyn futures_util::stream::Stream<Item = crate::error::Result<PushModelStatus>> + Send>,
 >;
 
 impl Ollama {
@@ -22,7 +22,7 @@ impl Ollama {
         allow_insecure: bool,
     ) -> crate::error::Result<PushModelStatusStream> {
         use crate::error::OllamaError;
-        use tokio_stream::StreamExt;
+        use futures_util::stream::StreamExt;
 
         let request = PushModelRequest {
             model_name,
