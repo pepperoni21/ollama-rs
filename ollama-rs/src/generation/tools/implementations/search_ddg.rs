@@ -14,7 +14,7 @@ pub struct Params {
     query: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SearchResult {
     title: String,
     link: String,
@@ -53,9 +53,10 @@ impl DDGSearcher {
         let url = format!("{}/html/?q={}", self.base_url, query);
         let resp = self.client.get(&url).send().await?;
         let body = resp.text().await?;
-        let document = Html::parse_document(&body);
-
-        document
+        self.parse(&body)
+    }
+    fn parse(&self, html: &str) -> Result<Vec<SearchResult>, Box<dyn Error + Send + Sync>> {
+        Html::parse_document(html)
             .select(&self.result_selector)
             .map(|result| {
                 let [title, link, snippet] = std::array::from_fn(|i| {
@@ -98,5 +99,58 @@ impl Tool for DDGSearcher {
         let results = self.search(&params.query).await?;
         let results_json = serde_json::to_string(&results)?;
         Ok(results_json)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_example() {
+        let raw = r#"<div class="result results_links results_links_deep web-result ">
+                          <div class="links_main links_deep result__body"> <!-- This is the visible part -->
+
+                              <h2 class="result__title">
+                                <a rel="nofollow" class="result__a" href="https://speed.cloudflare.com/">Internet Speed Test - Measure Network Performance | Cloudflare</a>
+                              </h2>
+
+
+
+
+                              <div class="result__extras">
+                                <div class="result__extras__url">
+                                  <span class="result__icon">
+                                    <a rel="nofollow" href="https://speed.cloudflare.com/">
+                                      <img class="result__icon__img" width="16" height="16" alt="" src="//external-content.duckduckgo.com/ip3/speed.cloudflare.com.ico" name="i15">
+                                    </a>
+                                  </span>
+                                  <a class="result__url" href="https://speed.cloudflare.com/">
+                                    speed.cloudflare.com
+                                  </a>
+
+                                </div>
+                              </div>
+
+
+
+
+                                <a class="result__snippet" href="https://speed.cloudflare.com/"><b>Test</b> your Internet connection and network performance with Cloudflare's global edge network. See your download, upload, latency, jitter, packet loss and network quality score.</a>
+
+
+
+                            <div class="clear"></div>
+                          </div>
+                        </div>"#;
+        let ddg = DDGSearcher::default();
+        let x = &ddg.parse(raw).unwrap()[0];
+        assert_eq!(
+            x,
+            &SearchResult {
+                link: "speed.cloudflare.com".into(),
+                title: "Internet Speed Test - Measure Network Performance | Cloudflare".into(),
+                snippet: "Test your Internet connection and network performance with Cloudflare's global edge network. See your download, upload, latency, jitter, packet loss and network quality score.".into()
+            }
+        );
     }
 }
