@@ -16,6 +16,13 @@ pub type GenerationResponseStream = std::pin::Pin<
 >;
 pub type GenerationResponseStreamChunk = Vec<GenerationResponse>;
 
+#[derive(Serialize)]
+struct WithStreamField<T> {
+    stream: bool,
+    #[serde(flatten)]
+    rest: T,
+}
+
 impl Ollama {
     #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
     #[cfg(feature = "stream")]
@@ -29,16 +36,19 @@ impl Ollama {
 
         use crate::error::OllamaError;
 
-        let mut request = request;
-        request.stream = true;
-
         let url = format!("{}api/generate", self.url_str());
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder.json(&request).send().await?;
+        let res = builder
+            .json(&WithStreamField {
+                stream: true,
+                rest: request,
+            })
+            .send()
+            .await?;
 
         if !res.status().is_success() {
             return Err(OllamaError::Other(
@@ -66,16 +76,19 @@ impl Ollama {
         &self,
         request: GenerationRequest<'_>,
     ) -> crate::error::Result<GenerationResponse> {
-        let mut request = request;
-        request.stream = false;
-
         let url = format!("{}api/generate", self.url_str());
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder.json(&request).send().await?;
+        let res = builder
+            .json(&WithStreamField {
+                stream: false,
+                rest: request,
+            })
+            .send()
+            .await?;
 
         if !res.status().is_success() {
             return Err(OllamaError::Other(
