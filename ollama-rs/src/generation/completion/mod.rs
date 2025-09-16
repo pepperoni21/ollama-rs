@@ -28,8 +28,7 @@ impl Ollama {
         &self,
         request: GenerationRequest<'_>,
     ) -> crate::error::Result<GenerationResponseStream> {
-        let res = self.send_generation_request(request, true).await?;
-        crate::stream::map_response(res).await
+        crate::stream::map_response(self.send_generation_request(request, true).await?).await
     }
 
     /// Completion generation with a single response.
@@ -38,15 +37,7 @@ impl Ollama {
         &self,
         request: GenerationRequest<'_>,
     ) -> crate::error::Result<GenerationResponse> {
-        let res = self.send_generation_request(request, false).await?;
-        if res.status().is_success() {
-            let res = res.bytes().await?;
-            Ok(serde_json::from_slice::<GenerationResponse>(&res)?)
-        } else {
-            Err(OllamaError::Other(
-                res.text().await.unwrap_or_else(|e| e.to_string()),
-            ))
-        }
+        crate::map_response(self.send_generation_request(request, false).await?).await
     }
 
     async fn send_generation_request(

@@ -21,17 +21,7 @@ impl Ollama {
         &self,
         request: ChatMessageRequest,
     ) -> crate::error::Result<ChatMessageResponseStream> {
-        let mut request = request;
-        request.stream = true;
-
-        let url = format!("{}api/chat", self.url_str());
-        let builder = self.reqwest_client.post(url);
-
-        #[cfg(feature = "headers")]
-        let builder = builder.headers(self.request_headers.clone());
-
-        let res = builder.json(&request).send().await?;
-        crate::stream::map_response(res).await
+        crate::stream::map_response(self.send_chat_messages_request(request, true).await?).await
     }
 
     /// Chat message generation.
@@ -40,27 +30,22 @@ impl Ollama {
         &self,
         request: ChatMessageRequest,
     ) -> crate::error::Result<ChatMessageResponse> {
-        let mut request = request;
-        request.stream = false;
+        crate::map_response(self.send_chat_messages_request(request, false).await?).await
+    }
 
+    async fn send_chat_messages_request(
+        &self,
+        mut request: ChatMessageRequest,
+        stream: bool,
+    ) -> Result<reqwest::Response, OllamaError> {
+        request.stream = stream;
         let url = format!("{}api/chat", self.url_str());
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder.json(&request).send().await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(
-                res.text().await.unwrap_or_else(|e| e.to_string()),
-            ));
-        }
-
-        let bytes = res.bytes().await?;
-        let res = serde_json::from_slice::<ChatMessageResponse>(&bytes)?;
-
-        Ok(res)
+        Ok(builder.json(&request).send().await?)
     }
 }
 

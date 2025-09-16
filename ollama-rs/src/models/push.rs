@@ -51,16 +51,10 @@ impl Ollama {
             stream: false,
         };
 
-        let res = self.push_model_request(request).await?;
-        if res.status().is_success() {
-            let bytes = res.bytes().await?;
-            Ok(serde_json::from_slice::<PushModelStatus>(&bytes)?)
-        } else {
-            Err(OllamaError::Other(res.text().await?))
-        }
+        crate::map_response(self.send_push_model_request(request).await?).await
     }
 
-    async fn push_model_request(
+    async fn send_push_model_request(
         &self,
         request: PushModelRequest,
     ) -> Result<reqwest::Response, OllamaError> {

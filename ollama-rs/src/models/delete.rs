@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::{error::OllamaError, Ollama};
+use crate::Ollama;
 
 impl Ollama {
     /// Delete a model and its data.
@@ -13,13 +13,7 @@ impl Ollama {
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder.json(&request).send().await?;
-
-        if res.status().is_success() {
-            Ok(())
-        } else {
-            Err(OllamaError::Other(res.text().await?))
-        }
+        crate::map_empty_response(builder.json(&request).send().await?).await
     }
 }
 

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{error::OllamaError, generation::chat::ChatMessage, Ollama};
+use crate::{generation::chat::ChatMessage, Ollama};
 
 use super::ModelOptions;
 
@@ -16,11 +16,9 @@ impl Ollama {
     /// Create a model with streaming, meaning that each new status will be streamed.
     pub async fn create_model_stream(
         &self,
-        mut request: CreateModelRequest,
+        request: CreateModelRequest,
     ) -> crate::error::Result<CreateModelStatusStream> {
-        request.stream = true;
-        let res = self.send_model_request(request).await?;
-        crate::stream::map_response(res).await
+        crate::stream::map_response(self.send_create_model_request(request, true).await?).await
     }
 
     /// Create a model with a single response, only the final status will be returned.
@@ -28,18 +26,15 @@ impl Ollama {
         &self,
         request: CreateModelRequest,
     ) -> crate::error::Result<CreateModelStatus> {
-        let res = self.send_model_request(request).await?;
-        if res.status().is_success() {
-            let res = res.bytes().await?;
-            Ok(serde_json::from_slice::<CreateModelStatus>(&res)?)
-        } else {
-            Err(OllamaError::Other(res.text().await?))
-        }
+        let res = self.send_create_model_request(request, false).await?;
+        crate::map_response(res).await
     }
-    async fn send_model_request(
+    async fn send_create_model_request(
         &self,
-        request: CreateModelRequest,
+        mut request: CreateModelRequest,
+        stream: bool,
     ) -> reqwest::Result<reqwest::Response> {
+        request.stream = stream;
         let url = format!("{}api/create", self.url_str());
         let builder = self.reqwest_client.post(url);
 

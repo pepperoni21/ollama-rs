@@ -227,3 +227,21 @@ impl Default for Ollama {
         }
     }
 }
+
+async fn map_empty_response(res: reqwest::Response) -> Result<(), error::OllamaError> {
+    if res.status().is_success() {
+        Ok(())
+    } else {
+        Err(error::OllamaError::Other(res.text().await?))
+    }
+}
+async fn map_response<T: serde::de::DeserializeOwned>(
+    res: reqwest::Response,
+) -> Result<T, error::OllamaError> {
+    if res.status().is_success() {
+        let bytes = res.bytes().await?;
+        Ok(serde_json::from_slice::<T>(&bytes)?)
+    } else {
+        Err(error::OllamaError::Other(res.text().await?))
+    }
+}

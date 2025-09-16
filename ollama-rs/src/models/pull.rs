@@ -19,15 +19,15 @@ impl Ollama {
         model_name: String,
         allow_insecure: bool,
     ) -> crate::error::Result<PullModelStatusStream> {
-        let res = self
-            .pull_model_request(PullModelRequest {
+        crate::stream::map_response(
+            self.send_pull_model_request(PullModelRequest {
                 model_name,
                 allow_insecure,
                 stream: true,
             })
-            .await?;
-
-        crate::stream::map_response(res).await
+            .await?,
+        )
+        .await
     }
 
     /// Pull a model with a single response, only the final status will be returned.
@@ -38,23 +38,18 @@ impl Ollama {
         model_name: String,
         allow_insecure: bool,
     ) -> crate::error::Result<PullModelStatus> {
-        let res = self
-            .pull_model_request(PullModelRequest {
+        crate::map_response(
+            self.send_pull_model_request(PullModelRequest {
                 model_name,
                 allow_insecure,
                 stream: false,
             })
-            .await?;
-
-        if res.status().is_success() {
-            let res = res.bytes().await?;
-            Ok(serde_json::from_slice::<PullModelStatus>(&res)?)
-        } else {
-            Err(OllamaError::Other(res.text().await?))
-        }
+            .await?,
+        )
+        .await
     }
 
-    async fn pull_model_request(
+    async fn send_pull_model_request(
         &self,
         request: PullModelRequest,
     ) -> Result<reqwest::Response, OllamaError> {
