@@ -78,11 +78,11 @@ mod tests {
     use futures_util::stream;
     use tokio_stream::StreamExt;
 
-    async fn collect_lines(chunks: Vec<&'static [u8]>) -> Vec<String> {
+    async fn collect_lines<'a>(chunks: Vec<&'a [u8]>) -> Vec<String> {
         let s = stream::iter(
             chunks
                 .into_iter()
-                .map(|c| Result::<_, ()>::Ok(Bytes::from_static(c))),
+                .map(|c| Result::<_, ()>::Ok(Bytes::copy_from_slice(c))),
         );
         lines(s)
             .map(|b| String::from_utf8(b.unwrap().to_vec()).unwrap())
@@ -142,6 +142,18 @@ mod tests {
     async fn test_crlf_and_lf_mix_across_chunks() {
         let lines_out = collect_lines(vec![b"line1\r", b"\nline2\nline", b"3\r\n"]).await;
         assert_eq!(lines_out, vec!["line1", "line2", "line3"]);
+    }
+
+    #[tokio::test]
+    async fn test_json_linebreaks_pass_through() {
+        let original = "a\nb";
+        let json = serde_json::to_vec_pretty(original).unwrap();
+        let lines_out = collect_lines(vec![&json]).await;
+        assert_eq!(&lines_out, &[r#""a\nb""#]);
+        assert_eq!(
+            original,
+            serde_json::from_str::<String>(&lines_out[0]).unwrap()
+        );
     }
 
     #[tokio::test]
