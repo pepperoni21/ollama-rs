@@ -13,11 +13,6 @@ pub async fn map_response<T: serde::de::DeserializeOwned>(
             |res| {
                 let bytes = res?;
                 serde_json::from_slice::<T>(&bytes).map_err(|e| {
-                    println!(
-                        "Line {}, {}",
-                        String::from_utf8_lossy(&bytes),
-                        std::any::type_name::<T>()
-                    );
                     match serde_json::from_slice::<crate::error::InternalOllamaError>(&bytes) {
                         Ok(err) => OllamaError::InternalError(err),
                         Err(_) => e.into(),
