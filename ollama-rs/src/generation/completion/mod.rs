@@ -9,13 +9,8 @@ pub mod request;
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
 /// A stream of `GenerationResponse` objects
-pub type GenerationResponseStream = std::pin::Pin<
-    Box<
-        dyn futures_util::stream::Stream<Item = crate::error::Result<GenerationResponseStreamChunk>>
-            + Send,
-    >,
->;
-pub type GenerationResponseStreamChunk = Vec<GenerationResponse>;
+pub type GenerationResponseStream =
+    futures_util::stream::BoxStream<'static, crate::error::Result<GenerationResponse>>;
 
 #[derive(Serialize)]
 struct WithStreamField<T> {
@@ -33,42 +28,8 @@ impl Ollama {
         &self,
         request: GenerationRequest<'_>,
     ) -> crate::error::Result<GenerationResponseStream> {
-        use futures_util::stream::StreamExt;
-
-        use crate::error::OllamaError;
-
-        let url = format!("{}api/generate", self.url_str());
-        let builder = self.reqwest_client.post(url);
-
-        #[cfg(feature = "headers")]
-        let builder = builder.headers(self.request_headers.clone());
-
-        let res = builder
-            .json(&WithStreamField {
-                stream: true,
-                rest: request,
-            })
-            .send()
-            .await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(
-                res.text().await.unwrap_or_else(|e| e.to_string()),
-            ));
-        }
-
-        let stream = Box::new(res.bytes_stream().map(|res| match res {
-            Ok(bytes) => {
-                let res = serde_json::Deserializer::from_slice(&bytes).into_iter();
-                let res = res
-                    .filter_map(Result::ok) // Filter out the errors
-                    .collect::<Vec<GenerationResponse>>();
-                Ok(res)
-            }
-            Err(e) => Err(OllamaError::Other(format!("Failed to read response: {e}"))),
-        }));
-
-        Ok(std::pin::Pin::from(stream))
+        let res = self.send_generation_request(request, true).await?;
+        crate::stream::map_response(res).await
     }
 
     /// Completion generation with a single response.
@@ -77,29 +38,33 @@ impl Ollama {
         &self,
         request: GenerationRequest<'_>,
     ) -> crate::error::Result<GenerationResponse> {
+        let res = self.send_generation_request(request, false).await?;
+        if res.status().is_success() {
+            let res = res.bytes().await?;
+            Ok(serde_json::from_slice::<GenerationResponse>(&res)?)
+        } else {
+            Err(OllamaError::Other(
+                res.text().await.unwrap_or_else(|e| e.to_string()),
+            ))
+        }
+    }
+
+    async fn send_generation_request(
+        &self,
+        request: GenerationRequest<'_>,
+        stream: bool,
+    ) -> Result<reqwest::Response, OllamaError> {
         let url = format!("{}api/generate", self.url_str());
         let builder = self.reqwest_client.post(url);
-
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
-
         let res = builder
             .json(&WithStreamField {
-                stream: false,
+                stream,
                 rest: request,
             })
             .send()
             .await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(
-                res.text().await.unwrap_or_else(|e| e.to_string()),
-            ));
-        }
-
-        let res = res.bytes().await?;
-        let res = serde_json::from_slice::<GenerationResponse>(&res)?;
-
         Ok(res)
     }
 }

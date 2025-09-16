@@ -10,7 +10,6 @@ pub mod re_exports {
     pub use schemars;
     pub use serde;
 }
-
 pub mod coordinator;
 pub mod error;
 pub mod generation;
@@ -19,6 +18,8 @@ pub mod generation;
 pub mod headers;
 pub mod history;
 pub mod models;
+#[cfg(feature = "stream")]
+mod stream;
 
 /// A trait to try to convert some type into a [`Url`].
 ///

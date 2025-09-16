@@ -7,9 +7,8 @@ use super::ModelOptions;
 /// A stream of `CreateModelStatus` objects
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
-pub type CreateModelStatusStream = std::pin::Pin<
-    Box<dyn futures_util::stream::Stream<Item = crate::error::Result<CreateModelStatus>> + Send>,
->;
+pub type CreateModelStatusStream =
+    futures_util::stream::BoxStream<'static, crate::error::Result<CreateModelStatus>>;
 
 impl Ollama {
     #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
@@ -19,43 +18,9 @@ impl Ollama {
         &self,
         mut request: CreateModelRequest,
     ) -> crate::error::Result<CreateModelStatusStream> {
-        use futures_util::stream::StreamExt;
-
-        use crate::error::OllamaError;
-
         request.stream = true;
-
-        let url = format!("{}api/create", self.url_str());
-        let builder = self.reqwest_client.post(url);
-
-        #[cfg(feature = "headers")]
-        let builder = builder.headers(self.request_headers.clone());
-
-        let res = builder.json(&request).send().await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(res.text().await?));
-        }
-
-        let stream = Box::new(res.bytes_stream().map(|res| match res {
-            Ok(bytes) => {
-                let res = serde_json::from_slice::<CreateModelStatus>(&bytes);
-                match res {
-                    Ok(res) => Ok(res),
-                    Err(e) => {
-                        let err =
-                            serde_json::from_slice::<crate::error::InternalOllamaError>(&bytes);
-                        match err {
-                            Ok(err) => Err(OllamaError::InternalError(err)),
-                            Err(_) => Err(OllamaError::from(e)),
-                        }
-                    }
-                }
-            }
-            Err(e) => Err(OllamaError::Other(format!("Failed to read response: {e}"))),
-        }));
-
-        Ok(std::pin::Pin::from(stream))
+        let res = self.send_model_request(request).await?;
+        crate::stream::map_response(res).await
     }
 
     /// Create a model with a single response, only the final status will be returned.
@@ -63,22 +28,25 @@ impl Ollama {
         &self,
         request: CreateModelRequest,
     ) -> crate::error::Result<CreateModelStatus> {
+        let res = self.send_model_request(request).await?;
+        if res.status().is_success() {
+            let res = res.bytes().await?;
+            Ok(serde_json::from_slice::<CreateModelStatus>(&res)?)
+        } else {
+            Err(OllamaError::Other(res.text().await?))
+        }
+    }
+    async fn send_model_request(
+        &self,
+        request: CreateModelRequest,
+    ) -> reqwest::Result<reqwest::Response> {
         let url = format!("{}api/create", self.url_str());
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder.json(&request).send().await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(res.text().await?));
-        }
-
-        let res = res.bytes().await?;
-        let res = serde_json::from_slice::<CreateModelStatus>(&res)?;
-
-        Ok(res)
+        builder.json(&request).send().await
     }
 }
 

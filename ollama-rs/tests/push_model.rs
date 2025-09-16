@@ -1,6 +1,5 @@
-use futures_util::StreamExt;
+use futures_util::TryStreamExt;
 use ollama_rs::Ollama;
-
 #[tokio::test]
 /// This test needs a local model named `test_model:latest` to work, and requires registering for ollama.ai and adding a public key first.
 async fn test_push_model() {
@@ -11,10 +10,7 @@ async fn test_push_model() {
         .await
         .unwrap();
 
-    while let Some(res) = res.next().await {
-        match res {
-            Ok(res) => println!("{res:?}"),
-            Err(e) => panic!("{e:?}"),
-        }
+    while let Some(res) = res.try_next().await.unwrap() {
+        println!("{res:?}");
     }
 }

@@ -5,9 +5,8 @@ use crate::{error::OllamaError, Ollama};
 /// A stream of `PushModelStatus` objects.
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
-pub type PushModelStatusStream = std::pin::Pin<
-    Box<dyn futures_util::stream::Stream<Item = crate::error::Result<PushModelStatus>> + Send>,
->;
+pub type PushModelStatusStream =
+    futures_util::stream::BoxStream<'static, crate::error::Result<PushModelStatus>>;
 
 impl Ollama {
     #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
@@ -21,9 +20,6 @@ impl Ollama {
         model_name: String,
         allow_insecure: bool,
     ) -> crate::error::Result<PushModelStatusStream> {
-        use crate::error::OllamaError;
-        use futures_util::stream::StreamExt;
-
         let request = PushModelRequest {
             model_name,
             allow_insecure,
@@ -37,30 +33,7 @@ impl Ollama {
         let builder = builder.headers(self.request_headers.clone());
 
         let res = builder.json(&request).send().await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(res.text().await?));
-        }
-
-        let stream = Box::new(res.bytes_stream().map(|res| match res {
-            Ok(bytes) => {
-                let res = serde_json::from_slice::<PushModelStatus>(&bytes);
-                match res {
-                    Ok(res) => Ok(res),
-                    Err(e) => {
-                        let err =
-                            serde_json::from_slice::<crate::error::InternalOllamaError>(&bytes);
-                        match err {
-                            Ok(err) => Err(OllamaError::InternalError(err)),
-                            Err(_) => Err(e.into()),
-                        }
-                    }
-                }
-            }
-            Err(e) => Err(OllamaError::Other(format!("Failed to read response: {e}"))),
-        }));
-
-        Ok(std::pin::Pin::from(stream))
+        crate::stream::map_response(res).await
     }
 
     /// Upload a model to a model library. Requires registering for ollama.ai and adding a public key first.
@@ -78,22 +51,24 @@ impl Ollama {
             stream: false,
         };
 
+        let res = self.push_model_request(request).await?;
+        if res.status().is_success() {
+            let bytes = res.bytes().await?;
+            Ok(serde_json::from_slice::<PushModelStatus>(&bytes)?)
+        } else {
+            Err(OllamaError::Other(res.text().await?))
+        }
+    }
+
+    async fn push_model_request(
+        &self,
+        request: PushModelRequest,
+    ) -> Result<reqwest::Response, OllamaError> {
         let url = format!("{}api/push", self.url_str());
         let builder = self.reqwest_client.post(url);
-
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
-
-        let res = builder.json(&request).send().await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(res.text().await?));
-        }
-
-        let res = res.bytes().await?;
-        let res = serde_json::from_slice::<PushModelStatus>(&res)?;
-
-        Ok(res)
+        Ok(builder.json(&request).send().await?)
     }
 }
 

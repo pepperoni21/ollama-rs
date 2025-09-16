@@ -1,4 +1,4 @@
-use futures_util::StreamExt;
+use futures_util::TryStreamExt;
 use ollama_rs::Ollama;
 
 #[tokio::test]
@@ -10,10 +10,7 @@ async fn test_pull_model() {
         .await
         .unwrap();
 
-    while let Some(res) = res.next().await {
-        match res {
-            Ok(res) => println!("{res:?}"),
-            Err(e) => panic!("{e:?}"),
-        }
+    while let Some(res) = res.try_next().await.unwrap() {
+        println!("{res:?}");
     }
 }

@@ -5,9 +5,8 @@ use crate::{error::OllamaError, Ollama};
 /// A stream of `PullModelStatus` objects.
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
-pub type PullModelStatusStream = std::pin::Pin<
-    Box<dyn futures_util::stream::Stream<Item = crate::error::Result<PullModelStatus>> + Send>,
->;
+pub type PullModelStatusStream =
+    futures_util::stream::BoxStream<'static, crate::error::Result<PullModelStatus>>;
 
 impl Ollama {
     #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
@@ -20,46 +19,15 @@ impl Ollama {
         model_name: String,
         allow_insecure: bool,
     ) -> crate::error::Result<PullModelStatusStream> {
-        use futures_util::stream::StreamExt;
+        let res = self
+            .pull_model_request(PullModelRequest {
+                model_name,
+                allow_insecure,
+                stream: true,
+            })
+            .await?;
 
-        use crate::error::{InternalOllamaError, OllamaError};
-
-        let request = PullModelRequest {
-            model_name,
-            allow_insecure,
-            stream: true,
-        };
-
-        let url = format!("{}api/pull", self.url_str());
-        let builder = self.reqwest_client.post(url);
-
-        #[cfg(feature = "headers")]
-        let builder = builder.headers(self.request_headers.clone());
-
-        let res = builder.json(&request).send().await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(res.text().await?));
-        }
-
-        let stream = Box::new(res.bytes_stream().map(|res| match res {
-            Ok(bytes) => {
-                let res = serde_json::from_slice::<PullModelStatus>(&bytes);
-                match res {
-                    Ok(res) => Ok(res),
-                    Err(e) => {
-                        let err = serde_json::from_slice::<InternalOllamaError>(&bytes);
-                        match err {
-                            Ok(err) => Err(OllamaError::InternalError(err)),
-                            Err(_) => Err(e.into()),
-                        }
-                    }
-                }
-            }
-            Err(e) => Err(e.into()),
-        }));
-
-        Ok(std::pin::Pin::from(stream))
+        crate::stream::map_response(res).await
     }
 
     /// Pull a model with a single response, only the final status will be returned.
@@ -70,27 +38,31 @@ impl Ollama {
         model_name: String,
         allow_insecure: bool,
     ) -> crate::error::Result<PullModelStatus> {
-        let request = PullModelRequest {
-            model_name,
-            allow_insecure,
-            stream: false,
-        };
+        let res = self
+            .pull_model_request(PullModelRequest {
+                model_name,
+                allow_insecure,
+                stream: false,
+            })
+            .await?;
 
+        if res.status().is_success() {
+            let res = res.bytes().await?;
+            Ok(serde_json::from_slice::<PullModelStatus>(&res)?)
+        } else {
+            Err(OllamaError::Other(res.text().await?))
+        }
+    }
+
+    async fn pull_model_request(
+        &self,
+        request: PullModelRequest,
+    ) -> Result<reqwest::Response, OllamaError> {
         let url = format!("{}api/pull", self.url_str());
         let builder = self.reqwest_client.post(url);
-
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
-
         let res = builder.json(&request).send().await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(res.text().await?));
-        }
-
-        let res = res.bytes().await?;
-        let res = serde_json::from_slice::<PullModelStatus>(&res)?;
-
         Ok(res)
     }
 }

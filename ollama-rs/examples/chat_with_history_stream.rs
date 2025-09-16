@@ -39,8 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .await?;
 
-        while let Some(res) = stream.next().await {
-            let res = res.map_err(|_| "Error during stream")?;
+        while let Some(res) = stream.try_next().await? {
             stdout.write_all(res.message.content.as_bytes()).await?;
             stdout.flush().await?;
         }
