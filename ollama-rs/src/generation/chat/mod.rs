@@ -89,7 +89,7 @@ impl Ollama {
             self.send_chat_messages_stream(request.clone())
                 .await?
                 .then(move |x| {
-                    std::future::ready(x.map(|x| {
+                    std::future::ready(x.inspect(|x| {
                         if x.done {
                             history
                                 .lock()
@@ -97,9 +97,8 @@ impl Ollama {
                                 .push(ChatMessage::assistant(result.clone()));
                         } else {
                             let msg_part = &x.message.content;
-                            result.push_str(&msg_part);
+                            result.push_str(msg_part);
                         }
-                        x
                     }))
                 }),
         ))
