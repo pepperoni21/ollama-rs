@@ -45,7 +45,7 @@ impl TryFrom<Url> for HostUrl {
         if value.host().is_some() {
             Ok(HostUrl(value))
         } else {
-            Err(HostUrlError::MissingUrl(value))
+            Err(HostUrlError::MissingHost(value))
         }
     }
 }
@@ -79,7 +79,7 @@ pub enum HostUrlError {
     #[error("{0}")]
     Parse(::url::ParseError),
     #[error("Missing url: {0}")]
-    MissingUrl(::url::Url),
+    MissingHost(::url::Url),
 }
 
 impl From<::url::ParseError> for HostUrlError {
