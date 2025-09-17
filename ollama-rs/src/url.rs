@@ -78,6 +78,6 @@ impl TryFrom<&String> for HostUrl {
 pub enum HostUrlError {
     #[error("{0}")]
     Parse(#[from] ::url::ParseError),
-    #[error("Missing url: {0}")]
+    #[error("Missing host: {0}")]
     MissingHost(::url::Url),
 }
