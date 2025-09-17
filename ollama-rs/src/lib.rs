@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, num::NonZeroU16};
 
 #[cfg(feature = "macros")]
 pub use ollama_rs_macros::function;
@@ -58,7 +58,8 @@ impl Ollama {
         TUrl::Error: Debug,
     {
         let mut url: HostUrl = host.try_into().unwrap();
-        url.set_port(Some(port)).unwrap();
+        let port = NonZeroU16::new(port).unwrap();
+        url.set_port(port);
 
         Self::from_url(url)
     }
@@ -84,7 +85,8 @@ impl Ollama {
         TUrl::Error: Debug,
     {
         let mut url: HostUrl = host.try_into().unwrap();
-        url.set_port(Some(port)).unwrap();
+        let port = NonZeroU16::new(port).unwrap();
+        url.set_port(port);
 
         Self::from_url_with_client(url, reqwest_client)
     }

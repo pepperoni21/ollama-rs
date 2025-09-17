@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Deref, str::FromStr};
+use std::{fmt::Display, num::NonZeroU16, ops::Deref, str::FromStr};
 
 use ::url::Url;
 
@@ -10,9 +10,8 @@ impl HostUrl {
     pub fn host(&self) -> ::url::Host<&str> {
         self.0.host().expect("Checked during construction")
     }
-    #[allow(clippy::result_unit_err)]
-    pub fn set_port(&mut self, value: Option<u16>) -> Result<(), ()> {
-        self.0.set_port(value)
+    pub fn set_port(&mut self, value: NonZeroU16) {
+        self.0.set_port(Some(value.get())).unwrap()
     }
 }
 
@@ -43,7 +42,11 @@ impl TryFrom<Url> for HostUrl {
 
     fn try_from(value: Url) -> Result<Self, Self::Error> {
         if value.host().is_some() {
-            Ok(HostUrl(value))
+            let mut r = HostUrl(value);
+            if r.port().is_none() {
+                r.set_port(const { NonZeroU16::new(11434).unwrap() });
+            }
+            Ok(r)
         } else {
             Err(HostUrlError::MissingHost(value))
         }
