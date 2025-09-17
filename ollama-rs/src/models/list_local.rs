@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::{error::OllamaError, Ollama};
+use crate::Ollama;
 
 use super::LocalModel;
 
@@ -12,16 +12,9 @@ impl Ollama {
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder.send().await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(res.text().await?));
-        }
-
-        let res = res.bytes().await?;
-        let res = serde_json::from_slice::<ListLocalModelsResponse>(&res)?;
-
-        Ok(res.models)
+        crate::map_response::<ListLocalModelsResponse>(builder.send().await?)
+            .await
+            .map(|a| a.models)
     }
 }
 

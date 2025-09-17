@@ -10,7 +10,6 @@ pub mod re_exports {
     pub use schemars;
     pub use serde;
 }
-
 pub mod coordinator;
 pub mod error;
 pub mod generation;
@@ -19,6 +18,8 @@ pub mod generation;
 pub mod headers;
 pub mod history;
 pub mod models;
+#[cfg(feature = "stream")]
+mod stream;
 
 /// A trait to try to convert some type into a [`Url`].
 ///
@@ -224,5 +225,23 @@ impl Default for Ollama {
             #[cfg(feature = "headers")]
             request_headers: reqwest::header::HeaderMap::new(),
         }
+    }
+}
+
+async fn map_empty_response(res: reqwest::Response) -> Result<(), error::OllamaError> {
+    if res.status().is_success() {
+        Ok(())
+    } else {
+        Err(error::OllamaError::Other(res.text().await?))
+    }
+}
+async fn map_response<T: serde::de::DeserializeOwned>(
+    res: reqwest::Response,
+) -> Result<T, error::OllamaError> {
+    if res.status().is_success() {
+        let bytes = res.bytes().await?;
+        Ok(serde_json::from_slice::<T>(&bytes)?)
+    } else {
+        Err(error::OllamaError::Other(res.text().await?))
     }
 }

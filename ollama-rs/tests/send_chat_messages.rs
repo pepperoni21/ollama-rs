@@ -1,7 +1,7 @@
-use base64::Engine;
 use std::sync::{Arc, Mutex};
-use tokio_stream::StreamExt;
 
+use base64::Engine;
+use futures_util::TryStreamExt;
 use ollama_rs::{
     generation::{
         chat::{request::ChatMessageRequest, ChatMessage},
@@ -27,8 +27,7 @@ async fn test_send_chat_messages_stream() {
         .unwrap();
 
     let mut done = false;
-    while let Some(res) = res.next().await {
-        let res = res.unwrap();
+    while let Some(res) = res.try_next().await.unwrap() {
         dbg!(&res);
         if res.done {
             done = true;
@@ -73,9 +72,7 @@ async fn test_send_chat_messages_with_history_stream() {
         .await
         .unwrap();
 
-    while let Some(res) = res.next().await {
-        let res = res.unwrap();
-
+    while let Some(res) = res.try_next().await.unwrap() {
         if res.done {
             done = true;
             break;

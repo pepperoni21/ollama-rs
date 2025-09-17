@@ -1,5 +1,6 @@
 #![allow(unused_imports)]
 use base64::Engine;
+use futures_util::{stream::Stream, StreamExt, TryStreamExt};
 use ollama_rs::{
     generation::{
         completion::{request::GenerationRequest, GenerationResponseStream},
@@ -8,13 +9,12 @@ use ollama_rs::{
     Ollama,
 };
 use tokio::io::AsyncWriteExt;
-use tokio_stream::StreamExt;
 
 #[allow(dead_code)]
 const PROMPT: &str = "Why is the sky blue?";
 
 #[tokio::test]
-async fn test_generation_stream() {
+async fn test_generation_stream() -> Result<(), Box<dyn std::error::Error>> {
     let ollama = Ollama::default();
 
     let mut res: GenerationResponseStream = ollama
@@ -23,18 +23,16 @@ async fn test_generation_stream() {
         .unwrap();
 
     let mut done = false;
-    while let Some(res) = res.next().await {
-        let res = res.unwrap();
-        for ele in res {
-            dbg!(&ele);
-            if ele.done {
-                done = true;
-                break;
-            }
+    while let Some(res) = res.try_next().await? {
+        dbg!(&res);
+        if res.done {
+            done = true;
+            break;
         }
     }
 
     assert!(done);
+    Ok(())
 }
 
 #[tokio::test]

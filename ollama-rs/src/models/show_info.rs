@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::{error::OllamaError, Ollama};
+use crate::Ollama;
 
 use super::ModelInfo;
 
@@ -12,20 +12,8 @@ impl Ollama {
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
-
-        let res = builder
-            .json(&ModelInfoRequest { model_name })
-            .send()
-            .await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(res.text().await?));
-        }
-
-        let res = res.bytes().await?;
-        let res = serde_json::from_slice::<ModelInfo>(&res)?;
-
-        Ok(res)
+        let request = ModelInfoRequest { model_name };
+        crate::map_response(builder.json(&request).send().await?).await
     }
 }
 

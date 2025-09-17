@@ -1,5 +1,5 @@
+use futures_util::TryStreamExt;
 use ollama_rs::{models::create::CreateModelRequest, Ollama};
-use tokio_stream::StreamExt;
 
 #[tokio::test]
 /// This test needs a Modelfile at /tmp to work
@@ -15,15 +15,10 @@ async fn test_create_model_stream() {
     let mut res = ollama.create_model_stream(request).await.unwrap();
 
     let mut done = false;
-    while let Some(res) = res.next().await {
-        match res {
-            Ok(res) => {
-                dbg!(&res.message);
-                if res.message.eq("success") {
-                    done = true;
-                }
-            }
-            Err(e) => panic!("{e:?}"),
+    while let Some(res) = res.try_next().await.unwrap() {
+        dbg!(&res.message);
+        if res.message.eq("success") {
+            done = true;
         }
     }
 

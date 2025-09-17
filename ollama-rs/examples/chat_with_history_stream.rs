@@ -1,3 +1,4 @@
+use futures_util::StreamExt;
 use futures_util::TryStreamExt;
 use ollama_rs::{
     generation::chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponseStream},
@@ -5,7 +6,6 @@ use ollama_rs::{
 };
 use std::sync::{Arc, Mutex};
 use tokio::io::{stdout, AsyncBufReadExt, AsyncWriteExt};
-use tokio_stream::StreamExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -39,8 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .await?;
 
-        while let Some(res) = stream.next().await {
-            let res = res.map_err(|_| "Error during stream")?;
+        while let Some(res) = stream.try_next().await? {
             stdout.write_all(res.message.content.as_bytes()).await?;
             stdout.flush().await?;
         }

@@ -4,23 +4,13 @@ use super::{images::Image, tools::ToolCall};
 use crate::{error::OllamaError, history::ChatHistory, Ollama};
 use request::ChatMessageRequest;
 
-#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
-#[cfg(feature = "stream")]
-use async_stream::stream;
-#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
-#[cfg(feature = "stream")]
-use std::sync::{Arc, Mutex};
-#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
-#[cfg(feature = "stream")]
-use tokio_stream::StreamExt;
-
 pub mod request;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
 /// A stream of `ChatMessageResponse` objects
 pub type ChatMessageResponseStream =
-    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<ChatMessageResponse, ()>> + Send>>;
+    futures_util::stream::BoxStream<'static, Result<ChatMessageResponse, OllamaError>>;
 
 impl Ollama {
     #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
@@ -31,83 +21,7 @@ impl Ollama {
         &self,
         request: ChatMessageRequest,
     ) -> crate::error::Result<ChatMessageResponseStream> {
-        let mut request = request;
-        request.stream = true;
-
-        let url = format!("{}api/chat", self.url_str());
-        let builder = self.reqwest_client.post(url);
-
-        #[cfg(feature = "headers")]
-        let builder = builder.headers(self.request_headers.clone());
-
-        let res = builder.json(&request).send().await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(
-                res.text().await.unwrap_or_else(|e| e.to_string()),
-            ));
-        }
-
-        let s = stream! {
-            let mut buffer = String::new();
-
-            let mut stream = res.bytes_stream();
-            while let Some(chunk_result) = stream.next().await {
-                match chunk_result {
-                    Ok(chunk) => {
-                        // Convert bytes to string and append to buffer
-                        if let Ok(chunk_str) = String::from_utf8(chunk.to_vec()) {
-                            buffer.push_str(&chunk_str);
-
-                            // Process complete lines in the buffer
-                            let mut lines_to_process = Vec::new();
-                            let mut start_pos = 0;
-
-                            // Find all complete lines in the buffer and collect them
-                            while let Some(pos) = buffer[start_pos..].find('\n') {
-                                let actual_pos = start_pos + pos;
-                                let line = buffer[start_pos..actual_pos].trim().to_string();
-                                if !line.is_empty() {
-                                    lines_to_process.push(line);
-                                }
-                                start_pos = actual_pos + 1;
-                            }
-
-                            // If we processed any lines, truncate the buffer
-                            if start_pos > 0 {
-                                buffer = buffer[start_pos..].to_string();
-                            }
-
-                            // Process all collected lines
-                            for line in lines_to_process {
-                                // Parse the JSON line
-                                match serde_json::from_str::<ChatMessageResponse>(&line) {
-                                    Ok(response) => yield Ok(response),
-                                    Err(e) => {
-                                        eprintln!("Failed to deserialize response: {e}");
-                                        // Continue processing other lines even if one fails
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("Failed to read response: {e}");
-                        yield Err(());
-                        break;
-                    }
-                }
-            }
-
-            // Process any remaining data in the buffer
-            if !buffer.is_empty() {
-                if let Ok(response) = serde_json::from_str::<ChatMessageResponse>(&buffer) {
-                    yield Ok(response);
-                }
-            }
-        };
-
-        Ok(Box::pin(s))
+        crate::stream::map_response(self.send_chat_messages_request(request, true).await?).await
     }
 
     /// Chat message generation.
@@ -116,27 +30,22 @@ impl Ollama {
         &self,
         request: ChatMessageRequest,
     ) -> crate::error::Result<ChatMessageResponse> {
-        let mut request = request;
-        request.stream = false;
+        crate::map_response(self.send_chat_messages_request(request, false).await?).await
+    }
 
+    async fn send_chat_messages_request(
+        &self,
+        mut request: ChatMessageRequest,
+        stream: bool,
+    ) -> Result<reqwest::Response, OllamaError> {
+        request.stream = stream;
         let url = format!("{}api/chat", self.url_str());
         let builder = self.reqwest_client.post(url);
 
         #[cfg(feature = "headers")]
         let builder = builder.headers(self.request_headers.clone());
 
-        let res = builder.json(&request).send().await?;
-
-        if !res.status().is_success() {
-            return Err(OllamaError::Other(
-                res.text().await.unwrap_or_else(|e| e.to_string()),
-            ));
-        }
-
-        let bytes = res.bytes().await?;
-        let res = serde_json::from_slice::<ChatMessageResponse>(&bytes)?;
-
-        Ok(res)
+        Ok(builder.json(&request).send().await?)
     }
 }
 
@@ -145,13 +54,12 @@ impl Ollama {
     #[cfg(feature = "stream")]
     pub async fn send_chat_messages_with_history_stream<C: ChatHistory + Send + 'static>(
         &self,
-        history: Arc<Mutex<C>>,
+        history: std::sync::Arc<std::sync::Mutex<C>>,
         mut request: ChatMessageRequest,
     ) -> crate::error::Result<ChatMessageResponseStream> {
-        use async_stream::stream;
-        use tokio_stream::StreamExt;
-
         // The request is modified to include the current chat messages
+
+        use futures_util::StreamExt;
         {
             let mut hist = history.lock().unwrap();
             for m in request.messages {
@@ -161,27 +69,24 @@ impl Ollama {
 
         request.messages = history.lock().unwrap().messages().to_vec();
         request.stream = true;
-
-        let mut resp_stream: ChatMessageResponseStream =
-            self.send_chat_messages_stream(request.clone()).await?;
-
-        let s = stream! {
-            let mut result = String::new();
-
-            while let Some(item) = resp_stream.try_next().await.unwrap() {
-                let msg_part = item.clone().message.content;
-
-                if item.done {
-                    history.lock().unwrap().push(ChatMessage::assistant(result.clone()));
-                } else {
-                    result.push_str(&msg_part);
-                }
-
-                yield Ok(item);
-            }
-        };
-
-        Ok(Box::pin(s))
+        let mut result = String::new();
+        Ok(Box::pin(
+            self.send_chat_messages_stream(request.clone())
+                .await?
+                .then(move |x| {
+                    std::future::ready(x.inspect(|x| {
+                        if x.done {
+                            history
+                                .lock()
+                                .unwrap()
+                                .push(ChatMessage::assistant(result.clone()));
+                        } else {
+                            let msg_part = &x.message.content;
+                            result.push_str(msg_part);
+                        }
+                    }))
+                }),
+        ))
     }
 
     /// Chat message generation

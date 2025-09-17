@@ -87,7 +87,7 @@ _Requires the `stream` feature._
 ```rust
 use ollama_rs::generation::completion::GenerationRequest;
 use tokio::io::{self, AsyncWriteExt};
-use tokio_stream::StreamExt;
+use futures_util::stream::Stream;
 
 let model = "llama2:latest".to_string();
 let prompt = "Why is the sky blue?".to_string();
@@ -95,9 +95,8 @@ let prompt = "Why is the sky blue?".to_string();
 let mut stream = ollama.generate_stream(GenerationRequest::new(model, prompt)).await.unwrap();
 
 let mut stdout = io::stdout();
-while let Some(res) = stream.next().await {
-    let responses = res.unwrap();
-    for resp in responses {
+while let Some(res) = stream.try_next().await.unwrap() {
+    for resp in rles {
         stdout.write_all(resp.response.as_bytes()).await.unwrap();
         stdout.flush().await.unwrap();
     }
@@ -195,12 +194,11 @@ _Requires the `stream` feature._
 
 ```rust
 use ollama_rs::models::create::CreateModelRequest;
-use tokio_stream::StreamExt;
+use futures_util::stream::Stream;
 
 let mut res = ollama.create_model_stream(CreateModelRequest::path("model".into(), "/tmp/Modelfile.example".into())).await.unwrap();
 
-while let Some(res) = res.next().await {
-    let res = res.unwrap();
+while let Some(res) = res.try_next().await.unwrap() {
     // Handle the status
 }
 ```
