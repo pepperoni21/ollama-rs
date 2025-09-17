@@ -48,7 +48,7 @@ impl TryFrom<Url> for HostUrl {
     type Error = HostUrlError;
 
     fn try_from(value: Url) -> Result<Self, Self::Error> {
-        if !matches!(value.scheme(), "http" | "https" | "") {
+        if !matches!(value.scheme(), "http" | "https") {
             Err(HostUrlError::UnknownScheme(value))
         } else if value.host().is_none() {
             Err(HostUrlError::MissingHost(value))
