@@ -77,13 +77,7 @@ impl TryFrom<&String> for HostUrl {
 #[derive(Debug, thiserror::Error)]
 pub enum HostUrlError {
     #[error("{0}")]
-    Parse(::url::ParseError),
+    Parse(#[from] ::url::ParseError),
     #[error("Missing url: {0}")]
     MissingHost(::url::Url),
-}
-
-impl From<::url::ParseError> for HostUrlError {
-    fn from(value: ::url::ParseError) -> Self {
-        HostUrlError::Parse(value)
-    }
 }
