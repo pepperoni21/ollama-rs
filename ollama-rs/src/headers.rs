@@ -1,4 +1,6 @@
-use crate::{IntoUrl, Ollama};
+use std::fmt::Debug;
+
+use crate::{HostUrl, Ollama};
 
 pub use http::header::*;
 
@@ -18,7 +20,11 @@ impl Ollama {
     /// # Panics
     ///
     /// Panics if the host is not a valid URL or if the URL cannot have a port.
-    pub fn new_with_request_headers(host: impl IntoUrl, port: u16, headers: HeaderMap) -> Self {
+    pub fn new_with_request_headers<TUrl>(host: TUrl, port: u16, headers: HeaderMap) -> Self
+    where
+        TUrl: TryInto<HostUrl>,
+        TUrl::Error: Debug,
+    {
         let mut ollama = Self::new(host, port);
         ollama.set_headers(Some(headers));
 
