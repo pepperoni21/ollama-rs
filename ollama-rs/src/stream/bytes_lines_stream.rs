@@ -78,7 +78,7 @@ mod tests {
     use futures_util::stream;
     use tokio_stream::StreamExt;
 
-    async fn collect_lines<'a>(chunks: Vec<&'a [u8]>) -> Vec<String> {
+    async fn collect_lines(chunks: Vec<&[u8]>) -> Vec<String> {
         let s = stream::iter(
             chunks
                 .into_iter()
