@@ -1,9 +1,8 @@
-#![cfg_attr(docsrs, feature(doc_cfg))]
-
-use url::Url;
+use std::fmt::Debug;
 
 #[cfg(feature = "macros")]
 pub use ollama_rs_macros::function;
+pub use url::*;
 
 #[cfg(feature = "macros")]
 pub mod re_exports {
@@ -19,76 +18,11 @@ pub mod generation;
 pub mod headers;
 pub mod history;
 pub mod models;
-
-/// A trait to try to convert some type into a [`Url`].
-///
-/// This trait is "sealed", such that only types within ollama-rs can
-/// implement it.
-///
-/// # Examples
-///
-/// ```
-/// use url::Url;
-/// use ollama_rs::IntoUrl;
-///
-/// let url: Url = "http://example.com".into_url().unwrap();
-/// ```
-pub trait IntoUrl: IntoUrlSealed {}
-
-impl IntoUrl for Url {}
-impl IntoUrl for String {}
-impl IntoUrl for &str {}
-impl IntoUrl for &String {}
-
-pub trait IntoUrlSealed {
-    fn into_url(self) -> Result<Url, url::ParseError>;
-
-    fn as_str(&self) -> &str;
-}
-
-impl IntoUrlSealed for Url {
-    fn into_url(self) -> Result<Url, url::ParseError> {
-        Ok(self)
-    }
-
-    fn as_str(&self) -> &str {
-        self.as_str()
-    }
-}
-
-impl IntoUrlSealed for &str {
-    fn into_url(self) -> Result<Url, url::ParseError> {
-        Url::parse(self)?.into_url()
-    }
-
-    fn as_str(&self) -> &str {
-        self
-    }
-}
-
-impl IntoUrlSealed for &String {
-    fn into_url(self) -> Result<Url, url::ParseError> {
-        (&**self).into_url()
-    }
-
-    fn as_str(&self) -> &str {
-        self.as_ref()
-    }
-}
-
-impl IntoUrlSealed for String {
-    fn into_url(self) -> Result<Url, url::ParseError> {
-        (&*self).into_url()
-    }
-
-    fn as_str(&self) -> &str {
-        self.as_ref()
-    }
-}
+mod url;
 
 #[derive(Debug, Clone)]
 pub struct Ollama {
-    pub(crate) url: Url,
+    pub(crate) url: HostUrl,
     pub(crate) reqwest_client: reqwest::Client,
     #[cfg(feature = "headers")]
     pub(crate) request_headers: reqwest::header::HeaderMap,
@@ -118,8 +52,12 @@ impl Ollama {
     /// # Panics
     ///
     /// Panics if the host is not a valid URL or if the URL cannot have a port.
-    pub fn new(host: impl IntoUrl, port: u16) -> Self {
-        let mut url: Url = host.into_url().unwrap();
+    pub fn new<TUrl>(host: TUrl, port: u16) -> Self
+    where
+        TUrl: TryInto<HostUrl>,
+        TUrl::Error: Debug,
+    {
+        let mut url: HostUrl = host.try_into().unwrap();
         url.set_port(Some(port)).unwrap();
 
         Self::from_url(url)
@@ -140,16 +78,15 @@ impl Ollama {
     /// # Panics
     ///
     /// Panics if the host is not a valid URL or if the URL cannot have a port.
-    pub fn new_with_client(host: impl IntoUrl, port: u16, reqwest_client: reqwest::Client) -> Self {
-        let mut url: Url = host.into_url().unwrap();
+    pub fn new_with_client<TUrl>(host: TUrl, port: u16, reqwest_client: reqwest::Client) -> Self
+    where
+        TUrl: TryInto<HostUrl>,
+        TUrl::Error: Debug,
+    {
+        let mut url: HostUrl = host.try_into().unwrap();
         url.set_port(Some(port)).unwrap();
 
-        Self {
-            url,
-            reqwest_client,
-            #[cfg(feature = "headers")]
-            request_headers: reqwest::header::HeaderMap::new(),
-        }
+        Self::from_url_with_client(url, reqwest_client)
     }
 
     /// Attempts to create a new `Ollama` instance from a URL.
@@ -162,16 +99,22 @@ impl Ollama {
     ///
     /// A `Result` containing the new `Ollama` instance or a `url::ParseError`.
     #[inline]
-    pub fn try_new(url: impl IntoUrl) -> Result<Self, url::ParseError> {
-        Ok(Self::from_url(url.into_url()?))
+    pub fn try_new<TUrl: TryInto<HostUrl>>(url: TUrl) -> Result<Self, TUrl::Error> {
+        Ok(Self::from_url(url.try_into()?))
     }
 
     /// Create new instance from a [`Url`].
     #[inline]
-    pub fn from_url(url: Url) -> Self {
+    pub fn from_url(url: HostUrl) -> Self {
+        Self::from_url_with_client(url, Default::default())
+    }
+
+    pub fn from_url_with_client(url: HostUrl, reqwest_client: reqwest::Client) -> Self {
         Self {
             url,
-            ..Default::default()
+            reqwest_client,
+            #[cfg(feature = "headers")]
+            request_headers: reqwest::header::HeaderMap::new(),
         }
     }
 
@@ -181,12 +124,12 @@ impl Ollama {
     ///
     /// Panics if the URL does not have a host.
     #[inline]
-    pub fn uri(&self) -> String {
-        self.url.host().unwrap().to_string()
+    pub fn host(&self) -> ::url::Host<&str> {
+        self.url.host()
     }
 
     /// Returns a reference to the URL of the Ollama service.
-    pub fn url(&self) -> &Url {
+    pub fn url(&self) -> &HostUrl {
         &self.url
     }
 
@@ -209,8 +152,8 @@ impl Ollama {
     }
 }
 
-impl From<Url> for Ollama {
-    fn from(url: Url) -> Self {
+impl From<HostUrl> for Ollama {
+    fn from(url: HostUrl) -> Self {
         Self::from_url(url)
     }
 }
@@ -218,11 +161,6 @@ impl From<Url> for Ollama {
 impl Default for Ollama {
     /// Returns a default Ollama instance with the host set to `http://127.0.0.1:11434`.
     fn default() -> Self {
-        Self {
-            url: Url::parse("http://127.0.0.1:11434").unwrap(),
-            reqwest_client: reqwest::Client::new(),
-            #[cfg(feature = "headers")]
-            request_headers: reqwest::header::HeaderMap::new(),
-        }
+        Self::from_url("http://127.0.0.1:11434".parse().unwrap())
     }
 }
