@@ -83,3 +83,57 @@ impl ChatMessageRequest {
         self
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::generation::parameters::{FormatType, JsonSchema, JsonStructure};
+    use serde_json::Value;
+
+    #[allow(dead_code)]
+    #[derive(Debug, JsonSchema)]
+    struct StructuredReply {
+        answer: String,
+    }
+
+    #[test]
+    fn serializes_structured_json_format() {
+        let request = ChatMessageRequest::new(
+            "model".to_string(),
+            vec![ChatMessage::user("hello".to_string())],
+        )
+        .format(FormatType::StructuredJson(Box::new(JsonStructure::new::<
+            StructuredReply,
+        >())));
+
+        let value = serde_json::to_value(&request).expect("serialize request");
+
+        let format = value
+            .get("format")
+            .expect("format field present")
+            .as_object()
+            .expect("format serialized as object");
+
+        assert_eq!(
+            format
+                .get("type")
+                .expect("schema type present")
+                .as_str()
+                .expect("type is string"),
+            "object"
+        );
+
+        let properties = format
+            .get("properties")
+            .expect("schema has properties")
+            .as_object()
+            .expect("properties serialized as object");
+
+        assert!(properties.contains_key("answer"));
+
+        assert_eq!(
+            value.get("stream").expect("stream field present"),
+            &Value::Bool(false)
+        );
+    }
+}

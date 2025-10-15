@@ -169,12 +169,15 @@ impl Ollama {
             let mut result = String::new();
 
             while let Some(item) = resp_stream.try_next().await.unwrap() {
-                let msg_part = item.clone().message.content;
+                let mut item = item;
+                let msg_part = item.message.content.clone();
+
+                result.push_str(&msg_part);
 
                 if item.done {
+                    item.message.content = result.clone();
                     history.lock().unwrap().push(ChatMessage::assistant(result.clone()));
-                } else {
-                    result.push_str(&msg_part);
+                    result.clear();
                 }
 
                 yield Ok(item);
