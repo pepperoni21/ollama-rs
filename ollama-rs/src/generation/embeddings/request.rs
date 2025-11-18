@@ -1,8 +1,9 @@
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 
 use crate::{generation::parameters::KeepAlive, models::ModelOptions};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(untagged)]
 pub enum EmbeddingsInput {
     Single(String),
     Multiple(Vec<String>),
@@ -48,7 +49,7 @@ impl Serialize for EmbeddingsInput {
 }
 
 /// An embeddings generation request to Ollama.
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct GenerateEmbeddingsRequest {
     #[serde(rename = "model")]
     model_name: String,
@@ -83,5 +84,38 @@ impl GenerateEmbeddingsRequest {
     pub fn truncate(mut self, truncate: bool) -> Self {
         self.truncate = Some(truncate);
         self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::generation::embeddings::request::{EmbeddingsInput, GenerateEmbeddingsRequest};
+
+    #[test]
+    fn serde_embedding_request_single() {
+        let request = GenerateEmbeddingsRequest::new(
+            "test".to_string(),
+            EmbeddingsInput::Single("test".to_string()),
+        );
+        let json = serde_json::to_vec(&request).unwrap();
+        let parsed_request: GenerateEmbeddingsRequest = serde_json::from_slice(&json).unwrap();
+        assert_eq!(request.model_name, parsed_request.model_name);
+        assert_eq!(request.input, parsed_request.input);
+        assert_eq!(request.truncate, parsed_request.truncate);
+        assert_eq!(request.keep_alive, parsed_request.keep_alive);
+    }
+
+    #[test]
+    fn serde_embedding_request_multiple() {
+        let request = GenerateEmbeddingsRequest::new(
+            "test".to_string(),
+            EmbeddingsInput::Multiple(vec!["test".to_string()]),
+        );
+        let json = serde_json::to_vec(&request).unwrap();
+        let parsed_request: GenerateEmbeddingsRequest = serde_json::from_slice(&json).unwrap();
+        assert_eq!(request.model_name, parsed_request.model_name);
+        assert_eq!(request.input, parsed_request.input);
+        assert_eq!(request.truncate, parsed_request.truncate);
+        assert_eq!(request.keep_alive, parsed_request.keep_alive);
     }
 }
