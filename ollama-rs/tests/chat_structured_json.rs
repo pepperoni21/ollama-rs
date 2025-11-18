@@ -75,8 +75,8 @@ async fn chat_structured_json_stream() {
 
     let _final_message = final_message.expect("received done chunk");
 
-    let parsed: CountryInfo = serde_json::from_str(&aggregated)
-        .expect("stream response parses into CountryInfo");
+    let parsed: CountryInfo =
+        serde_json::from_str(&aggregated).expect("stream response parses into CountryInfo");
 
     assert_eq!(parsed.country, "Canada");
     assert_eq!(parsed.capital, "Ottawa");
