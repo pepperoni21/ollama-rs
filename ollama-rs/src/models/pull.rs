@@ -96,7 +96,7 @@ impl Ollama {
 }
 
 /// A pull model request to Ollama.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct PullModelRequest {
     #[serde(rename = "name")]
     model_name: String,
@@ -106,7 +106,7 @@ struct PullModelRequest {
 }
 
 /// A pull model status response from Ollama.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PullModelStatus {
     #[serde(rename = "status")]
     pub message: String,

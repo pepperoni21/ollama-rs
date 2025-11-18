@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{error::OllamaError, Ollama};
 
@@ -31,7 +31,7 @@ impl Ollama {
 }
 
 /// A copy model request to Ollama.
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 struct CopyModelRequest {
     source: String,
     destination: String,
