@@ -137,7 +137,7 @@ _Every message sent and received will be stored in the library's history._
 Example with history:
 
 ```rust
-use ollama_rs::generation::chat::{ChatMessage, ChatMessageRequest};
+use ollama_rs::generation::chat::{request::ChatMessageRequest, ChatMessage};
 use ollama_rs::history::ChatHistory;
 
 let model = "llama2:latest".to_string();
