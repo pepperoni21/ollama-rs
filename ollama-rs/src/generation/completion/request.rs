@@ -20,6 +20,7 @@ pub struct GenerationRequest<'a> {
     pub prompt: Cow<'a, str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub suffix: Option<Cow<'a, str>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub images: Vec<Image>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub options: Option<ModelOptions>,

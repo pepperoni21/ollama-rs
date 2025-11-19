@@ -16,7 +16,7 @@ pub struct ChatMessageRequest {
     #[serde(rename = "model")]
     pub model_name: String,
     pub messages: Vec<ChatMessage>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tools: Vec<ToolInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub options: Option<ModelOptions>,
@@ -27,6 +27,7 @@ pub struct ChatMessageRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_alive: Option<KeepAlive>,
     /// Must be false if tools are provided
+    #[serde(default)]
     pub(crate) stream: bool,
     pub think: Option<bool>,
 }

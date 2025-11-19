@@ -159,7 +159,14 @@ impl<'de> Deserialize<'de> for KeepAlive {
             where
                 E: serde::de::Error,
             {
-                self.visit_i8(v as i8)
+                match v {
+                    -1 => Ok(KeepAlive::Indefinitely),
+                    0 => Ok(KeepAlive::UnloadOnCompletion),
+                    _ => Err(E::invalid_value(
+                        serde::de::Unexpected::Signed(v),
+                        &"0 or -1",
+                    )),
+                }
             }
 
             fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
