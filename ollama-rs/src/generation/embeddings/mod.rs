@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{error::OllamaError, Ollama};
 
@@ -36,7 +36,7 @@ impl Ollama {
 }
 
 /// An embeddings generation response from Ollama.
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GenerateEmbeddingsResponse {
     #[allow(dead_code)]
     pub embeddings: Vec<Vec<f32>>,

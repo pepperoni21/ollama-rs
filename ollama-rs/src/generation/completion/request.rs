@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     generation::{
@@ -13,13 +13,14 @@ use crate::{
 use super::GenerationContext;
 
 /// A generation request to Ollama.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenerationRequest<'a> {
     #[serde(rename = "model")]
     pub model_name: String,
     pub prompt: Cow<'a, str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub suffix: Option<Cow<'a, str>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub images: Vec<Image>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub options: Option<ModelOptions>,

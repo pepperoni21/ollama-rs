@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{error::OllamaError, Ollama};
 
@@ -26,7 +26,7 @@ impl Ollama {
 }
 
 /// A response from Ollama containing a list of local models.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct ListLocalModelsResponse {
     models: Vec<LocalModel>,
 }

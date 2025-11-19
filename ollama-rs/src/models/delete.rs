@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{error::OllamaError, Ollama};
 
@@ -24,7 +24,7 @@ impl Ollama {
 }
 
 /// A delete model request to Ollama.
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 struct DeleteModelRequest {
     #[serde(rename = "name")]
     model_name: String,

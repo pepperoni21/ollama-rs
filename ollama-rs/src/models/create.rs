@@ -82,7 +82,7 @@ impl Ollama {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub enum QuantizationType {
     #[serde(rename = "q2_K")]
     Q2K,
@@ -115,7 +115,7 @@ pub enum QuantizationType {
 }
 
 /// A create model request to Ollama.
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct CreateModelRequest {
     /// Name of the model to create
     #[serde(rename = "model")]
@@ -219,7 +219,7 @@ impl CreateModelRequest {
 }
 
 /// A create model status response from Ollama.
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateModelStatus {
     #[serde(rename = "status")]
     pub message: String,

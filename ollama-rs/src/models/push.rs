@@ -98,7 +98,7 @@ impl Ollama {
 }
 
 /// A push model request to Ollama.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct PushModelRequest {
     #[serde(rename = "name")]
     model_name: String,
@@ -108,7 +108,7 @@ struct PushModelRequest {
 }
 
 /// A push model status response from Ollama.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PushModelStatus {
     #[serde(rename = "status")]
     pub message: String,
