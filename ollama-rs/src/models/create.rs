@@ -119,35 +119,35 @@ pub enum QuantizationType {
 pub struct CreateModelRequest {
     /// Name of the model to create
     #[serde(rename = "model")]
-    model_name: String,
+    pub model_name: String,
     /// Name of an existing model to create the new model from
     #[serde(rename = "from")]
-    from_model: Option<String>,
+    pub from_model: Option<String>,
     /// A dictionary of file names to SHA256 digests of blobs to create the model from
     #[serde(skip_serializing_if = "Option::is_none")]
-    files: Option<std::collections::HashMap<String, String>>,
+    pub files: Option<std::collections::HashMap<String, String>>,
     /// A dictionary of file names to SHA256 digests of blobs for LORA adapters
     #[serde(skip_serializing_if = "Option::is_none")]
-    adapters: Option<std::collections::HashMap<String, String>>,
+    pub adapters: Option<std::collections::HashMap<String, String>>,
     /// The prompt template for the model
     #[serde(skip_serializing_if = "Option::is_none")]
-    template: Option<String>,
+    pub template: Option<String>,
     /// A string or list of strings containing the license or licenses for the model
     #[serde(skip_serializing_if = "Option::is_none")]
-    license: Option<Vec<String>>,
+    pub license: Option<Vec<String>>,
     /// A string containing the system prompt for the model
     #[serde(skip_serializing_if = "Option::is_none")]
-    system: Option<String>,
+    pub system: Option<String>,
     /// A dictionary of parameters for the model
     #[serde(skip_serializing_if = "Option::is_none")]
-    parameters: Option<ModelOptions>,
+    pub parameters: Option<ModelOptions>,
     /// A list of message objects used to create a conversation
     #[serde(skip_serializing_if = "Option::is_none")]
-    messages: Option<Vec<ChatMessage>>,
-    stream: bool,
+    pub messages: Option<Vec<ChatMessage>>,
+    pub stream: bool,
     /// Quantize a non-quantized model
     #[serde(skip_serializing_if = "Option::is_none")]
-    quantize: Option<QuantizationType>,
+    pub quantize: Option<QuantizationType>,
 }
 
 impl CreateModelRequest {
