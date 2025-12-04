@@ -20,9 +20,8 @@ impl Ollama {
         model_name: String,
         allow_insecure: bool,
     ) -> crate::error::Result<PullModelStatusStream> {
-        use tokio_stream::StreamExt;
-
         use crate::error::{InternalOllamaError, OllamaError};
+        use tokio_stream::StreamExt;
 
         let request = PullModelRequest {
             model_name,
@@ -42,26 +41,49 @@ impl Ollama {
             return Err(OllamaError::Other(res.text().await?));
         }
 
-        let stream = Box::new(res.bytes_stream().map(|res| match res {
-            Ok(bytes) => {
-                let res = serde_json::from_slice::<PullModelStatus>(&bytes);
-                match res {
-                    Ok(res) => Ok(res),
-                    Err(e) => {
-                        let err = serde_json::from_slice::<InternalOllamaError>(&bytes);
-                        match err {
-                            Ok(err) => Err(OllamaError::InternalError(err)),
-                            Err(_) => Err(e.into()),
+        let mut stream = res.bytes_stream();
+
+        // Use async-stream to create a generator
+        let stream = async_stream::try_stream! {
+            let mut buffer = Vec::new();
+
+            while let Some(chunk) = stream.next().await {
+                let bytes = chunk.map_err(|e| OllamaError::Other(e.to_string()))?;
+                buffer.extend_from_slice(&bytes);
+
+                // Process all complete lines in the buffer
+                while let Some(i) = buffer.iter().position(|&b| b == b'\n') {
+                    // Split the buffer at the newline:
+                    // 'line' gets the data up to and including \n
+                    // 'buffer' keeps the rest
+                    let line_bytes: Vec<u8> = buffer.drain(..=i).collect();
+
+                    // Slice off the newline for parsing
+                    let line_slice = &line_bytes[..line_bytes.len() - 1]; // -1 because we know it ends in \n
+
+                    if line_slice.is_empty() {
+                        continue;
+                    }
+
+                    // Try parsing
+                    let res = serde_json::from_slice::<PullModelStatus>(line_slice);
+                    match res {
+                        Ok(res) => yield res,
+                        Err(e) => {
+                            // If parsing fails, check if it's an internal API error
+                            let err = serde_json::from_slice::<InternalOllamaError>(line_slice);
+                            match err {
+                                Ok(err) => Err(OllamaError::InternalError(err))?,
+                                Err(_) => Err::<(), OllamaError>(e.into())?,
+                            }
                         }
                     }
                 }
             }
-            Err(e) => Err(e.into()),
-        }));
+        };
 
-        Ok(std::pin::Pin::from(stream))
+        Ok(std::pin::Pin::from(Box::new(stream)))
     }
-
     /// Pull a model with a single response, only the final status will be returned.
     /// - `model_name` - The name of the model to pull.
     /// - `allow_insecure` - Allow insecure connections to the library. Only use this if you are pulling from your own library during development.
