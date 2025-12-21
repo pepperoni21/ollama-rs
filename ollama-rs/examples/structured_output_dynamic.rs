@@ -41,15 +41,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .await?;
 
-    // Output {
-    //     country: "Canada",
-    //     capital: "Ottawa",
-    //     languages: [
-    //         "English",
-    //         "French",
-    //     ],
-    //     temperature: Cold,
-    // }
     dbg!(&res.response);
 
     Ok(())
