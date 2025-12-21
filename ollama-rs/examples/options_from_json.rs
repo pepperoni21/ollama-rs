@@ -6,8 +6,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let model = "llama2:latest".to_string();
     let prompt = "Why is the sky blue?".to_string();
 
-    // Fetch the configuration from a file or from user request
-    // let options_str = fs::read_to_string("options.json").expect("The option file should be available")    ;
     let options_str = r#"{
       "temperature": 0.2,
       "repeat_penalty": 1.5,
