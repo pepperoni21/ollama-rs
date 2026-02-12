@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     generation::{
-        parameters::{FormatType, KeepAlive},
+        parameters::{FormatType, KeepAlive, ThinkType},
         tools::ToolInfo,
     },
     models::ModelOptions,
@@ -29,7 +29,8 @@ pub struct ChatMessageRequest {
     /// Must be false if tools are provided
     #[serde(default)]
     pub(crate) stream: bool,
-    pub think: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub think: Option<ThinkType>,
 }
 
 impl ChatMessageRequest {
@@ -79,8 +80,8 @@ impl ChatMessageRequest {
     }
 
     /// Used to control whether thinking/reasoning models will think before responding
-    pub fn think(mut self, think: bool) -> Self {
-        self.think = Some(think);
+    pub fn think(mut self, think: impl Into<ThinkType>) -> Self {
+        self.think = Some(think.into());
         self
     }
 }

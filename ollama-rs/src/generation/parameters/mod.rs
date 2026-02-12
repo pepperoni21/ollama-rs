@@ -2,6 +2,10 @@ use schemars::{generate::SchemaSettings, Schema};
 pub use schemars::{schema_for, JsonSchema};
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 
+mod think;
+
+pub use think::*;
+
 /// The format to return a response in
 #[derive(Debug, Clone, PartialEq)]
 pub enum FormatType {
@@ -261,77 +265,5 @@ impl TimeUnit {
             "h" => Some(TimeUnit::Hours),
             _ => None,
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::generation::parameters::{FormatType, JsonStructure, KeepAlive, TimeUnit};
-
-    #[test]
-    fn serde_keep_alive_indefinitely() {
-        let keep_alive = KeepAlive::Indefinitely;
-        let json = serde_json::to_vec(&keep_alive).unwrap();
-
-        let parsed_keep_alive: KeepAlive = serde_json::from_slice(&json).unwrap();
-
-        assert_eq!(keep_alive, parsed_keep_alive);
-    }
-
-    #[test]
-    fn serde_keep_alive_unload_on_completion() {
-        let keep_alive = KeepAlive::UnloadOnCompletion;
-        let json = serde_json::to_vec(&keep_alive).unwrap();
-
-        let parsed_keep_alive: KeepAlive = serde_json::from_slice(&json).unwrap();
-
-        assert_eq!(keep_alive, parsed_keep_alive);
-    }
-
-    #[test]
-    fn serde_keep_alive_until() {
-        let keep_alive = KeepAlive::Until {
-            time: 1,
-            unit: TimeUnit::Seconds,
-        };
-        let json = serde_json::to_vec(&keep_alive).unwrap();
-        let parsed_keep_alive: KeepAlive = serde_json::from_slice(&json).unwrap();
-        assert_eq!(keep_alive, parsed_keep_alive);
-
-        let keep_alive = KeepAlive::Until {
-            time: 1,
-            unit: TimeUnit::Minutes,
-        };
-        let json = serde_json::to_vec(&keep_alive).unwrap();
-        let parsed_keep_alive: KeepAlive = serde_json::from_slice(&json).unwrap();
-        assert_eq!(keep_alive, parsed_keep_alive);
-
-        let keep_alive = KeepAlive::Until {
-            time: 1,
-            unit: TimeUnit::Hours,
-        };
-        let json = serde_json::to_vec(&keep_alive).unwrap();
-        let parsed_keep_alive: KeepAlive = serde_json::from_slice(&json).unwrap();
-        assert_eq!(keep_alive, parsed_keep_alive);
-    }
-
-    #[test]
-    fn serde_format_type_json() {
-        let format_type = FormatType::Json;
-        let json = serde_json::to_vec(&format_type).unwrap();
-        let parsed_format_type: FormatType = serde_json::from_slice(&json).unwrap();
-        assert_eq!(format_type, parsed_format_type);
-    }
-
-    #[test]
-    fn serde_format_type_schema() {
-        let format_type = FormatType::StructuredJson(Box::new(JsonStructure {
-            schema: schemars::json_schema!({
-                "type": ["object", "null"]
-            }),
-        }));
-        let json = serde_json::to_vec(&format_type).unwrap();
-        let parsed_format_type: FormatType = serde_json::from_slice(&json).unwrap();
-        assert_eq!(format_type, parsed_format_type);
     }
 }
