@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{
     generation::{
         chat::{request::ChatMessageRequest, ChatMessage, ChatMessageResponse, MessageRole},
-        parameters::{FormatType, KeepAlive},
+        parameters::{FormatType, KeepAlive, ThinkType},
         tools::{Tool, ToolHolder, ToolInfo},
     },
     history::ChatHistory,
@@ -26,7 +26,7 @@ pub struct Coordinator<C: ChatHistory> {
     debug: bool,
     format: Option<FormatType>,
     keep_alive: Option<KeepAlive>,
-    think: Option<bool>,
+    think: Option<ThinkType>,
 }
 
 impl<C: ChatHistory> Coordinator<C> {
@@ -82,8 +82,8 @@ impl<C: ChatHistory> Coordinator<C> {
         self
     }
 
-    pub fn think(mut self, think: bool) -> Self {
-        self.think = Some(think);
+    pub fn think(mut self, think: impl Into<ThinkType>) -> Self {
+        self.think = Some(think.into());
         self
     }
 
@@ -107,7 +107,7 @@ impl<C: ChatHistory> Coordinator<C> {
         }
 
         if let Some(think) = &self.think {
-            request = request.think(*think);
+            request = request.think(think.clone());
         }
 
         if let Some(format) = &self.format {

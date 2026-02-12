@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     generation::{
         images::Image,
-        parameters::{FormatType, KeepAlive},
+        parameters::{FormatType, KeepAlive, ThinkType},
     },
     models::ModelOptions,
 };
@@ -36,7 +36,8 @@ pub struct GenerationRequest<'a> {
     pub format: Option<FormatType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_alive: Option<KeepAlive>,
-    pub think: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub think: Option<ThinkType>,
 }
 
 impl<'a> GenerationRequest<'a> {
@@ -124,8 +125,8 @@ impl<'a> GenerationRequest<'a> {
     }
 
     /// Used to control whether thinking/reasoning models will think before responding
-    pub fn think(mut self, think: bool) -> Self {
-        self.think = Some(think);
+    pub fn think(mut self, think: impl Into<ThinkType>) -> Self {
+        self.think = Some(think.into());
         self
     }
 }
