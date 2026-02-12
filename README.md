@@ -184,7 +184,9 @@ _Returns a `ModelInfo` struct._
 ```rust
 use ollama_rs::models::create::CreateModelRequest;
 
-let res = ollama.create_model(CreateModelRequest::path("model".into(), "/tmp/Modelfile.example".into())).await.unwrap();
+let res = ollama.create_model(CreateModelRequest::new("my_model".into())
+    .system("You're a chat bot.".into())
+    .from_model("llama2:latest".into())).await.unwrap();
 ```
 
 _Returns a `CreateModelStatus` struct representing the final status of the model creation._
@@ -197,7 +199,9 @@ _Requires the `stream` feature._
 use ollama_rs::models::create::CreateModelRequest;
 use tokio_stream::StreamExt;
 
-let mut res = ollama.create_model_stream(CreateModelRequest::path("model".into(), "/tmp/Modelfile.example".into())).await.unwrap();
+let res = ollama.create_model_stream(CreateModelRequest::new("my_model".into())
+    .system("You're a chat bot.".into())
+    .from_model("llama2:latest".into())).await.unwrap();
 
 while let Some(res) = res.next().await {
     let res = res.unwrap();
