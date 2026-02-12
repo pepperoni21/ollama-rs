@@ -31,6 +31,10 @@ pub struct ChatMessageRequest {
     pub(crate) stream: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub think: Option<ThinkType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logprobs: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_logprobs: Option<u32>,
 }
 
 impl ChatMessageRequest {
@@ -46,6 +50,8 @@ impl ChatMessageRequest {
             stream: false,
             tools: vec![],
             think: None,
+            logprobs: None,
+            top_logprobs: None,
         }
     }
 
@@ -82,6 +88,18 @@ impl ChatMessageRequest {
     /// Used to control whether thinking/reasoning models will think before responding
     pub fn think(mut self, think: impl Into<ThinkType>) -> Self {
         self.think = Some(think.into());
+        self
+    }
+
+    /// Used to control whether to return log probabilities for each token
+    pub fn logprobs(mut self, logprobs: bool) -> Self {
+        self.logprobs = Some(logprobs);
+        self
+    }
+
+    /// Used to control the number of top log probabilities to return for each token
+    pub fn top_logprobs(mut self, top_logprobs: u32) -> Self {
+        self.top_logprobs = Some(top_logprobs);
         self
     }
 }
