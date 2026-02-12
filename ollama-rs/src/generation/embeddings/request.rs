@@ -60,6 +60,8 @@ pub struct GenerateEmbeddingsRequest {
     pub options: Option<ModelOptions>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_alive: Option<KeepAlive>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dimensions: Option<u32>,
 }
 
 impl GenerateEmbeddingsRequest {
@@ -83,6 +85,11 @@ impl GenerateEmbeddingsRequest {
 
     pub fn truncate(mut self, truncate: bool) -> Self {
         self.truncate = Some(truncate);
+        self
+    }
+
+    pub fn dimensions(mut self, dimensions: u32) -> Self {
+        self.dimensions = Some(dimensions);
         self
     }
 }
