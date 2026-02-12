@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 use super::{images::Image, tools::ToolCall};
-use crate::{error::OllamaError, history::ChatHistory, Ollama};
+use crate::{
+    error::OllamaError, generation::parameters::LogprobsData, history::ChatHistory, Ollama,
+};
 use request::ChatMessageRequest;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
@@ -213,7 +215,7 @@ impl Ollama {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ChatMessageResponse {
     /// The name of the model used for the completion.
     pub model: String,
@@ -221,13 +223,15 @@ pub struct ChatMessageResponse {
     pub created_at: String,
     /// The generated chat message.
     pub message: ChatMessage,
+    /// The log probabilities (only if `logprobs` is set to `true`)
+    pub logprobs: Option<Vec<LogprobsData>>,
     pub done: bool,
     #[serde(flatten)]
     /// The final data of the completion. This is only present if the completion is done.
     pub final_data: Option<ChatMessageFinalResponseData>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ChatMessageFinalResponseData {
     /// Time spent generating the response
     pub total_duration: u64,

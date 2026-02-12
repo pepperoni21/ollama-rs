@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{error::OllamaError, Ollama};
+use crate::{error::OllamaError, generation::parameters::LogprobsData, Ollama};
 
 use request::GenerationRequest;
 
@@ -107,7 +107,7 @@ impl Ollama {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenerationContext(pub Vec<i32>);
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct GenerationResponse {
     /// The name of the model used for the completion.
     pub model: String,
@@ -133,4 +133,6 @@ pub struct GenerationResponse {
     pub eval_duration: Option<u64>,
     /// Contains the text that was inside thinking tags in the original model output when ChatMessageRequest.Think is enabled.
     pub thinking: Option<String>,
+    /// The log probabilities (only if `logprobs` is set to `true`)
+    pub logprobs: Option<Vec<LogprobsData>>,
 }
