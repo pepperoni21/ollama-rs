@@ -268,7 +268,7 @@ impl TimeUnit {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LogprobsData {
     pub token: String,
     pub logprob: f64,

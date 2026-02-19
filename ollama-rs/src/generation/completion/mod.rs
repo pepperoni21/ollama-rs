@@ -107,7 +107,7 @@ impl Ollama {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenerationContext(pub Vec<i32>);
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenerationResponse {
     /// The name of the model used for the completion.
     pub model: String,
