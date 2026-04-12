@@ -29,7 +29,7 @@ pub mod models;
 ///
 /// ```
 /// use url::Url;
-/// use ollama_rs::IntoUrl;
+/// use ollama_rs::IntoUrlSealed;
 ///
 /// let url: Url = "http://example.com".into_url().unwrap();
 /// ```

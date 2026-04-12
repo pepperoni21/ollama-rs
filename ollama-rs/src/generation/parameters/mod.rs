@@ -79,8 +79,16 @@ impl<'de> Deserialize<'de> for FormatType {
 /// Represents a serialized JSON schema. You can create this by converting
 /// a JsonSchema:
 /// ```rust
+/// use schemars::{JsonSchema, schema_for};
+/// use ollama_rs::generation::parameters::JsonStructure;
+///
+/// #[derive(JsonSchema)]
+/// struct Output {
+///     foo: i32
+/// }
+///
 /// let json_schema = schema_for!(Output);
-/// let serialized: SerializedJsonSchema = json_schema.into();
+/// let serialized: JsonStructure = json_schema.into();
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct JsonStructure {
@@ -101,6 +109,12 @@ impl JsonStructure {
     }
 
     pub fn new_for_schema(schema: Schema) -> Self {
+        Self { schema }
+    }
+}
+
+impl From<Schema> for JsonStructure {
+    fn from(schema: Schema) -> Self {
         Self { schema }
     }
 }
