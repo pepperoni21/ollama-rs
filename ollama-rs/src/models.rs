@@ -10,6 +10,8 @@ pub mod pull;
 pub mod push;
 pub mod show_info;
 
+use std::collections::HashMap;
+
 #[cfg(feature = "modelfile")]
 use modelfile::modelfile::Modelfile;
 
@@ -59,7 +61,7 @@ pub struct ModelInfo {
 }
 
 // Options for generation requests to Ollama.
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct ModelOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) mirostat: Option<u8>,
@@ -93,6 +95,10 @@ pub struct ModelOptions {
     pub(super) top_k: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) top_p: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) min_p: Option<f32>,
+    #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
+    pub(super) extra: HashMap<String, serde_json::Value>,
 }
 
 impl ModelOptions {
@@ -189,6 +195,34 @@ impl ModelOptions {
     /// Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more focused and conservative text. (Default: 0.9)
     pub fn top_p(mut self, top_p: f32) -> Self {
         self.top_p = Some(top_p);
+        self
+    }
+
+    /// Alternative to the topp, and aims to ensure a balance of quality and variety. The parameter _p represents the minimum probability for a token to be considered, relative to the probability of the most likely token. For example, with p=0.05 and the most likely token having a probability of 0.9, logits with a value less than 0.045 are filtered out. (Default: 0.0)
+    pub fn min_p(mut self, min_p: f32) -> Self {
+        self.min_p = Some(min_p);
+        self
+    }
+
+    /// Add an additional model parameter not listed in the documentation for the Modelfile
+    pub fn extra<K, V>(mut self, key: K, value: V) -> Self
+    where
+        K: Into<String>,
+        V: Into<serde_json::Value>,
+    {
+        self.extra.insert(key.into(), value.into());
+        self
+    }
+
+    /// Additional model parameters not listed in the documentation for the Modelfile
+    pub fn extras<I, K, V>(mut self, extras: I) -> Self
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: Into<String>,
+        V: Into<serde_json::Value>,
+    {
+        self.extra
+            .extend(extras.into_iter().map(|(k, v)| (k.into(), v.into())));
         self
     }
 }
