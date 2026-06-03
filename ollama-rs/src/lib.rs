@@ -104,6 +104,23 @@ pub struct Ollama {
 /// * `reqwest_client` - The HTTP client used for requests.
 /// * `request_headers` - Optional headers for requests (enabled with the `headers` feature).
 impl Ollama {
+    /// Returns a new [`OllamaBuilder`] for fluently configuring an `Ollama`
+    /// instance.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ollama_rs::Ollama;
+    ///
+    /// let ollama = Ollama::builder()
+    ///     .host("http://localhost")
+    ///     .port(11434)
+    ///     .build();
+    /// ```
+    pub fn builder() -> OllamaBuilder {
+        OllamaBuilder::new()
+    }
+
     /// Creates a new `Ollama` instance with the specified host and port.
     ///
     /// # Arguments
@@ -118,6 +135,10 @@ impl Ollama {
     /// # Panics
     ///
     /// Panics if the host is not a valid URL or if the URL cannot have a port.
+    #[deprecated(
+        since = "0.3.5",
+        note = "use `Ollama::builder().host(host).port(port).build()` instead"
+    )]
     pub fn new(host: impl IntoUrl, port: u16) -> Self {
         let mut url: Url = host.into_url().unwrap();
         url.set_port(Some(port)).unwrap();
@@ -140,6 +161,10 @@ impl Ollama {
     /// # Panics
     ///
     /// Panics if the host is not a valid URL or if the URL cannot have a port.
+    #[deprecated(
+        since = "0.3.5",
+        note = "use `Ollama::builder().host(host).port(port).reqwest_client(client).build()` instead"
+    )]
     pub fn new_with_client(host: impl IntoUrl, port: u16, reqwest_client: reqwest::Client) -> Self {
         let mut url: Url = host.into_url().unwrap();
         url.set_port(Some(port)).unwrap();
@@ -221,6 +246,110 @@ impl Default for Ollama {
         Self {
             url: Url::parse("http://127.0.0.1:11434").unwrap(),
             reqwest_client: reqwest::Client::new(),
+            #[cfg(feature = "headers")]
+            request_headers: reqwest::header::HeaderMap::new(),
+        }
+    }
+}
+
+/// Builder for configuring and constructing an [`Ollama`] client.
+///
+/// Created via [`Ollama::builder`] or [`OllamaBuilder::new`]. All settings are
+/// optional; the defaults match those of [`Ollama::default`] (host
+/// `http://127.0.0.1:11434` and a freshly constructed [`reqwest::Client`]).
+///
+/// # Examples
+///
+/// ```
+/// use ollama_rs::Ollama;
+///
+/// let ollama = Ollama::builder()
+///     .host("http://localhost")
+///     .port(11434)
+///     .build();
+/// ```
+#[derive(Debug, Clone)]
+pub struct OllamaBuilder {
+    url: Url,
+    reqwest_client: Option<reqwest::Client>,
+    #[cfg(feature = "headers")]
+    request_headers: reqwest::header::HeaderMap,
+}
+
+impl OllamaBuilder {
+    /// Creates a new builder pre-populated with the default settings.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Sets the host of the Ollama service.
+    ///
+    /// The host is parsed as a URL; the existing port (if any) is preserved
+    /// unless overridden by [`OllamaBuilder::port`] or carried in `host`
+    /// itself.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `host` is not a valid URL.
+    pub fn host(mut self, host: impl IntoUrl) -> Self {
+        self.url = host.into_url().unwrap();
+        self
+    }
+
+    /// Sets the port of the Ollama service.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the URL cannot have a port.
+    pub fn port(mut self, port: u16) -> Self {
+        self.url.set_port(Some(port)).unwrap();
+        self
+    }
+
+    /// Sets the full URL of the Ollama service, replacing any host or port
+    /// previously configured.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `url` is not a valid URL.
+    pub fn url(mut self, url: impl IntoUrl) -> Self {
+        self.url = url.into_url().unwrap();
+        self
+    }
+
+    /// Sets a pre-configured [`reqwest::Client`] used to make requests to the
+    /// Ollama service.
+    pub fn reqwest_client(mut self, reqwest_client: reqwest::Client) -> Self {
+        self.reqwest_client = Some(reqwest_client);
+        self
+    }
+
+    /// Sets the request headers attached to every request.
+    #[cfg_attr(docsrs, doc(cfg(feature = "headers")))]
+    #[cfg(feature = "headers")]
+    pub fn request_headers(mut self, request_headers: reqwest::header::HeaderMap) -> Self {
+        self.request_headers = request_headers;
+        self
+    }
+
+    /// Consumes the builder and returns a configured [`Ollama`] instance.
+    pub fn build(self) -> Ollama {
+        Ollama {
+            url: self.url,
+            reqwest_client: self.reqwest_client.unwrap_or_default(),
+            #[cfg(feature = "headers")]
+            request_headers: self.request_headers,
+        }
+    }
+}
+
+impl Default for OllamaBuilder {
+    /// Returns a builder pre-populated with the default Ollama host
+    /// (`http://127.0.0.1:11434`).
+    fn default() -> Self {
+        Self {
+            url: Url::parse("http://127.0.0.1:11434").unwrap(),
+            reqwest_client: None,
             #[cfg(feature = "headers")]
             request_headers: reqwest::header::HeaderMap::new(),
         }
