@@ -22,10 +22,7 @@ pub trait Tool: Send + Sync {
     /// Call the tool.
     /// Note that returning an Err will cause it to be bubbled up. If you want the LLM to handle the error,
     /// return that error as a string.
-    fn call(
-        &mut self,
-        parameters: Self::Params,
-    ) -> impl Future<Output = Result<String>> + Send;
+    fn call(&mut self, parameters: Self::Params) -> impl Future<Output = Result<String>> + Send;
 }
 
 pub trait Parameters: DeserializeOwned + JsonSchema {}
