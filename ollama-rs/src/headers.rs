@@ -19,7 +19,7 @@ impl Ollama {
     ///
     /// Panics if the host is not a valid URL or if the URL cannot have a port.
     pub fn new_with_request_headers(host: impl IntoUrl, port: u16, headers: HeaderMap) -> Self {
-        let mut ollama = Self::new(host, port);
+        let mut ollama = Self::builder().host(host).port(port).build();
         ollama.set_headers(Some(headers));
 
         ollama
