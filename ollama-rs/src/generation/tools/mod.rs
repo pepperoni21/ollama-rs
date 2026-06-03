@@ -25,7 +25,7 @@ pub trait Tool: Send + Sync {
     fn call(
         &mut self,
         parameters: Self::Params,
-    ) -> impl Future<Output = Result<String>> + Send + Sync;
+    ) -> impl Future<Output = Result<String>> + Send;
 }
 
 pub trait Parameters: DeserializeOwned + JsonSchema {}
@@ -36,14 +36,14 @@ pub(crate) trait ToolHolder: Send + Sync {
     fn call(
         &mut self,
         parameters: Value,
-    ) -> Pin<Box<dyn Future<Output = Result<String>> + '_ + Send + Sync>>;
+    ) -> Pin<Box<dyn Future<Output = Result<String>> + '_ + Send>>;
 }
 
 impl<T: Tool> ToolHolder for T {
     fn call(
         &mut self,
         parameters: Value,
-    ) -> Pin<Box<dyn Future<Output = Result<String>> + '_ + Send + Sync>> {
+    ) -> Pin<Box<dyn Future<Output = Result<String>> + '_ + Send>> {
         Box::pin(async move {
             // Json returned from the model can sometimes be in different formats, see https://github.com/pepperoni21/ollama-rs/issues/210
             // This is a work-around for this issue.
