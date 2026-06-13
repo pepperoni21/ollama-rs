@@ -70,7 +70,7 @@ pub struct ToolInfo {
 impl ToolInfo {
     /// Builds the JSON schema information Ollama needs to make a [`Tool`]
     /// available to the model.
-    pub fn from_tool<T: Tool>() -> Self {
+    pub fn new<P: Parameters, T: Tool<Params = P>>() -> Self {
         let mut settings = SchemaSettings::draft07();
         settings.inline_subschemas = true;
         let generator = settings.into_generator();
@@ -85,10 +85,6 @@ impl ToolInfo {
                 parameters,
             },
         }
-    }
-
-    pub(crate) fn new<P: Parameters, T: Tool<Params = P>>() -> Self {
-        Self::from_tool::<T>()
     }
 }
 

@@ -93,7 +93,7 @@ impl ChatMessageRequest {
     /// callers are responsible for consuming streamed tool calls and appending
     /// tool results to the next request.
     pub fn add_tool<T: Tool>(mut self, _tool: T) -> Self {
-        self.tools.push(ToolInfo::from_tool::<T>());
+        self.tools.push(ToolInfo::new::<_, T>());
         self
     }
 
