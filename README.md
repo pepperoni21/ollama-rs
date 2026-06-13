@@ -247,7 +247,7 @@ _Returns a `GenerateEmbeddingsResponse` struct containing the embeddings (a vect
 
 ```rust
 use ollama_rs::coordinator::Coordinator;
-use ollama_rs::generation::chat::{ChatMessage, ChatMessageRequest};
+use ollama_rs::generation::chat::ChatMessage;
 use ollama_rs::generation::tools::implementations::{DDGSearcher, Scraper, Calculator};
 use ollama_rs::models::ModelOptions;
 
@@ -287,6 +287,17 @@ async fn get_weather(city: String) -> Result<String, Box<dyn std::error::Error +
 To create a custom tool, define a function that returns a `Result<String, Box<dyn std::error::Error + Sync + Send>>` and annotate it with the `function` macro. This function will be automatically converted into a tool that can be used with the `Coordinator`, just like any other tool.
 
 Ensure that the doc comment above the function clearly describes the tool's purpose and its parameters. This information will be provided to the LLM to help it understand how to use the tool.
+
+When using streaming chat directly, attach tool schemas to the request:
+
+```rust
+use ollama_rs::generation::chat::request::ChatMessageRequest;
+
+let request = ChatMessageRequest::new(model, messages).add_tool(get_weather);
+let mut stream = ollama.send_chat_messages_stream(request).await.unwrap();
+```
+
+`send_chat_messages_stream` yields streamed `ChatMessageResponse` chunks. If a chunk contains `message.tool_calls`, run the requested tools and include their results in a follow-up request.
 
 For a more detailed example, see the [function call example](https://github.com/pepperoni21/ollama-rs/blob/0.3.4/ollama-rs/examples/function_call.rs).
 

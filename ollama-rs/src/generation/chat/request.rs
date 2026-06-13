@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     generation::{
         parameters::{FormatType, KeepAlive, ThinkType},
-        tools::ToolInfo,
+        tools::{Tool, ToolInfo},
     },
     models::ModelOptions,
 };
@@ -26,7 +26,7 @@ pub struct ChatMessageRequest {
     pub format: Option<FormatType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_alive: Option<KeepAlive>,
-    /// Must be false if tools are provided
+    /// Set by the chat send methods before the request is sent.
     #[serde(default)]
     pub(crate) stream: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -85,6 +85,17 @@ impl ChatMessageRequest {
         self
     }
 
+    /// Add a tool definition that is available to the LLM.
+    ///
+    /// This consumes the tool value only to identify its schema. The request does
+    /// not retain or execute the tool. When using `Ollama::send_chat_messages_stream`,
+    /// callers are responsible for consuming streamed tool calls and appending
+    /// tool results to the next request.
+    pub fn add_tool<T: Tool>(mut self, _tool: T) -> Self {
+        self.tools.push(ToolInfo::from_tool::<T>());
+        self
+    }
+
     /// Used to control whether thinking/reasoning models will think before responding
     pub fn think(mut self, think: impl Into<ThinkType>) -> Self {
         self.think = Some(think.into());
@@ -108,6 +119,7 @@ impl ChatMessageRequest {
 mod tests {
     use super::*;
     use crate::generation::parameters::{FormatType, JsonSchema, JsonStructure};
+    use serde::Deserialize;
     use serde_json::Value;
 
     #[allow(dead_code)]
@@ -155,5 +167,74 @@ mod tests {
             value.get("stream").expect("stream field present"),
             &Value::Bool(false)
         );
+    }
+
+    #[allow(dead_code)]
+    #[derive(Debug, Deserialize, JsonSchema)]
+    struct TestToolParams {
+        city: String,
+    }
+
+    struct TestTool;
+
+    impl Tool for TestTool {
+        type Params = TestToolParams;
+
+        fn name() -> &'static str {
+            "test_weather"
+        }
+
+        fn description() -> &'static str {
+            "Gets test weather"
+        }
+
+        async fn call(
+            &mut self,
+            _parameters: Self::Params,
+        ) -> crate::generation::tools::Result<String> {
+            Ok("sunny".to_string())
+        }
+    }
+
+    #[test]
+    fn add_tool_serializes_tool_schema_for_streaming_request() {
+        let mut request = ChatMessageRequest::new(
+            "model".to_string(),
+            vec![ChatMessage::user("hello".to_string())],
+        )
+        .add_tool(TestTool);
+
+        request.stream = true;
+
+        let value = serde_json::to_value(&request).expect("serialize request");
+
+        assert_eq!(
+            value.get("stream").expect("stream field present"),
+            &Value::Bool(true)
+        );
+
+        let tools = value
+            .get("tools")
+            .expect("tools field present")
+            .as_array()
+            .expect("tools serialized as array");
+
+        assert_eq!(tools.len(), 1);
+
+        let function = tools[0]
+            .get("function")
+            .expect("function field present")
+            .as_object()
+            .expect("function serialized as object");
+
+        assert_eq!(
+            function.get("name").expect("name present"),
+            &Value::String("test_weather".to_string())
+        );
+        assert_eq!(
+            function.get("description").expect("description present"),
+            &Value::String("Gets test weather".to_string())
+        );
+        assert!(function.contains_key("parameters"));
     }
 }

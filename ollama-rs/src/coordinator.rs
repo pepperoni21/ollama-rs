@@ -57,7 +57,7 @@ impl<C: ChatHistory> Coordinator<C> {
     }
 
     pub fn add_tool<T: Tool + 'static>(mut self, tool: T) -> Self {
-        self.tool_infos.push(ToolInfo::new::<_, T>());
+        self.tool_infos.push(ToolInfo::from_tool::<T>());
         self.tools.insert(T::name().to_string(), Box::new(tool));
         self
     }
