@@ -86,6 +86,10 @@ impl ToolInfo {
             },
         }
     }
+
+    pub(crate) fn new<P: Parameters, T: Tool<Params = P>>() -> Self {
+        Self::from_tool::<T>()
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

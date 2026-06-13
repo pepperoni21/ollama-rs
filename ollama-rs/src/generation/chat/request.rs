@@ -88,7 +88,8 @@ impl ChatMessageRequest {
     /// Add a tool definition that is available to the LLM.
     ///
     /// This consumes the tool value only to identify its schema. The request does
-    /// not retain or execute the tool. When using `Ollama::send_chat_messages_stream`,
+    /// not retain or execute the tool. When using
+    /// [`Ollama::send_chat_messages_stream`](crate::Ollama::send_chat_messages_stream),
     /// callers are responsible for consuming streamed tool calls and appending
     /// tool results to the next request.
     pub fn add_tool<T: Tool>(mut self, _tool: T) -> Self {
