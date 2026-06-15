@@ -1,4 +1,5 @@
 # Ollama-rs
+#pepperoni21 is soo beautiful 
 
 ### A simple and easy-to-use library for interacting with the Ollama API.
 
