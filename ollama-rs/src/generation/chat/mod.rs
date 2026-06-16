@@ -178,7 +178,7 @@ impl Ollama {
 
                 if item.done {
                     item.message.content = result.clone();
-                    history.lock().unwrap().push(ChatMessage::assistant(result.clone()));
+                    history.lock().unwrap().push(item.message.clone());
                     result.clear();
                 }
 
@@ -310,4 +310,90 @@ pub enum MessageRole {
     System,
     #[serde(rename = "tool")]
     Tool,
+}
+
+#[cfg(all(test, feature = "stream"))]
+mod tests {
+    use std::sync::{Arc, Mutex};
+
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio_stream::StreamExt;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn streamed_history_preserves_final_message_tool_calls() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind test server");
+        let addr = listener.local_addr().expect("test server addr");
+
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.expect("accept request");
+
+            let mut request = Vec::new();
+            let mut buffer = [0; 1024];
+            loop {
+                let read = socket.read(&mut buffer).await.expect("read request");
+                if read == 0 {
+                    break;
+                }
+
+                request.extend_from_slice(&buffer[..read]);
+                if request.windows(4).any(|window| window == b"\r\n\r\n") {
+                    break;
+                }
+            }
+
+            let body = concat!(
+                r#"{"model":"test","created_at":"2026-01-01T00:00:00Z","message":{"role":"assistant","content":"hello "},"done":false}"#,
+                "\n",
+                r#"{"model":"test","created_at":"2026-01-01T00:00:00Z","message":{"role":"assistant","content":"world","tool_calls":[{"function":{"name":"test_tool","arguments":{"city":"Paris"}}}]},"done":true}"#,
+                "\n",
+            );
+            let response = format!(
+                "HTTP/1.1 200 OK\r\ncontent-type: application/x-ndjson\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{}",
+                body.len(),
+                body
+            );
+
+            socket
+                .write_all(response.as_bytes())
+                .await
+                .expect("write response");
+        });
+
+        let ollama = Ollama::try_new(format!("http://{addr}")).expect("build test client");
+        let history = Arc::new(Mutex::new(Vec::new()));
+        let request = ChatMessageRequest::new(
+            "test".to_string(),
+            vec![ChatMessage::user("use the tool".to_string())],
+        );
+
+        let mut stream = ollama
+            .send_chat_messages_with_history_stream(history.clone(), request)
+            .await
+            .expect("stream starts");
+
+        let mut final_chunk = None;
+        while let Some(chunk) = stream.next().await {
+            let chunk = chunk.expect("chunk ok");
+            if chunk.done {
+                final_chunk = Some(chunk);
+                break;
+            }
+        }
+
+        server.await.expect("server completes");
+
+        let final_chunk = final_chunk.expect("received done chunk");
+        assert_eq!(final_chunk.message.content, "hello world");
+        assert_eq!(final_chunk.message.tool_calls.len(), 1);
+
+        let history = history.lock().expect("history lock");
+        assert_eq!(history.len(), 2);
+        assert_eq!(history[1].content, "hello world");
+        assert_eq!(history[1].tool_calls.len(), 1);
+        assert_eq!(history[1].tool_calls[0].function.name, "test_tool");
+    }
 }

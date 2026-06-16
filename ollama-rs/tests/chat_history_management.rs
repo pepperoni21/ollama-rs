@@ -9,11 +9,13 @@ async fn test_chat_history_accumulated() {
 
     let mut history = vec![];
 
+    let model = std::env::var("OLLAMA_RS_TEST_MODEL").unwrap_or_else(|_| "llama3.2:1b".to_owned());
+
     assert!(ollama
         .send_chat_messages_with_history(
             &mut history,
             ChatMessageRequest::new(
-                "granite-code:3b".into(),
+                model.clone(),
                 vec![ChatMessage::new(
                     MessageRole::User,
                     "Why is the sky blue?".into(),
@@ -27,7 +29,7 @@ async fn test_chat_history_accumulated() {
         .send_chat_messages_with_history(
             &mut history,
             ChatMessageRequest::new(
-                "granite-code:3b".into(),
+                model,
                 vec![ChatMessage::new(
                     MessageRole::User,
                     "But, why is the sky blue?".into()

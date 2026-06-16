@@ -9,21 +9,21 @@ This library was created following the [Ollama API](https://github.com/jmorganca
 - [Installation](#installation)
 - [Initialization](#initialization)
 - [Usage](#usage)
-  - [Completion Generation](#completion-generation)
-  - [Completion Generation (Streaming)](#completion-generation-streaming)
-  - [Completion Generation (With Options)](#completion-generation-with-options)
-  - [Chat Mode](#chat-mode)
-  - [List Local Models](#list-local-models)
-  - [Show Model Information](#show-model-information)
-  - [Create a Model](#create-a-model)
-  - [Create a Model (Streaming)](#create-a-model-streaming)
-  - [Copy a Model](#copy-a-model)
-  - [Delete a Model](#delete-a-model)
-  - [Generate Embeddings](#generate-embeddings)
-  - [Generate Embeddings (Batch)](#generate-embeddings-batch)
-  - [Make a Function Call](#make-a-function-call)
-  - [Create a custom tool](#create-a-custom-tool)
-  - [Completion Generation (With Thinking)](#completion-generation-with-thinking)
+    - [Completion Generation](#completion-generation)
+    - [Completion Generation (Streaming)](#completion-generation-streaming)
+    - [Completion Generation (With Options)](#completion-generation-with-options)
+    - [Chat Mode](#chat-mode)
+    - [List Local Models](#list-local-models)
+    - [Show Model Information](#show-model-information)
+    - [Create a Model](#create-a-model)
+    - [Create a Model (Streaming)](#create-a-model-streaming)
+    - [Copy a Model](#copy-a-model)
+    - [Delete a Model](#delete-a-model)
+    - [Generate Embeddings](#generate-embeddings)
+    - [Generate Embeddings (Batch)](#generate-embeddings-batch)
+    - [Make a Function Call](#make-a-function-call)
+    - [Create a custom tool](#create-a-custom-tool)
+    - [Completion Generation (With Thinking)](#completion-generation-with-thinking)
 
 ## Installation
 
@@ -41,7 +41,7 @@ If you absolutely want the latest version, you can use the `master` branch by ad
 ollama-rs = { git = "https://github.com/pepperoni21/ollama-rs.git", branch = "master" }
 ```
 
-*Note that the `master` branch may not be stable and may contain breaking changes.*
+_Note that the `master` branch may not be stable and may contain breaking changes._
 
 ## Initialization
 
@@ -247,7 +247,7 @@ _Returns a `GenerateEmbeddingsResponse` struct containing the embeddings (a vect
 
 ```rust
 use ollama_rs::coordinator::Coordinator;
-use ollama_rs::generation::chat::{ChatMessage, ChatMessageRequest};
+use ollama_rs::generation::chat::ChatMessage;
 use ollama_rs::generation::tools::implementations::{DDGSearcher, Scraper, Calculator};
 use ollama_rs::models::ModelOptions;
 
@@ -287,6 +287,17 @@ async fn get_weather(city: String) -> Result<String, Box<dyn std::error::Error +
 To create a custom tool, define a function that returns a `Result<String, Box<dyn std::error::Error + Sync + Send>>` and annotate it with the `function` macro. This function will be automatically converted into a tool that can be used with the `Coordinator`, just like any other tool.
 
 Ensure that the doc comment above the function clearly describes the tool's purpose and its parameters. This information will be provided to the LLM to help it understand how to use the tool.
+
+When using streaming chat directly, you may also attach tool schemas to the request:
+
+```rust
+use ollama_rs::generation::chat::request::ChatMessageRequest;
+
+let request = ChatMessageRequest::new("lfm2.5:8b".to_owned(), Vec::new()).add_tool(get_weather);
+let mut stream = ollama.send_chat_messages_stream(request).await.unwrap();
+```
+
+`send_chat_messages_stream` yields streamed `ChatMessageResponse` chunks. If a chunk contains `message.tool_calls`, run the requested tools and include their results in a follow-up request.
 
 For a more detailed example, see the [function call example](https://github.com/pepperoni21/ollama-rs/blob/0.3.4/ollama-rs/examples/function_call.rs).
 
