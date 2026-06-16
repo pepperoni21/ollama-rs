@@ -31,7 +31,7 @@ This library was created following the [Ollama API](https://github.com/jmorganca
 
 ```toml
 [dependencies]
-ollama-rs = "0.3.4"
+ollama-rs = "0.3.5"
 ```
 
 If you absolutely want the latest version, you can use the `master` branch by adding the following to your `Cargo.toml` file:
@@ -59,7 +59,7 @@ let ollama = Ollama::new("http://localhost".to_string(), 11434);
 
 ## Usage
 
-Feel free to check the [Chatbot example](https://github.com/pepperoni21/ollama-rs/blob/0.3.4/ollama-rs/examples/basic_chatbot.rs) that shows how to use the library to create a simple chatbot in less than 50 lines of code. You can also check some [other examples](https://github.com/pepperoni21/ollama-rs/tree/0.3.4/ollama-rs/examples).
+Feel free to check the [Chatbot example](https://github.com/pepperoni21/ollama-rs/blob/0.3.5/ollama-rs/examples/basic_chatbot.rs) that shows how to use the library to create a simple chatbot in less than 50 lines of code. You can also check some [other examples](https://github.com/pepperoni21/ollama-rs/tree/0.3.5/ollama-rs/examples).
 
 _These examples use poor error handling for simplicity, but you should handle errors properly in your code._
 
@@ -161,7 +161,7 @@ if let Ok(res) = res {
 }
 ```
 
-_Check chat with history examples for [default](https://github.com/pepperoni21/ollama-rs/blob/0.3.4/ollama-rs/examples/chat_with_history.rs) and [stream](https://github.com/pepperoni21/ollama-rs/blob/0.3.4/ollama-rs/examples/chat_with_history_stream.rs)_
+_Check chat with history examples for [default](https://github.com/pepperoni21/ollama-rs/blob/0.3.5/ollama-rs/examples/chat_with_history.rs) and [stream](https://github.com/pepperoni21/ollama-rs/blob/0.3.5/ollama-rs/examples/chat_with_history_stream.rs)_
 
 ### List Local Models
 
@@ -299,7 +299,7 @@ let mut stream = ollama.send_chat_messages_stream(request).await.unwrap();
 
 `send_chat_messages_stream` yields streamed `ChatMessageResponse` chunks. If a chunk contains `message.tool_calls`, run the requested tools and include their results in a follow-up request.
 
-For a more detailed example, see the [function call example](https://github.com/pepperoni21/ollama-rs/blob/0.3.4/ollama-rs/examples/function_call.rs).
+For a more detailed example, see the [function call example](https://github.com/pepperoni21/ollama-rs/blob/0.3.5/ollama-rs/examples/function_call.rs).
 
 ### Completion Generation (With Thinking)
 
