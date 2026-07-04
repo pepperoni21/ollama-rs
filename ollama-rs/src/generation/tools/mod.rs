@@ -90,7 +90,7 @@ impl ToolInfo {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum ToolType {
-    #[serde(rename_all(deserialize = "PascalCase"))]
+    #[serde(rename = "function")]
     Function,
 }
 
