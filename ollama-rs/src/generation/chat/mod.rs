@@ -226,6 +226,10 @@ pub struct ChatMessageResponse {
     /// The log probabilities (only if `logprobs` is set to `true`)
     pub logprobs: Option<Vec<LogprobsData>>,
     pub done: bool,
+    /// Why generation stopped: `"stop"`, `"length"`, etc. Only present on the
+    /// final (`done == true`) response.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub done_reason: Option<String>,
     #[serde(flatten)]
     /// The final data of the completion. This is only present if the completion is done.
     pub final_data: Option<ChatMessageFinalResponseData>,
