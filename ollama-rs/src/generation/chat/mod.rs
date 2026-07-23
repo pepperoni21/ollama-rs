@@ -1,11 +1,10 @@
 use serde::{Deserialize, Serialize};
 
 use super::{images::Image, tools::ToolCall};
+#[cfg(feature = "stream")]
+use crate::error::InternalOllamaError;
 use crate::{
-    error::{InternalOllamaError, OllamaError},
-    generation::parameters::LogprobsData,
-    history::ChatHistory,
-    Ollama,
+    error::OllamaError, generation::parameters::LogprobsData, history::ChatHistory, Ollama,
 };
 use request::ChatMessageRequest;
 
