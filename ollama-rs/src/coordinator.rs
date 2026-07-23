@@ -145,7 +145,7 @@ impl<C: ChatHistory> Coordinator<C> {
                     .map_err(crate::error::ToolCallError::InternalToolError)?;
 
                 if self.debug {
-                    eprintln!("Tool response: {}", &resp);
+                    eprintln!("Tool response: {}", resp);
                 }
 
                 self.history.push(ChatMessage::tool(resp))

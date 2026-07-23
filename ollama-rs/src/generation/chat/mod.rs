@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use super::{images::Image, tools::ToolCall};
+#[cfg(feature = "stream")]
+use crate::error::InternalOllamaError;
 use crate::{
     error::OllamaError, generation::parameters::LogprobsData, history::ChatHistory, Ollama,
 };
@@ -21,8 +23,28 @@ pub mod request;
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
 /// A stream of `ChatMessageResponse` objects
-pub type ChatMessageResponseStream =
-    std::pin::Pin<Box<dyn tokio_stream::Stream<Item = Result<ChatMessageResponse, ()>> + Send>>;
+pub type ChatMessageResponseStream = std::pin::Pin<
+    Box<dyn tokio_stream::Stream<Item = crate::error::Result<ChatMessageResponse>> + Send>,
+>;
+
+/// Parse one NDJSON line from a streaming chat response.
+///
+/// A well-formed line deserializes into a [`ChatMessageResponse`]. Ollama can
+/// also terminate a stream with an error line of the shape `{"error": "..."}`
+/// (e.g. a mid-generation CUDA OOM); we surface that as
+/// [`OllamaError::InternalError`] so the message is not lost. Anything else is a
+/// genuine deserialization failure and is returned as [`OllamaError::JsonError`].
+#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
+#[cfg(feature = "stream")]
+fn parse_chat_line(line: &str) -> crate::error::Result<ChatMessageResponse> {
+    match serde_json::from_str::<ChatMessageResponse>(line) {
+        Ok(response) => Ok(response),
+        Err(orig) => match serde_json::from_str::<InternalOllamaError>(line) {
+            Ok(internal) => Err(OllamaError::InternalError(internal)),
+            Err(_) => Err(OllamaError::JsonError(orig)),
+        },
+    }
+}
 
 impl Ollama {
     #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
@@ -82,29 +104,28 @@ impl Ollama {
 
                             // Process all collected lines
                             for line in lines_to_process {
-                                // Parse the JSON line
-                                match serde_json::from_str::<ChatMessageResponse>(&line) {
+                                match parse_chat_line(&line) {
                                     Ok(response) => yield Ok(response),
                                     Err(e) => {
-                                        eprintln!("Failed to deserialize response: {e}");
-                                        // Continue processing other lines even if one fails
+                                        yield Err(e);
+                                        return;
                                     }
                                 }
                             }
                         }
                     }
                     Err(e) => {
-                        eprintln!("Failed to read response: {e}");
-                        yield Err(());
+                        yield Err(OllamaError::ReqwestError(e));
                         break;
                     }
                 }
             }
 
             // Process any remaining data in the buffer
-            if !buffer.is_empty() {
-                if let Ok(response) = serde_json::from_str::<ChatMessageResponse>(&buffer) {
-                    yield Ok(response);
+            if !buffer.trim().is_empty() {
+                match parse_chat_line(buffer.trim()) {
+                    Ok(response) => yield Ok(response),
+                    Err(e) => yield Err(e),
                 }
             }
         };
@@ -170,8 +191,14 @@ impl Ollama {
         let s = stream! {
             let mut result = String::new();
 
-            while let Some(item) = resp_stream.try_next().await.unwrap() {
-                let mut item = item;
+            while let Some(item) = resp_stream.next().await {
+                let mut item = match item {
+                    Ok(item) => item,
+                    Err(e) => {
+                        yield Err(e);
+                        return;
+                    }
+                };
                 let msg_part = item.message.content.clone();
 
                 result.push_str(&msg_part);
