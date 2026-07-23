@@ -131,6 +131,10 @@ pub struct GenerationResponse {
     pub eval_count: Option<u64>,
     /// Time spent in nanoseconds generating the response
     pub eval_duration: Option<u64>,
+    /// Why generation stopped: `"stop"`, `"length"`, etc. Only present on the
+    /// final (`done == true`) response.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub done_reason: Option<String>,
     /// Contains the text that was inside thinking tags in the original model output when ChatMessageRequest.Think is enabled.
     pub thinking: Option<String>,
     /// The log probabilities (only if `logprobs` is set to `true`)
