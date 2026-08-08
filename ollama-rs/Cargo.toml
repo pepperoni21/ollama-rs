@@ -58,7 +58,7 @@ ollama-rs = { path = ".", features = [
     "headers",
     "tool-implementations",
 ] }
-base64 = "0.22.1"
+base64 = "0.23.0"
 fs2 = "0.4.3"
 
 [package.metadata.docs.rs]
