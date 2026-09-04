@@ -8,6 +8,7 @@ This library was created following the [Ollama API](https://github.com/jmorganca
 
 - [Installation](#installation)
 - [Initialization](#initialization)
+    - [Using with llmman](#using-with-llmman)
 - [Usage](#usage)
     - [Completion Generation](#completion-generation)
     - [Completion Generation (Streaming)](#completion-generation-streaming)
@@ -56,6 +57,22 @@ let ollama = Ollama::default();
 // For custom values:
 let ollama = Ollama::new("http://localhost".to_string(), 11434);
 ```
+
+### Using with llmman
+
+[llmman](https://github.com/llmmanorg/llmman) is a local model runner that serves the Ollama API on port 17434, so `ollama-rs` works with it unchanged; just point the client at that port:
+
+```rust
+use ollama_rs::Ollama;
+
+// llmman listens on 127.0.0.1:17434 by default
+let ollama = Ollama::builder()
+    .host("http://localhost")
+    .port(17434)
+    .build();
+```
+
+Start the server with `llmman serve` and pull a model with `llmman pull gemma4` (or `llmman pull hf.co/unsloth/Qwen3.5-0.8B-GGUF` to pull from Hugging Face).
 
 ## Usage
 
