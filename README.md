@@ -83,7 +83,7 @@ _These examples use poor error handling for simplicity, but you should handle er
 ### Completion Generation
 
 ```rust
-use ollama_rs::generation::completion::GenerationRequest;
+use ollama_rs::generation::completion::request::GenerationRequest;
 
 let model = "llama2:latest".to_string();
 let prompt = "Why is the sky blue?".to_string();
@@ -102,7 +102,7 @@ if let Ok(res) = res {
 _Requires the `stream` feature._
 
 ```rust
-use ollama_rs::generation::completion::GenerationRequest;
+use ollama_rs::generation::completion::request::GenerationRequest;
 use tokio::io::{self, AsyncWriteExt};
 use tokio_stream::StreamExt;
 
@@ -126,7 +126,7 @@ Same output as above but streamed.
 ### Completion Generation (With Options)
 
 ```rust
-use ollama_rs::generation::completion::GenerationRequest;
+use ollama_rs::generation::completion::request::GenerationRequest;
 use ollama_rs::models::ModelOptions;
 
 let model = "llama2:latest".to_string();
