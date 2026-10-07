@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use base64::Engine;
 use ollama_rs::generation::images::Image;
 use ollama_rs::generation::systemone::{
@@ -15,21 +13,19 @@ const TOMATO_URL: &str = "https://images.pexels.com/photos/39795138/pexels-photo
 #[tokio::test]
 async fn test_system_one_choice() {
     let ollama = Ollama::default();
-    let request = SystemOneRequest::new(
-        "nimble",
-        "Our checkout has returned 500 errors since 9am.",
-        BTreeMap::from([(
-            "label".to_string(),
-            Question::Choice {
-                instructions: json!("Which label fits this ticket?"),
-                criteria: BTreeMap::from([
-                    ("billing".to_string(), json!("Payments and refunds")),
-                    ("bug".to_string(), json!("Software errors")),
-                    ("account".to_string(), json!("Login and account access")),
-                ]),
-            },
-        )]),
-    );
+    let request =
+        SystemOneRequest::builder("nimble", "Our checkout has returned 500 errors since 9am.")
+            .question(
+                "label",
+                Question::choice(
+                    "Which label fits this ticket?",
+                    [
+                        ("billing", "Payments and refunds"),
+                        ("bug", "Software errors"),
+                        ("account", "Login and account access"),
+                    ],
+                ),
+            );
 
     let response = ollama.system_one(request).await.unwrap();
 
@@ -52,75 +48,67 @@ async fn test_system_one_choice() {
 #[tokio::test]
 async fn test_system_one_multiple_questions() {
     let ollama = Ollama::default();
-    let request = SystemOneRequest::new(
+    let request = SystemOneRequest::builder(
         "nimble",
         State::object(json!({
             "ticket": "I was charged twice. Please refund the extra payment."
         })),
-        BTreeMap::from([
-            (
-                "refund".to_string(),
-                Question::Noul {
-                    instructions: json!("Is the customer requesting a refund?"),
-                    criteria: Some(BTreeMap::from([
-                        ("false".to_string(), "No refund is requested".to_string()),
-                        (
-                            "true".to_string(),
-                            "The customer requests a refund".to_string(),
-                        ),
-                    ])),
-                },
-            ),
-            (
-                "urgency".to_string(),
-                Question::Score {
-                    instructions: json!("How urgently does this ticket need a response?"),
-                    criteria: vec![
-                        "Routine: no time pressure".to_string(),
-                        "Soon: a customer is inconvenienced".to_string(),
-                        "Immediate: a critical service is unavailable".to_string(),
-                    ],
-                },
-            ),
-            (
-                "refund_follow_up".to_string(),
-                Question::Noul {
-                    instructions: json!("Does the customer mention an extra payment?"),
-                    criteria: None,
-                },
-            ),
-            (
-                "priority".to_string(),
-                Question::Score {
-                    instructions: json!("How severe is this payment issue?"),
-                    criteria: vec![
-                        "Minor: easy to resolve".to_string(),
-                        "Moderate: affects one customer".to_string(),
-                        "Major: requires immediate attention".to_string(),
-                    ],
-                },
-            ),
-            (
-                "category".to_string(),
-                Question::Choice {
-                    instructions: json!("Which category fits this ticket?"),
-                    criteria: BTreeMap::from([
-                        ("billing".to_string(), json!("Payments and refunds")),
-                        ("account".to_string(), json!("Account access")),
-                    ]),
-                },
-            ),
-            (
-                "request_type".to_string(),
-                Question::Choice {
-                    instructions: json!("What kind of request is this?"),
-                    criteria: BTreeMap::from([
-                        ("refund".to_string(), json!("A refund request")),
-                        ("question".to_string(), json!("A general question")),
-                    ]),
-                },
-            ),
-        ]),
+    )
+    .question(
+        "refund",
+        Question::noul_with_criteria(
+            "Is the customer requesting a refund?",
+            [
+                ("false", "No refund is requested"),
+                ("true", "The customer requests a refund"),
+            ],
+        ),
+    )
+    .question(
+        "urgency",
+        Question::score(
+            "How urgently does this ticket need a response?",
+            [
+                "Routine: no time pressure",
+                "Soon: a customer is inconvenienced",
+                "Immediate: a critical service is unavailable",
+            ],
+        ),
+    )
+    .question(
+        "refund_follow_up",
+        Question::noul("Does the customer mention an extra payment?"),
+    )
+    .question(
+        "priority",
+        Question::score(
+            "How severe is this payment issue?",
+            [
+                "Minor: easy to resolve",
+                "Moderate: affects one customer",
+                "Major: requires immediate attention",
+            ],
+        ),
+    )
+    .question(
+        "category",
+        Question::choice(
+            "Which category fits this ticket?",
+            [
+                ("billing", "Payments and refunds"),
+                ("account", "Account access"),
+            ],
+        ),
+    )
+    .question(
+        "request_type",
+        Question::choice(
+            "What kind of request is this?",
+            [
+                ("refund", "A refund request"),
+                ("question", "A general question"),
+            ],
+        ),
     );
 
     let response = ollama.system_one(request).await.unwrap();
@@ -136,19 +124,16 @@ async fn test_system_one_multiple_questions() {
 #[tokio::test]
 async fn test_system_one_keep_alive_and_array_state() {
     let ollama = Ollama::default();
-    let request = SystemOneRequest::new(
+    let request = SystemOneRequest::builder(
         "nimble",
         State::array([
             "Customer reports a duplicate payment.",
             "Customer asks for the extra payment to be refunded.",
         ]),
-        BTreeMap::from([(
-            "refund".to_string(),
-            Question::Noul {
-                instructions: json!("Is the customer requesting a refund?"),
-                criteria: None,
-            },
-        )]),
+    )
+    .question(
+        "refund",
+        Question::noul("Is the customer requesting a refund?"),
     )
     .keep_alive(ollama_rs::generation::parameters::KeepAlive::Until {
         time: 5,
@@ -178,29 +163,23 @@ async fn test_system_one_with_image() {
         .unwrap();
     let tomato_base64 = base64::engine::general_purpose::STANDARD.encode(&tomato_bytes);
 
-    let request = SystemOneRequest::new(
-        "clef-flash",
-        "What can we see in these images?",
-        BTreeMap::from([(
-            "subject".to_string(),
-            Question::Choice {
-                instructions: json!("Which subjects are shown across the images?"),
-                criteria: BTreeMap::from([
-                    ("elephant".to_string(), json!("An elephant")),
-                    ("tomato".to_string(), json!("A tomato")),
-                    (
-                        "elephant_and_tomato".to_string(),
-                        json!("An elephant and a tomato"),
-                    ),
-                    ("other".to_string(), json!("Something else")),
-                ]),
-            },
-        )]),
-    )
-    .images(vec![
-        Image::from_base64(&elephant_base64),
-        Image::from_base64(&tomato_base64),
-    ]);
+    let request = SystemOneRequest::builder("clef-flash", "What can we see in these images?")
+        .question(
+            "subject",
+            Question::choice(
+                "Which subjects are shown across the images?",
+                [
+                    ("elephant", "An elephant"),
+                    ("tomato", "A tomato"),
+                    ("elephant_and_tomato", "An elephant and a tomato"),
+                    ("other", "Something else"),
+                ],
+            ),
+        )
+        .images(vec![
+            Image::from_base64(&elephant_base64),
+            Image::from_base64(&tomato_base64),
+        ]);
 
     let response = ollama.system_one(request).await.unwrap();
 

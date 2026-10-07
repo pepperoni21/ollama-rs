@@ -97,6 +97,62 @@ pub enum Question {
     },
 }
 
+impl Question {
+    /// Creates a choice question from instructions and named criteria.
+    pub fn choice<I, K, V>(instructions: impl Serialize, criteria: I) -> Self
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: Into<String>,
+        V: Serialize,
+    {
+        Self::Choice {
+            instructions: to_value(instructions),
+            criteria: criteria
+                .into_iter()
+                .map(|(key, value)| (key.into(), to_value(value)))
+                .collect(),
+        }
+    }
+
+    /// Creates a yes/no question using the model's default outcome descriptions.
+    pub fn noul(instructions: impl Serialize) -> Self {
+        Self::Noul {
+            instructions: to_value(instructions),
+            criteria: None,
+        }
+    }
+
+    /// Creates a yes/no question with descriptions for both outcomes.
+    pub fn noul_with_criteria<I, K, V>(instructions: impl Serialize, criteria: I) -> Self
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: Into<String>,
+        V: Into<String>,
+    {
+        Self::Noul {
+            instructions: to_value(instructions),
+            criteria: Some(
+                criteria
+                    .into_iter()
+                    .map(|(key, value)| (key.into(), value.into()))
+                    .collect(),
+            ),
+        }
+    }
+
+    /// Creates a score question from criteria ordered from lowest to highest.
+    pub fn score<I, S>(instructions: impl Serialize, criteria: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        Self::Score {
+            instructions: to_value(instructions),
+            criteria: criteria.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct SystemOneRequest {
     pub model: String,
@@ -109,6 +165,18 @@ pub struct SystemOneRequest {
 }
 
 impl SystemOneRequest {
+    /// Creates an empty request to which questions can be added with
+    /// [`Self::question`].
+    pub fn builder(model: impl Into<String>, state: impl Into<State>) -> Self {
+        Self {
+            model: model.into(),
+            state: state.into(),
+            questions: BTreeMap::new(),
+            images: Vec::new(),
+            keep_alive: None,
+        }
+    }
+
     pub fn new(
         model: impl Into<String>,
         state: impl Into<State>,
@@ -133,10 +201,20 @@ impl SystemOneRequest {
         self
     }
 
+    /// Adds a named question to the request.
+    pub fn question(mut self, name: impl Into<String>, question: Question) -> Self {
+        self.questions.insert(name.into(), question);
+        self
+    }
+
     pub fn keep_alive(mut self, keep_alive: KeepAlive) -> Self {
         self.keep_alive = Some(keep_alive);
         self
     }
+}
+
+fn to_value<T: Serialize>(value: T) -> Value {
+    serde_json::to_value(value).expect("System One content must be serializable")
 }
 
 #[cfg(test)]

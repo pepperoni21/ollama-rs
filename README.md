@@ -22,6 +22,7 @@ This library was created following the [Ollama API](https://github.com/jmorganca
     - [Delete a Model](#delete-a-model)
     - [Generate Embeddings](#generate-embeddings)
     - [Generate Embeddings (Batch)](#generate-embeddings-batch)
+    - [System One](#system-one)
     - [Make a Function Call](#make-a-function-call)
     - [Create a custom tool](#create-a-custom-tool)
     - [Completion Generation (With Thinking)](#completion-generation-with-thinking)
@@ -259,6 +260,60 @@ let res = ollama.generate_embeddings(request).await.unwrap();
 ```
 
 _Returns a `GenerateEmbeddingsResponse` struct containing the embeddings (a vector of floats)._
+
+### System One
+
+System One supports choice, yes/no (`noul`), and score questions with local decision models such as `nimble`. It requires Ollama 0.35.0 or later and a downloaded compatible model.
+
+```rust
+use ollama_rs::generation::systemone::{
+    request::{Question, SystemOneRequest},
+    SystemOneAnswer,
+};
+
+let request = SystemOneRequest::builder(
+    "nimble",
+    "Our checkout has returned 500 errors since 9am.",
+)
+.question(
+    "refund",
+    Question::noul("Is the customer requesting a refund?"),
+)
+.question(
+    "urgency",
+    Question::score(
+        "How urgently does this ticket need a response?",
+        [
+            "Routine: no time pressure",
+            "Soon: a customer is inconvenienced",
+            "Immediate: a critical service is unavailable",
+        ],
+    ),
+)
+.question(
+    "label",
+    Question::choice(
+        "Which label fits this ticket?",
+        [
+            ("billing", "Payments and refunds"),
+            ("bug", "Software errors"),
+            ("account", "Login and account access"),
+        ],
+    ),
+);
+
+let response = ollama.system_one(request).await.unwrap();
+
+for answer in response.answers.values() {
+    match answer {
+        SystemOneAnswer::Choice { choice, .. } => println!("Choice: {choice}"),
+        SystemOneAnswer::Noul { noul } => println!("True probability: {noul}"),
+        SystemOneAnswer::Score { score, .. } => println!("Score: {score}"),
+    }
+}
+```
+
+The response contains typed choice, `noul`, and score answers, along with token usage. See the [System One documentation](https://docs.ollama.com/capabilities/decision) for the available question types and model requirements.
 
 ### Make a Function Call
 
