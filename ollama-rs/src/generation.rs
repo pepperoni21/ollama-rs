@@ -8,4 +8,5 @@ pub mod completion;
 pub mod embeddings;
 pub mod images;
 pub mod parameters;
+pub mod systemone;
 pub mod tools;
