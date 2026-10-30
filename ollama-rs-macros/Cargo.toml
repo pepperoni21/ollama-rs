@@ -16,4 +16,4 @@ quote = "1"
 syn = { version = "3", features = ["full"] }
 
 [dev-dependencies]
-macrotest = "1"
+prettyplease = "0.3"

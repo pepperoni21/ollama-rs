@@ -59,8 +59,5 @@ jobs:
         with:
           toolchain: "stable"
 
-      - name: Install cargo-expand
-        run: cargo install cargo-expand
-
       - name: Run Macros Tests
         run: cargo test -p ollama-rs-macros --verbose

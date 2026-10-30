@@ -2,7 +2,6 @@
 
 use std::collections::HashMap;
 
-use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{quote_spanned, ToTokens};
 use syn::{
@@ -10,13 +9,14 @@ use syn::{
     Pat, Type,
 };
 
-pub fn function_impl(_attr: TokenStream, value: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(value as ItemFn);
+pub(crate) fn function_impl(_attr: TokenStream2, value: TokenStream2) -> TokenStream2 {
+    let input = match syn::parse2::<ItemFn>(value) {
+        Ok(input) => input,
+        Err(err) => return err.to_compile_error(),
+    };
 
     if input.sig.asyncness.is_none() {
-        return Error::new_spanned(input.sig.fn_token, "function must be async")
-            .to_compile_error()
-            .into();
+        return Error::new_spanned(input.sig.fn_token, "function must be async").to_compile_error();
     }
 
     if !input.sig.generics.params.is_empty() {
@@ -24,14 +24,12 @@ pub fn function_impl(_attr: TokenStream, value: TokenStream) -> TokenStream {
             input.sig.generics,
             "functions with generics are not supported, as you'd need to provide a custom description for each combination of generics",
         )
-        .to_compile_error()
-        .into();
+        .to_compile_error();
     }
 
     let Some(docs) = extract_docs(&input) else {
         return Error::new_spanned(input.sig.fn_token, "function must be documented")
-            .to_compile_error()
-            .into();
+            .to_compile_error();
     };
 
     let vis = &input.vis;
@@ -40,7 +38,7 @@ pub fn function_impl(_attr: TokenStream, value: TokenStream) -> TokenStream {
 
     let params_struct = match build_params_struct(&input, &docs) {
         Ok(params_struct) => params_struct,
-        Err(err) => return err.to_compile_error().into(),
+        Err(err) => return err.to_compile_error(),
     };
 
     let tool_impl = build_tool_impl(
@@ -70,7 +68,6 @@ pub fn function_impl(_attr: TokenStream, value: TokenStream) -> TokenStream {
 
         #tool_impl
     )
-    .into()
 }
 
 fn build_tool_impl(
@@ -265,3 +262,6 @@ struct FunctionDocs {
     description: String,
     parameter_docs: HashMap<String, String>,
 }
+
+#[cfg(test)]
+mod tests;
