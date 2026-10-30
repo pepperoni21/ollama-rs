@@ -1,0 +1,8 @@
+[package]
+name = "ollama-rs-macros-test-stub"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+ollama-rs-macros-test-derive = { path = "../ollama-rs-macros-test-derive" }

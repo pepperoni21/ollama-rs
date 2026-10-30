@@ -24,5 +24,5 @@ async fn dummy(
     two: i32,
     three: bool,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    Ok(format!("{} {} {}", greeting, name, three))
+    Ok(format!("{} {} {}", one, two, three))
 }

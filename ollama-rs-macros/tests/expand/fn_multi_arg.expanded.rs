@@ -84,9 +84,7 @@ impl ::ollama_rs::generation::tools::Tool for dummy {
         {
             Ok(
                 ::alloc::__export::must_use({
-                    ::alloc::fmt::format(
-                        format_args!("{0} {1} {2}", greeting, name, three),
-                    )
+                    ::alloc::fmt::format(format_args!("{0} {1} {2}", one, two, three))
                 }),
             )
         }

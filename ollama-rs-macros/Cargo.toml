@@ -17,3 +17,7 @@ syn = { version = "3", features = ["full"] }
 
 [dev-dependencies]
 macrotest = "1"
+# The macro emits `ollama_rs::...` paths, so macrotest's generated crate needs
+# an `ollama-rs` dependency. The stub keeps derive expansions out of the
+# snapshots.
+ollama-rs = { package = "ollama-rs-macros-test-stub", path = "tests/stubs/ollama-rs-macros-test-stub" }

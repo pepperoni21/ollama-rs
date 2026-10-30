@@ -1,0 +1,8 @@
+[package]
+name = "ollama-rs-macros-test-derive"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+proc-macro = true
