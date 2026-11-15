@@ -60,6 +60,7 @@ ollama-rs = { path = ".", features = [
 ] }
 base64 = "0.23.0"
 fs2 = "0.4.3"
+llm-diff = "0.3"
 
 [package.metadata.docs.rs]
 all-features = true
