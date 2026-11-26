@@ -125,6 +125,9 @@ pub struct GenerationResponse {
     pub load_duration: Option<u64>,
     /// Number of tokens in the prompt
     pub prompt_eval_count: Option<u64>,
+    /// Number of prompt tokens read from the cache
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub prompt_eval_cached_count: Option<u64>,
     /// Time spent in nanoseconds evaluating the prompt
     pub prompt_eval_duration: Option<u64>,
     /// Number of tokens in the response
