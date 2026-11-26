@@ -148,7 +148,11 @@ impl<C: ChatHistory> Coordinator<C> {
                     eprintln!("Tool response: {}", resp);
                 }
 
-                self.history.push(ChatMessage::tool(resp))
+                let mut message = ChatMessage::tool(resp).with_tool_name(call.function.name);
+                if let Some(id) = call.id {
+                    message = message.with_tool_call_id(id);
+                }
+                self.history.push(message)
             }
 
             // recurse

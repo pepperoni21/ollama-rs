@@ -264,6 +264,12 @@ pub struct ChatMessage {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub images: Option<Vec<Image>>,
     pub thinking: Option<String>,
+    /// Name of the tool whose result this `tool` message carries.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_name: Option<String>,
+    /// ID of the tool call this `tool` message answers, when the model returned one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_call_id: Option<String>,
 }
 
 impl ChatMessage {
@@ -274,6 +280,8 @@ impl ChatMessage {
             tool_calls: vec![],
             images: None,
             thinking: None,
+            tool_name: None,
+            tool_call_id: None,
         }
     }
 
@@ -291,6 +299,18 @@ impl ChatMessage {
 
     pub fn tool(content: String) -> Self {
         Self::new(MessageRole::Tool, content)
+    }
+
+    /// Sets the name of the tool whose result this message carries.
+    pub fn with_tool_name(mut self, tool_name: impl Into<String>) -> Self {
+        self.tool_name = Some(tool_name.into());
+        self
+    }
+
+    /// Sets the ID of the tool call this message answers.
+    pub fn with_tool_call_id(mut self, tool_call_id: impl Into<String>) -> Self {
+        self.tool_call_id = Some(tool_call_id.into());
+        self
     }
 
     pub fn with_images(mut self, images: Vec<Image>) -> Self {

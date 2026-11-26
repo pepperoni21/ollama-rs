@@ -103,6 +103,10 @@ pub struct ToolFunctionInfo {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ToolCall {
+    /// ID the model assigned to this call, if any. Send it back as the
+    /// `tool_call_id` of the matching `tool` message.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
     pub function: ToolCallFunction,
 }
 
