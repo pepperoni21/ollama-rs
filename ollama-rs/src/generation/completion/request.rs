@@ -42,6 +42,12 @@ pub struct GenerationRequest<'a> {
     pub logprobs: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub top_logprobs: Option<u32>,
+    /// Truncate the input if the rendered prompt exceeds the context length.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub truncate: Option<bool>,
+    /// Shift the context instead of returning an error when it reaches the context length.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shift: Option<bool>,
 }
 
 impl<'a> GenerationRequest<'a> {
@@ -61,6 +67,8 @@ impl<'a> GenerationRequest<'a> {
             think: None,
             logprobs: None,
             top_logprobs: None,
+            truncate: None,
+            shift: None,
         }
     }
 
@@ -145,6 +153,20 @@ impl<'a> GenerationRequest<'a> {
     /// Used to control the number of top log probabilities to return for each token
     pub fn top_logprobs(mut self, top_logprobs: u32) -> Self {
         self.top_logprobs = Some(top_logprobs);
+        self
+    }
+
+    /// Whether to truncate the input when the rendered prompt exceeds the context length.
+    /// Set to `false` to get an error instead.
+    pub fn truncate(mut self, truncate: bool) -> Self {
+        self.truncate = Some(truncate);
+        self
+    }
+
+    /// Whether to shift the context when it reaches the context length during generation.
+    /// Set to `false` to get an error instead.
+    pub fn shift(mut self, shift: bool) -> Self {
+        self.shift = Some(shift);
         self
     }
 }
