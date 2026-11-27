@@ -49,6 +49,29 @@ async fn test_generation_with_logprobs() {
             !logprob_data.bytes.is_empty(),
             "Expected bytes to be non-empty"
         );
+        // top_logprobs should contain the top logprobs for the token if present
+        assert!(logprob_data.top_logprobs.is_some(), "Expected top_logprobs to be present");
+        if let Some(ref top_logprobs) = logprob_data.top_logprobs {
+            assert!(
+                !top_logprobs.is_empty(),
+                "Expected top_logprobs to contain at least one entry"
+            );
+            for top_logprob_data in top_logprobs {
+                assert!(
+                    !top_logprob_data.token.is_empty(),
+                    "Expected token in top_logprobs to be non-empty"
+                );
+                assert!(
+                    top_logprob_data.logprob <= 0.0,
+                    "Expected logprob in top_logprobs to be <= 0.0, got {}",
+                    top_logprob_data.logprob
+                );
+                assert!(
+                    !top_logprob_data.bytes.is_empty(),
+                    "Expected bytes in top_logprobs to be non-empty"
+                );
+            }
+        }
     }
 
     println!("Non-streaming test passed. Response: {}", res.response);
