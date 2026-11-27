@@ -36,10 +36,10 @@ pub type ChatMessageResponseStream = std::pin::Pin<
 /// genuine deserialization failure and is returned as [`OllamaError::JsonError`].
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
-fn parse_chat_line(line: &str) -> crate::error::Result<ChatMessageResponse> {
-    match serde_json::from_str::<ChatMessageResponse>(line) {
+fn parse_chat_line(line: &[u8]) -> crate::error::Result<ChatMessageResponse> {
+    match serde_json::from_slice::<ChatMessageResponse>(line) {
         Ok(response) => Ok(response),
-        Err(orig) => match serde_json::from_str::<InternalOllamaError>(line) {
+        Err(orig) => match serde_json::from_slice::<InternalOllamaError>(line) {
             Ok(internal) => Err(OllamaError::InternalError(internal)),
             Err(_) => Err(OllamaError::JsonError(orig)),
         },
@@ -73,60 +73,35 @@ impl Ollama {
         }
 
         let s = stream! {
-            let mut buffer = String::new();
-
+            let mut line = Vec::new();
             let mut stream = res.bytes_stream();
-            while let Some(chunk_result) = stream.next().await {
-                match chunk_result {
-                    Ok(chunk) => {
-                        // Convert bytes to string and append to buffer
-                        if let Ok(chunk_str) = String::from_utf8(chunk.to_vec()) {
-                            buffer.push_str(&chunk_str);
-
-                            // Process complete lines in the buffer
-                            let mut lines_to_process = Vec::new();
-                            let mut start_pos = 0;
-
-                            // Find all complete lines in the buffer and collect them
-                            while let Some(pos) = buffer[start_pos..].find('\n') {
-                                let actual_pos = start_pos + pos;
-                                let line = buffer[start_pos..actual_pos].trim().to_string();
-                                if !line.is_empty() {
-                                    lines_to_process.push(line);
-                                }
-                                start_pos = actual_pos + 1;
-                            }
-
-                            // If we processed any lines, truncate the buffer
-                            if start_pos > 0 {
-                                buffer = buffer[start_pos..].to_string();
-                            }
-
-                            // Process all collected lines
-                            for line in lines_to_process {
-                                match parse_chat_line(&line) {
-                                    Ok(response) => yield Ok(response),
-                                    Err(e) => {
-                                        yield Err(e);
-                                        return;
-                                    }
+            while let Some(chunk) = stream.next().await {
+                let chunk = match chunk {
+                    Ok(chunk) => chunk,
+                    Err(err) => {
+                        yield Err(err.into());
+                        return;
+                    }
+                };
+                // HTTP chunks can split a UTF-8 code point as well as a JSON record.
+                for part in chunk.split_inclusive(|&byte| byte == b'\n') {
+                    line.extend_from_slice(part);
+                    if part.ends_with(b"\n") {
+                        if !line.iter().all(u8::is_ascii_whitespace) {
+                            match parse_chat_line(&line) {
+                                Ok(response) => yield Ok(response),
+                                Err(err) => {
+                                    yield Err(err);
+                                    return;
                                 }
                             }
                         }
-                    }
-                    Err(e) => {
-                        yield Err(OllamaError::ReqwestError(e));
-                        break;
+                        line.clear();
                     }
                 }
             }
-
-            // Process any remaining data in the buffer
-            if !buffer.trim().is_empty() {
-                match parse_chat_line(buffer.trim()) {
-                    Ok(response) => yield Ok(response),
-                    Err(e) => yield Err(e),
-                }
+            if !line.iter().all(u8::is_ascii_whitespace) {
+                yield parse_chat_line(&line);
             }
         };
 
