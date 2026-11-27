@@ -50,7 +50,10 @@ async fn test_generation_with_logprobs() {
             "Expected bytes to be non-empty"
         );
         // top_logprobs should contain the top logprobs for the token if present
-        assert!(logprob_data.top_logprobs.is_some(), "Expected top_logprobs to be present");
+        assert!(
+            logprob_data.top_logprobs.is_some(),
+            "Expected top_logprobs to be present"
+        );
         if let Some(ref top_logprobs) = logprob_data.top_logprobs {
             assert!(
                 !top_logprobs.is_empty(),
