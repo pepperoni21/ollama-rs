@@ -190,6 +190,7 @@ impl Ollama {
 
         let s = stream! {
             let mut result = String::new();
+            let mut tool_calls = Vec::new();
 
             while let Some(item) = resp_stream.next().await {
                 let mut item = match item {
@@ -199,14 +200,15 @@ impl Ollama {
                         return;
                     }
                 };
-                let msg_part = item.message.content.clone();
-
-                result.push_str(&msg_part);
+                result.push_str(&item.message.content);
 
                 if item.done {
-                    item.message.content = result.clone();
+                    item.message.content = std::mem::take(&mut result);
+                    tool_calls.append(&mut item.message.tool_calls);
+                    item.message.tool_calls = std::mem::take(&mut tool_calls);
                     history.lock().unwrap().push(item.message.clone());
-                    result.clear();
+                } else {
+                    tool_calls.extend_from_slice(&item.message.tool_calls);
                 }
 
                 yield Ok(item);
@@ -353,7 +355,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn streamed_history_preserves_final_message_tool_calls() {
+    async fn streamed_history_preserves_tool_calls_from_all_messages() {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
             .await
             .expect("bind test server");
@@ -377,7 +379,7 @@ mod tests {
             }
 
             let body = concat!(
-                r#"{"model":"test","created_at":"2026-01-01T00:00:00Z","message":{"role":"assistant","content":"hello "},"done":false}"#,
+                r#"{"model":"test","created_at":"2026-01-01T00:00:00Z","message":{"role":"assistant","content":"hello ","tool_calls":[{"function":{"name":"first_tool","arguments":{}}}]},"done":false}"#,
                 "\n",
                 r#"{"model":"test","created_at":"2026-01-01T00:00:00Z","message":{"role":"assistant","content":"world","tool_calls":[{"function":{"name":"test_tool","arguments":{"city":"Paris"}}}]},"done":true}"#,
                 "\n",
@@ -419,12 +421,18 @@ mod tests {
 
         let final_chunk = final_chunk.expect("received done chunk");
         assert_eq!(final_chunk.message.content, "hello world");
-        assert_eq!(final_chunk.message.tool_calls.len(), 1);
+        assert_eq!(final_chunk.message.tool_calls.len(), 2);
+        assert_eq!(
+            final_chunk.message.tool_calls[0].function.name,
+            "first_tool"
+        );
+        assert_eq!(final_chunk.message.tool_calls[1].function.name, "test_tool");
 
         let history = history.lock().expect("history lock");
         assert_eq!(history.len(), 2);
         assert_eq!(history[1].content, "hello world");
-        assert_eq!(history[1].tool_calls.len(), 1);
-        assert_eq!(history[1].tool_calls[0].function.name, "test_tool");
+        assert_eq!(history[1].tool_calls.len(), 2);
+        assert_eq!(history[1].tool_calls[0].function.name, "first_tool");
+        assert_eq!(history[1].tool_calls[1].function.name, "test_tool");
     }
 }
