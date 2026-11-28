@@ -247,6 +247,8 @@ pub struct ChatMessageFinalResponseData {
     pub load_duration: u64,
     /// Number of tokens in the prompt
     pub prompt_eval_count: u64,
+    /// Number of prompt tokens read from the cache
+    pub prompt_eval_cached_count: Option<u64>,
     /// Time spent in nanoseconds evaluating the prompt
     pub prompt_eval_duration: u64,
     /// Number of tokens the response
