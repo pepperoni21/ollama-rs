@@ -46,7 +46,9 @@ impl<T: Tool> ToolHolder for T {
             // This is a work-around for this issue.
             let param_value = match serde_json::from_value(parameters.clone()) {
                 // We first try with the ToolCallFunction format
-                Ok(ToolCallFunction { name: _, arguments }) => arguments,
+                Ok(ToolCallFunction {
+                    name: _, arguments, ..
+                }) => arguments,
                 Err(_err) => match serde_json::from_value::<ToolInfo>(parameters.clone()) {
                     Ok(ti) => ti.function.parameters.to_value(),
                     Err(_err) => parameters,
@@ -113,6 +115,10 @@ pub struct ToolCall {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ToolCallFunction {
     pub name: String,
+    /// Position of this call within the response, when the model makes
+    /// several tool calls in one turn.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<u32>,
     // I don't love this (the Value)
     // But fixing it would be a big effort
     // FIXME
