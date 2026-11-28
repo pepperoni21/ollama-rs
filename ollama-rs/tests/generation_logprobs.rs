@@ -32,23 +32,35 @@ async fn test_generation_with_logprobs() {
         "Expected logprobs to contain at least one entry"
     );
 
-    // Verify structure of logprobs data
+    // Verify structure of logprobs data. We deliberately do not assert that
+    // `token` or `bytes` are non-empty: `token` can be an empty string for
+    // byte-level tokens, and `bytes` is `omitempty` in the Ollama API (so it
+    // is absent when a token has no byte representation).
     for logprob_data in &logprobs {
-        assert!(
-            !logprob_data.token.is_empty(),
-            "Expected token to be non-empty"
-        );
         // logprob should be a valid float (negative or zero, since it's a log probability)
         assert!(
             logprob_data.logprob <= 0.0,
             "Expected logprob to be <= 0.0, got {}",
             logprob_data.logprob
         );
-        // bytes should contain the byte representation of the token
+        // top_logprobs should be present since the request asked for them
         assert!(
-            !logprob_data.bytes.is_empty(),
-            "Expected bytes to be non-empty"
+            logprob_data.top_logprobs.is_some(),
+            "Expected top_logprobs to be present"
         );
+        if let Some(ref top_logprobs) = logprob_data.top_logprobs {
+            assert!(
+                !top_logprobs.is_empty(),
+                "Expected top_logprobs to contain at least one entry"
+            );
+            for top_logprob_data in top_logprobs {
+                assert!(
+                    top_logprob_data.logprob <= 0.0,
+                    "Expected logprob in top_logprobs to be <= 0.0, got {}",
+                    top_logprob_data.logprob
+                );
+            }
+        }
     }
 
     println!("Non-streaming test passed. Response: {}", res.response);
@@ -82,20 +94,14 @@ async fn test_generation_stream_with_logprobs() {
             if let Some(ref logprobs) = ele.logprobs {
                 total_logprobs_entries += logprobs.len();
 
-                // Verify structure of logprobs data in each chunk
+                // Verify structure of logprobs data in each chunk. As with the
+                // non-streaming test, `token` and `bytes` are not asserted to
+                // be non-empty (they are not guaranteed by the Ollama API).
                 for logprob_data in logprobs {
-                    assert!(
-                        !logprob_data.token.is_empty(),
-                        "Expected token to be non-empty in streaming chunk"
-                    );
                     assert!(
                         logprob_data.logprob <= 0.0,
                         "Expected logprob to be <= 0.0 in streaming chunk, got {}",
                         logprob_data.logprob
-                    );
-                    assert!(
-                        !logprob_data.bytes.is_empty(),
-                        "Expected bytes to be non-empty in streaming chunk"
                     );
                 }
             }
