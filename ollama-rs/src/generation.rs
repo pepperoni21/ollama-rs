@@ -7,6 +7,8 @@ pub mod chat;
 pub mod completion;
 pub mod embeddings;
 pub mod images;
+#[cfg(feature = "stream")]
+mod ndjson;
 pub mod parameters;
 pub mod systemone;
 pub mod tools;
