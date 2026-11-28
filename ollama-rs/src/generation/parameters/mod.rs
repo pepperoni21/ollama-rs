@@ -286,6 +286,7 @@ impl TimeUnit {
 pub struct LogprobsData {
     pub token: String,
     pub logprob: f64,
+    #[serde(default)]
     pub bytes: Vec<i64>,
     pub top_logprobs: Option<Vec<LogprobsData>>,
 }
