@@ -36,10 +36,10 @@ pub struct ChatMessageRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub top_logprobs: Option<u32>,
     /// Truncate the chat history if the rendered prompt exceeds the context length.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub truncate: Option<bool>,
     /// Shift the context instead of returning an error when it reaches the context length.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub shift: Option<bool>,
 }
 
