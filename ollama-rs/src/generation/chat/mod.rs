@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 use super::{images::Image, tools::ToolCall};
-#[cfg(feature = "stream")]
-use crate::error::InternalOllamaError;
 use crate::{
     error::OllamaError, generation::parameters::LogprobsData, history::ChatHistory, Ollama,
 };
@@ -10,13 +8,7 @@ use request::ChatMessageRequest;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
 #[cfg(feature = "stream")]
-use async_stream::stream;
-#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
-#[cfg(feature = "stream")]
 use std::sync::{Arc, Mutex};
-#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
-#[cfg(feature = "stream")]
-use tokio_stream::StreamExt;
 
 pub mod request;
 
@@ -26,25 +18,6 @@ pub mod request;
 pub type ChatMessageResponseStream = std::pin::Pin<
     Box<dyn tokio_stream::Stream<Item = crate::error::Result<ChatMessageResponse>> + Send>,
 >;
-
-/// Parse one NDJSON line from a streaming chat response.
-///
-/// A well-formed line deserializes into a [`ChatMessageResponse`]. Ollama can
-/// also terminate a stream with an error line of the shape `{"error": "..."}`
-/// (e.g. a mid-generation CUDA OOM); we surface that as
-/// [`OllamaError::InternalError`] so the message is not lost. Anything else is a
-/// genuine deserialization failure and is returned as [`OllamaError::JsonError`].
-#[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
-#[cfg(feature = "stream")]
-fn parse_chat_line(line: &[u8]) -> crate::error::Result<ChatMessageResponse> {
-    match serde_json::from_slice::<ChatMessageResponse>(line) {
-        Ok(response) => Ok(response),
-        Err(orig) => match serde_json::from_slice::<InternalOllamaError>(line) {
-            Ok(internal) => Err(OllamaError::InternalError(internal)),
-            Err(_) => Err(OllamaError::JsonError(orig)),
-        },
-    }
-}
 
 impl Ollama {
     #[cfg_attr(docsrs, doc(cfg(feature = "stream")))]
@@ -72,40 +45,7 @@ impl Ollama {
             ));
         }
 
-        let s = stream! {
-            let mut line = Vec::new();
-            let mut stream = res.bytes_stream();
-            while let Some(chunk) = stream.next().await {
-                let chunk = match chunk {
-                    Ok(chunk) => chunk,
-                    Err(err) => {
-                        yield Err(err.into());
-                        return;
-                    }
-                };
-                // HTTP chunks can split a UTF-8 code point as well as a JSON record.
-                for part in chunk.split_inclusive(|&byte| byte == b'\n') {
-                    line.extend_from_slice(part);
-                    if part.ends_with(b"\n") {
-                        if !line.iter().all(u8::is_ascii_whitespace) {
-                            match parse_chat_line(&line) {
-                                Ok(response) => yield Ok(response),
-                                Err(err) => {
-                                    yield Err(err);
-                                    return;
-                                }
-                            }
-                        }
-                        line.clear();
-                    }
-                }
-            }
-            if !line.iter().all(u8::is_ascii_whitespace) {
-                yield parse_chat_line(&line);
-            }
-        };
-
-        Ok(Box::pin(s))
+        Ok(Box::pin(super::ndjson::records(res)))
     }
 
     /// Chat message generation.

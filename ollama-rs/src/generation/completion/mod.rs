@@ -56,18 +56,13 @@ impl Ollama {
             ));
         }
 
-        let stream = Box::new(res.bytes_stream().map(|res| match res {
-            Ok(bytes) => {
-                let res = serde_json::Deserializer::from_slice(&bytes).into_iter();
-                let res = res
-                    .filter_map(Result::ok) // Filter out the errors
-                    .collect::<Vec<GenerationResponse>>();
-                Ok(res)
-            }
-            Err(e) => Err(OllamaError::Other(format!("Failed to read response: {e}"))),
-        }));
-
-        Ok(std::pin::Pin::from(stream))
+        let stream = super::ndjson::records(res).map(|record| match record {
+            Err(OllamaError::ReqwestError(err)) => Err(OllamaError::Other(format!(
+                "Failed to read response: {err}"
+            ))),
+            record => record.map(|response| vec![response]),
+        });
+        Ok(Box::pin(stream))
     }
 
     /// Completion generation with a single response.
